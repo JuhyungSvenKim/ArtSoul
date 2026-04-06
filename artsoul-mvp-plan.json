@@ -1,0 +1,208 @@
+{
+  "project": {
+    "name": "Art+Soul",
+    "description": "사주 × MBTI × AI 미술 마켓플레이스 — MVP Phase 1 화면 설계",
+    "frontend_repo": "JuhyungSvenKim/ArtSoul-Frontend",
+    "tech_stack": {
+      "framework": "React + TypeScript (Vite)",
+      "styling": "Tailwind CSS (Lovable 기본)",
+      "routing": "React Router DOM",
+      "state_management": "Zustand (예정)",
+      "backend": "Supabase (Auth + PostgreSQL + Storage)"
+    }
+  },
+  "routing": {
+    "auth_flow": [
+      { "path": "/login", "page": "LoginPage", "screen_id": "S02" },
+      { "path": "/onboarding/birth", "page": "BirthInfoPage", "screen_id": "S03" },
+      { "path": "/onboarding/mbti", "page": "MbtiPage", "screen_id": "S04" },
+      { "path": "/onboarding/taste", "page": "ArtTastePage", "screen_id": "S05" },
+      { "path": "/onboarding/dna-card", "page": "ArtDnaCardPage", "screen_id": "S06" }
+    ],
+    "main_tabs": [
+      { "path": "/", "page": "HomePage", "screen_id": "T01", "tab_label": "홈", "tab_icon": "home" },
+      { "path": "/explore", "page": "ExplorePage", "screen_id": "T02", "tab_label": "탐색", "tab_icon": "search" },
+      { "path": "/saju", "page": "SajuPage", "screen_id": "T03", "tab_label": "사주", "tab_icon": "sparkles" },
+      { "path": "/my", "page": "MyPage", "screen_id": "T04", "tab_label": "마이", "tab_icon": "user" }
+    ],
+    "sub_pages": [
+      { "path": "/artwork/:id", "page": "ArtworkDetailPage", "screen_id": "D01" }
+    ],
+    "auth_guard": {
+      "unauthenticated": "/login",
+      "onboarding_incomplete": "/onboarding/birth",
+      "authenticated": "/"
+    }
+  },
+  "screens": {
+    "S02_login": {
+      "id": "S02",
+      "name": "로그인",
+      "page_file": "src/pages/LoginPage.tsx",
+      "component_tree": {
+        "root": "PageContainer",
+        "children": [
+          { "component": "div.logo-section", "children": [{ "element": "img", "props": { "src": "logo", "alt": "Art+Soul" } }, { "element": "p.tagline", "text": "사주 × 미술, 나만의 그림을 찾다" }] },
+          { "component": "div.button-section", "children": [{ "component": "KakaoLoginButton", "props": { "onLogin": "() => void" } }, { "component": "AppleLoginButton", "props": { "onLogin": "() => void" } }] },
+          { "component": "TermsLink", "props": { "onPress": "() => void" } }
+        ]
+      },
+      "domain_components": [
+        { "name": "KakaoLoginButton", "file": "src/components/auth/KakaoLoginButton.tsx", "props": { "onLogin": "() => void" } },
+        { "name": "AppleLoginButton", "file": "src/components/auth/AppleLoginButton.tsx", "props": { "onLogin": "() => void" } },
+        { "name": "TermsLink", "file": "src/components/auth/TermsLink.tsx", "props": { "onPress": "() => void" } }
+      ]
+    },
+    "S03_birth_info": {
+      "id": "S03",
+      "name": "온보딩 - 생년월일시 입력",
+      "page_file": "src/pages/onboarding/BirthInfoPage.tsx",
+      "input_fields": {
+        "birth_date": { "type": "date", "required": true },
+        "birth_time": { "type": "time", "required": false, "note": "모르면 null" },
+        "name_korean": { "type": "text", "required": true },
+        "name_hanja": { "type": "text", "required": false },
+        "gender": { "type": "enum", "values": ["male", "female"], "required": true }
+      },
+      "domain_components": [
+        { "name": "GenderSelect", "file": "src/components/onboarding/GenderSelect.tsx", "props": { "value": "Gender | null", "onChange": "(gender: Gender) => void" } },
+        { "name": "HanjaInput", "file": "src/components/onboarding/HanjaInput.tsx", "props": { "label": "string", "value": "string", "onChange": "(value: string) => void" } }
+      ]
+    },
+    "S04_mbti": {
+      "id": "S04",
+      "name": "온보딩 - MBTI 선택",
+      "page_file": "src/pages/onboarding/MbtiPage.tsx",
+      "domain_components": [
+        { "name": "MbtiGrid", "file": "src/components/onboarding/MbtiGrid.tsx", "props": { "selected": "MbtiType | null", "onSelect": "(type: MbtiType) => void" }, "description": "4x4 그리드" },
+        { "name": "MiniMbtiTest", "file": "src/components/onboarding/MiniMbtiTest.tsx", "props": { "visible": "boolean", "onComplete": "(result: MbtiType) => void" }, "description": "4문항 간이 테스트" }
+      ]
+    },
+    "S05_art_taste": {
+      "id": "S05",
+      "name": "온보딩 - 그림 취향 테스트",
+      "page_file": "src/pages/onboarding/ArtTastePage.tsx",
+      "logic": "5라운드 x 2장 = 10장 중 5장 선택. 오행별 2장씩 배치",
+      "domain_components": [
+        { "name": "ArtworkPairCard", "file": "src/components/onboarding/ArtworkPairCard.tsx", "props": { "artworkA": "TasteArtwork", "artworkB": "TasteArtwork", "onSelect": "(artworkId: string) => void" } }
+      ]
+    },
+    "S06_art_dna_card": {
+      "id": "S06",
+      "name": "미술 DNA 카드",
+      "page_file": "src/pages/onboarding/ArtDnaCardPage.tsx",
+      "dna_card_sections": ["일간 오행 + 한줄 성격 요약", "오행 레이더 차트", "추천 화풍 키워드 3개", "추천 색감 팔레트 5색", "한줄 사주 해석"],
+      "domain_components": [
+        { "name": "DnaCard", "file": "src/components/onboarding/DnaCard.tsx", "props": { "artDna": "ArtDna", "userName": "string", "interpretation": "string" } },
+        { "name": "OhaengRadarChart", "file": "src/components/onboarding/OhaengRadarChart.tsx", "props": { "scores": "OhaengScores" }, "note": "SVG 5축 레이더" },
+        { "name": "ArtStyleSummary", "file": "src/components/onboarding/ArtStyleSummary.tsx", "props": { "styles": "string[]", "colors": "string[]" } },
+        { "name": "ShareToInstagram", "file": "src/components/share/ShareToInstagram.tsx", "props": { "imageUrl": "string" } },
+        { "name": "ShareToKakao", "file": "src/components/share/ShareToKakao.tsx", "props": { "shareData": "KakaoShareData" } }
+      ]
+    },
+    "T01_home": {
+      "id": "T01",
+      "name": "홈 탭",
+      "page_file": "src/pages/HomePage.tsx",
+      "domain_components": [
+        { "name": "TodayRecommendationCard", "file": "src/components/home/TodayRecommendationCard.tsx", "props": { "artwork": "ArtworkWithMatch", "matchReason": "string" } },
+        { "name": "TodayFortuneCard", "file": "src/components/saju/TodayFortuneCard.tsx", "props": { "fortune": "string", "ohaeng": "Ohaeng" } },
+        { "name": "EventBanner", "file": "src/components/home/EventBanner.tsx", "props": { "imageUrl": "string", "linkUrl": "string" } }
+      ]
+    },
+    "T02_explore": {
+      "id": "T02",
+      "name": "탐색 탭",
+      "page_file": "src/pages/ExplorePage.tsx",
+      "domain_components": [
+        { "name": "SearchBar", "file": "src/components/explore/SearchBar.tsx", "props": { "value": "string", "onChange": "(value: string) => void", "onSubmit": "() => void" } },
+        { "name": "FilterChips", "file": "src/components/explore/FilterChips.tsx", "props": { "filters": "FilterState", "onChange": "(filters: FilterState) => void" } },
+        { "name": "OhaengCollectionRow", "file": "src/components/explore/OhaengCollectionRow.tsx", "props": { "onSelect": "(ohaeng: Ohaeng) => void" } },
+        { "name": "SortToggle", "file": "src/components/explore/SortToggle.tsx", "props": { "options": "SortOption[]", "selected": "SortOption", "onChange": "(opt: SortOption) => void" } }
+      ]
+    },
+    "T03_saju": {
+      "id": "T03",
+      "name": "사주 탭",
+      "page_file": "src/pages/SajuPage.tsx",
+      "domain_components": [
+        { "name": "SajuSummaryCard", "file": "src/components/saju/SajuSummaryCard.tsx", "props": { "profile": "SajuProfile" } },
+        { "name": "OhaengBalanceChart", "file": "src/components/saju/OhaengBalanceChart.tsx", "props": { "scores": "OhaengScores" } },
+        { "name": "SinsalList", "file": "src/components/saju/SinsalList.tsx", "props": { "sinsals": "Sinsal[]" } },
+        { "name": "DaeunTimeline", "file": "src/components/saju/DaeunTimeline.tsx", "props": { "periods": "DaeunPeriod[]", "currentAge": "number" } },
+        { "name": "NameAnalysisCard", "file": "src/components/saju/NameAnalysisCard.tsx", "props": { "analysis": "NameAnalysis | null" } }
+      ]
+    },
+    "T04_my": {
+      "id": "T04",
+      "name": "마이 탭",
+      "page_file": "src/pages/MyPage.tsx",
+      "domain_components": [
+        { "name": "ProfileCard", "file": "src/components/my/ProfileCard.tsx", "props": { "user": "UserProfile" } },
+        { "name": "ArtistModeSwitch", "file": "src/components/my/ArtistModeSwitch.tsx", "props": { "isArtist": "boolean", "onToggle": "() => void" } },
+        { "name": "OrderHistoryList", "file": "src/components/my/OrderHistoryList.tsx", "props": { "orders": "Order[]" } },
+        { "name": "RentalStatusCard", "file": "src/components/my/RentalStatusCard.tsx", "props": { "rental": "Rental | null" } }
+      ]
+    },
+    "D01_artwork_detail": {
+      "id": "D01",
+      "name": "작품 상세",
+      "page_file": "src/pages/ArtworkDetailPage.tsx",
+      "domain_components": [
+        { "name": "ArtworkImageViewer", "file": "src/components/artwork/ArtworkImageViewer.tsx", "props": { "imageUrls": "string[]", "alt": "string" } },
+        { "name": "ArtworkInfo", "file": "src/components/artwork/ArtworkInfo.tsx", "props": { "artwork": "Artwork" } },
+        { "name": "SajuMatchScore", "file": "src/components/artwork/SajuMatchScore.tsx", "props": { "score": "number", "reason": "string" } },
+        { "name": "ArtistMiniProfile", "file": "src/components/artist/ArtistMiniProfile.tsx", "props": { "artist": "Artist", "onClick": "() => void" } },
+        { "name": "ActionButtons", "file": "src/components/artwork/ActionButtons.tsx", "props": { "onPurchase": "() => void", "onRental": "() => void", "onLike": "() => void", "onShare": "() => void", "isLiked": "boolean", "rentalAvailable": "boolean" } }
+      ]
+    }
+  },
+  "shared_components": {
+    "artwork": [
+      { "name": "ArtworkCard", "file": "src/components/artwork/ArtworkCard.tsx", "used_in": ["T01", "T02", "T04", "D01"] },
+      { "name": "ArtworkGrid", "file": "src/components/artwork/ArtworkGrid.tsx", "used_in": ["T01", "T02", "T04"] },
+      { "name": "ArtworkCarousel", "file": "src/components/artwork/ArtworkCarousel.tsx", "used_in": ["T01", "D01"] },
+      { "name": "OhaengTagChips", "file": "src/components/artwork/OhaengTagChips.tsx", "used_in": ["S06", "T01", "T02", "T03", "T04", "D01"] }
+    ],
+    "layout": [
+      { "name": "PageContainer", "file": "src/components/layout/PageContainer.tsx", "used_in": ["ALL"] },
+      { "name": "TabBar", "file": "src/components/layout/TabBar.tsx", "used_in": ["T01", "T02", "T03", "T04"] },
+      { "name": "Section", "file": "src/components/layout/Section.tsx", "used_in": ["T01", "T02", "T03", "T04", "D01"] },
+      { "name": "StickyBottomBar", "file": "src/components/layout/StickyBottomBar.tsx", "used_in": ["D01"] }
+    ]
+  },
+  "ohaeng_color_map": {
+    "목_wood": { "hex": "#22C55E", "tailwind": "green-500", "mood": "자연/성장/생명력" },
+    "화_fire": { "hex": "#EF4444", "tailwind": "red-500", "mood": "열정/강렴/표현" },
+    "토_earth": { "hex": "#CA8A04", "tailwind": "yellow-600", "mood": "안정/따뜻함/전통" },
+    "금_metal": { "hex": "#9CA3AF", "tailwind": "gray-400", "mood": "절제/미니말/정밀" },
+    "수_water": { "hex": "#3B82F6", "tailwind": "blue-500", "mood": "몹환/유동/깊이" }
+  },
+  "component_reuse_matrix": {
+    "ArtworkCard": ["T01_home", "T02_explore", "T04_my", "D01_detail"],
+    "ArtworkGrid": ["T01_home", "T02_explore", "T04_my"],
+    "ArtworkCarousel": ["T01_home", "D01_detail"],
+    "OhaengRadarChart": ["S06_dna_card", "T03_saju"],
+    "OhaengTagChips": ["S06_dna_card", "T01_home", "T02_explore", "T03_saju", "T04_my", "D01_detail"],
+    "ProgressBar": ["S03_birth", "S04_mbti", "S05_taste"],
+    "Section": ["T01_home", "T02_explore", "T03_saju", "T04_my", "D01_detail"],
+    "TabBar": ["T01_home", "T02_explore", "T03_saju", "T04_my"]
+  },
+  "implementation_status": {
+    "completed": [
+      "src/types/ — 전체 6개 타입 파일",
+      "src/constants/ — 전체 3개 상수 파일",
+      "src/components/ui/ — Button, Input, Card, Chip, ProgressBar, Toggle, Avatar, Badge, Modal"
+    ],
+    "pending_lovable": [
+      "src/pages/ — 전체 10개 페이지 (Lovable에서 화면 생성 예정)",
+      "src/components/layout/ — PageContainer, TabBar, Section, StickyBottomBar",
+      "src/components/{auth,onboarding,artwork,saju,home,explore,my,share}/ — 도메인 컴포넌트"
+    ],
+    "pending_integration": [
+      "src/routes.tsx + App.tsx — 라우팅",
+      "Supabase 연동",
+      "사주 엔진 API 연동"
+    ]
+  }
+}

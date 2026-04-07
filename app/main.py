@@ -9,17 +9,26 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.saju import router as saju_router
+from app.services.migration import run_migrations
 from app.services.rag import init_knowledge_base
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """앱 시작 시 RAG 지식 베이스 초기화"""
+    """앱 시작 시 DB 마이그레이션 + RAG 지식 베이스 초기화 (전부 자동)"""
+    # 1) 테이블 자동 생성
+    try:
+        result = await run_migrations()
+        print(f"[DB] Migration: {result}")
+    except Exception as e:
+        print(f"[DB] Migration skipped: {e}")
+
+    # 2) RAG 지식 임베딩
     try:
         result = await init_knowledge_base()
         print(f"[RAG] Knowledge base initialized: {result}")
     except Exception as e:
-        print(f"[RAG] Knowledge base init skipped (set API keys to enable): {e}")
+        print(f"[RAG] Knowledge base init skipped: {e}")
     yield
 
 

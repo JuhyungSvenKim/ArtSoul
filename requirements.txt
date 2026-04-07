@@ -10,3 +10,4 @@ langchain-core==0.3.28
 langchain-google-genai==2.0.8
 httpx==0.28.1
 numpy==2.2.1
+asyncpg==0.30.0

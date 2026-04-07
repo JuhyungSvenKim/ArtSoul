@@ -5,7 +5,7 @@ import { getTwelveStage } from './twelve-stages'
 import { getGongmang } from './gongmang'
 import { analyzeRelations } from './relations'
 import { getGyeokguk } from './gyeokguk'
-import { analyzeSinsal } from './sinsal'
+import { analyzeSinsal, groupSinsalByPillar, interpretByPillar } from './sinsal'
 import { getDaeun } from './daeun'
 import { lunarToSolar } from './lunar'
 
@@ -48,6 +48,8 @@ export function getSaju(input: SajuInput): SajuResult {
 
   // 신살
   const sinsal = analyzeSinsal({ yeonju, wolju, ilju, siju })
+  const sinsalByPillar = groupSinsalByPillar(sinsal)
+  const pillarInterpretations = interpretByPillar(sinsalByPillar)
 
   // 공망
   const gongmang = getGongmang(ilju.cheonganIdx, ilju.jijiIdx)
@@ -66,6 +68,8 @@ export function getSaju(input: SajuInput): SajuResult {
     twelveStages,
     gyeokguk,
     sinsal,
+    sinsalByPillar,
+    pillarInterpretations,
     gongmang,
     relations,
     daeun,
@@ -76,16 +80,18 @@ export function getSaju(input: SajuInput): SajuResult {
 
 // ── AI 해석용 프롬프트 변환 ─────────────────────────
 export function sajuToAIPrompt(result: SajuResult): string {
-  const { yeonju, wolju, ilju, siju, sipsung, twelveStages, gyeokguk, sinsal, gongmang, relations, daeun, daeunStartAge, input } = result
+  const { yeonju, wolju, ilju, siju, sipsung, twelveStages, gyeokguk, sinsalByPillar, pillarInterpretations, gongmang, relations, daeun, daeunStartAge, input } = result
   const p = (g: typeof yeonju) => `${g.cheongan}${g.jiji}(${g.cheonganKor}${g.jijiKor}/${g.ohaeng})`
-
-  const sinsalStr = sinsal.length > 0
-    ? sinsal.map(s => `${s.name}(${s.position})`).join(', ')
-    : '없음'
 
   const relStr = relations.length > 0
     ? relations.map(r => `${r.detail}(${r.positions.join('-')})`).join(', ')
     : '없음'
+
+  // 주별 신살 포맷
+  const pillarSinsalStr = pillarInterpretations.map(pi => {
+    const names = pi.sinsalNames.length > 0 ? pi.sinsalNames.join(', ') : '없음'
+    return `${pi.position}(${pi.meaning}): [${names}]\n  → ${pi.interpretation}`
+  }).join('\n')
 
   return `
 [사주팔자]
@@ -107,7 +113,8 @@ export function sajuToAIPrompt(result: SajuResult): string {
 
 [격국] ${gyeokguk.name} - ${gyeokguk.description}
 
-[신살] ${sinsalStr}
+[신살 — 주별 배치]
+${pillarSinsalStr}
 
 [공망] ${gongmang.jiji1Kor}(${gongmang.jiji1}), ${gongmang.jiji2Kor}(${gongmang.jiji2})
 
@@ -147,5 +154,5 @@ export type { TwelveStage } from './twelve-stages'
 export type { Gongmang } from './gongmang'
 export type { RelationItem } from './relations'
 export type { GyeokgukResult } from './gyeokguk'
-export type { SinsalItem } from './sinsal'
+export type { SinsalItem, SinsalByPillar, PillarInterpretation } from './sinsal'
 export { lunarToSolar } from './lunar'

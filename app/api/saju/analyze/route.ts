@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server'
-import { getSaju, sajuToAIPrompt, sajuToDBRecord } from '@/lib/saju'
+import { getSaju, sajuToAIPrompt } from '@/lib/saju'
 import type { SajuInput } from '@/lib/saju'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204 })
+  return new NextResponse(null, { status: 204, headers: corsHeaders })
 }
 
 export async function POST(req: Request) {
@@ -22,15 +28,15 @@ export async function POST(req: Request) {
     const result = getSaju(input)
     const aiPrompt = sajuToAIPrompt(result)
 
-    return NextResponse.json({
-      success: true,
-      data: result,
-      aiPrompt,
-    })
-  } catch (error) {
     return NextResponse.json(
-      { success: false, error: String(error) },
-      { status: 400 },
+      { success: true, data: result, aiPrompt },
+      { headers: corsHeaders },
+    )
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return NextResponse.json(
+      { success: false, error: message },
+      { status: 400, headers: corsHeaders },
     )
   }
 }

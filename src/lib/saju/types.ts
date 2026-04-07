@@ -2,7 +2,7 @@ import type { TwelveStage } from './twelve-stages'
 import type { Gongmang } from './gongmang'
 import type { RelationItem } from './relations'
 import type { GyeokgukResult } from './gyeokguk'
-import type { SinsalItem } from './sinsal'
+import type { SinsalItem, SinsalByPillar, PillarInterpretation } from './sinsal'
 
 // ── 사주 입력 ────────────────────────────────────────
 export interface SajuInput {
@@ -67,6 +67,8 @@ export interface SajuResult {
   twelveStages: TwelveStagesResult
   gyeokguk: GyeokgukResult
   sinsal: SinsalItem[]
+  sinsalByPillar: SinsalByPillar
+  pillarInterpretations: PillarInterpretation[]
   gongmang: Gongmang
   relations: RelationItem[]
   daeun: DaeunItem[]

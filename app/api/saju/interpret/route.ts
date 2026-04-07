@@ -25,6 +25,10 @@ const SYSTEM_PROMPT = `당신은 ArtSoul의 사주 전문가입니다.
 5. 🔮 대운 흐름과 조언
 6. ⭐ 종합 한마디`
 
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204 })
+}
+
 export async function POST(req: Request) {
   try {
     const { prompt, mode } = await req.json()

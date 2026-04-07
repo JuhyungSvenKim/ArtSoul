@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import { getSaju, sajuToAIPrompt, sajuToDBRecord } from '@/lib/saju'
 import type { SajuInput } from '@/lib/saju'
 
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204 })
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()

@@ -1,11 +1,6 @@
-__pycache__/
-*.py[cod]
-*$py.class
-.env
-.venv/
-venv/
-*.egg-info/
-dist/
-build/
-.pytest_cache/
 node_modules/
+.next/
+.env
+.env.local
+.vercel
+out/

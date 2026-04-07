@@ -276,6 +276,126 @@ const TAEGEUK: Record<number, number[]> = {
   9: [2, 9],   // 계 → 인, 유
 }
 
+// ══════════════════════════════════════════════════════
+// ▼ 추가 신살 테이블 (자평명리 실무 풀셋) ▼
+// ══════════════════════════════════════════════════════
+
+// ── 천덕귀인 (月支→天干) ────────────────────────────
+// 월지 인(2)→정(3), 묘(3)→신(7), 진(4)→임(8)...
+const CHEONDEOK: Record<number, number> = {
+  2: 3, 3: 7, 4: 8, 5: 7, 6: 0, 7: 9,
+  8: 8, 9: 6, 10: 2, 11: 1, 0: 6, 1: 5,
+}
+
+// ── 월덕귀인 (月支→天干, 삼합 기준) ─────────────────
+const WOLDEOK: Record<number, number> = {
+  2: 2, 6: 2, 10: 2,    // 인오술월 → 병(2)
+  5: 6, 9: 6, 1: 6,     // 사유축월 → 경(6)
+  8: 8, 0: 8, 4: 8,     // 신자진월 → 임(8)
+  11: 0, 3: 0, 7: 0,    // 해묘미월 → 갑(0)
+}
+
+// ── 천관귀인 (日干→지지) ────────────────────────────
+const CHEONGWAN: Record<number, number> = {
+  0: 7, 1: 8, 2: 10, 3: 11, 4: 10,
+  5: 11, 6: 1, 7: 2, 8: 4, 9: 5,
+}
+
+// ── 천복귀인 (日干→지지) ────────────────────────────
+const CHEONBOK: Record<number, number> = {
+  0: 9, 1: 8, 2: 0, 3: 11, 4: 3,
+  5: 2, 6: 6, 7: 5, 8: 9, 9: 8,
+}
+
+// ── 문곡귀인 (日干→지지) ────────────────────────────
+const MUNGOK: Record<number, number> = {
+  0: 11, 1: 0, 2: 2, 3: 3, 4: 2,
+  5: 3, 6: 5, 7: 6, 8: 8, 9: 9,
+}
+
+// ── 복성귀인 (日干→지지, 반대 음양) ──────────────────
+const BOKSEONG: Record<number, number> = {
+  0: 1, 1: 0, 2: 3, 3: 2, 4: 5,
+  5: 4, 6: 7, 7: 6, 8: 9, 9: 8,
+}
+
+// ── 홍란살 (日干→지지) ─────────────────────────────
+const HONGRAN: Record<number, number> = {
+  0: 3, 1: 2, 2: 6, 3: 5, 4: 6,
+  5: 5, 6: 9, 7: 8, 8: 0, 9: 11,
+}
+
+// ── 천마 (年支 삼합→충, 역마와 같은 테이블 but 년지 기준) ─
+// 역마와 같은 매핑이지만 기준이 년지
+
+// ── 함지살 (年支 삼합 왕지, 도화와 같은 테이블 but 년지 기준) ─
+// 도화와 같은 매핑이지만 기준이 년지
+
+// ── 원진살 (日支 pairs) ────────────────────────────
+const WONJIN: Record<number, number> = {
+  0: 7, 7: 0, 1: 6, 6: 1, 2: 9, 9: 2,
+  3: 8, 8: 3, 4: 11, 11: 4, 5: 10, 10: 5,
+}
+
+// ── 귀문관살 (日支→지지) ───────────────────────────
+const GUIMUN: Record<number, number> = {
+  0: 9, 1: 6, 2: 7, 3: 8, 4: 5, 5: 4,
+  6: 1, 7: 2, 8: 3, 9: 0, 10: 11, 11: 10,
+}
+
+// ── 고신살 (年支 삼합 기준) ─────────────────────────
+// 인묘진→사, 사오미→신, 신유술→해, 해자축→인
+const GOSIN: Record<number, number> = {
+  2: 5, 3: 5, 4: 5,
+  5: 8, 6: 8, 7: 8,
+  8: 11, 9: 11, 10: 11,
+  11: 2, 0: 2, 1: 2,
+}
+
+// ── 과숙살 (年支 삼합 기준) ─────────────────────────
+// 인묘진→축, 사오미→진, 신유술→미, 해자축→술
+const GWASUK: Record<number, number> = {
+  2: 1, 3: 1, 4: 1,
+  5: 4, 6: 4, 7: 4,
+  8: 7, 9: 7, 10: 7,
+  11: 10, 0: 10, 1: 10,
+}
+
+// ── 상문살 (年支 기준, +2) ─────────────────────────
+// 년지에서 시계방향 2칸
+function getSangmunTarget(yearJiIdx: number): number {
+  return (yearJiIdx + 2) % 12
+}
+
+// ── 조객살 (年支 기준, -2 = +10) ───────────────────
+function getJogaekTarget(yearJiIdx: number): number {
+  return (yearJiIdx + 10) % 12
+}
+
+// ── 격각살 (日支 기준, +3 / +9) ────────────────────
+// 일지에서 3칸 또는 9칸(= -3) 떨어진 지지
+function getGyeokgakTargets(dayJiIdx: number): number[] {
+  return [(dayJiIdx + 3) % 12, (dayJiIdx + 9) % 12]
+}
+
+// ── 비인살 (日干→지지, 겁재의 사지) ─────────────────
+const BIIN: Record<number, number> = {
+  0: 8, 1: 5, 2: 11, 3: 2, 4: 11,
+  5: 2, 6: 5, 7: 8, 8: 2, 9: 11,
+}
+
+// ── 록신 (日干→건록지) ─────────────────────────────
+const ROKSIN: Record<number, number> = {
+  0: 2, 1: 3, 2: 5, 3: 6, 4: 5,
+  5: 6, 6: 8, 7: 9, 8: 11, 9: 0,
+}
+
+// ── 탕화살 (日支→지지) ─────────────────────────────
+const TANGHWA: Record<number, number> = {
+  0: 6, 1: 5, 2: 8, 3: 9, 4: 8,
+  5: 9, 6: 0, 7: 11, 8: 2, 9: 3,
+}
+
 const POSITION_NAMES = ['연주', '월주', '일주', '시주'] as const
 
 /**
@@ -638,6 +758,288 @@ export function analyzeSinsal(pillars: {
         effect: 'positive',
         position: POSITION_NAMES[i],
       })
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // ▼ 추가 신살 (자평명리 실무 풀셋) ▼
+  // ══════════════════════════════════════════════════
+
+  const woljiIdx = pillars.wolju.jijiIdx
+  const allCheongan = p.map(x => x.cheonganIdx)
+
+  // ── 천덕귀인 (월지→천간 매칭) ──
+  const cheondeokTarget = CHEONDEOK[woljiIdx]
+  if (cheondeokTarget !== undefined) {
+    for (let i = 0; i < 4; i++) {
+      if (allCheongan[i] === cheondeokTarget) {
+        results.push({
+          name: '천덕귀인',
+          description: '하늘의 덕을 받아 재앙을 면하고 위기를 넘기는 힘이 있음. 최고 귀인 중 하나',
+          effect: 'positive',
+          position: POSITION_NAMES[i],
+        })
+      }
+    }
+  }
+
+  // ── 월덕귀인 (월지→천간 매칭) ──
+  const woldeokTarget = WOLDEOK[woljiIdx]
+  if (woldeokTarget !== undefined) {
+    for (let i = 0; i < 4; i++) {
+      if (allCheongan[i] === woldeokTarget) {
+        results.push({
+          name: '월덕귀인',
+          description: '달의 덕을 받아 인복이 좋고 사람들에게 도움을 많이 받음',
+          effect: 'positive',
+          position: POSITION_NAMES[i],
+        })
+      }
+    }
+  }
+
+  // ── 천관귀인 (日干→지지) ──
+  const cheongwanTarget = CHEONGWAN[dayGanIdx]
+  for (let i = 0; i < 4; i++) {
+    if (allJiji[i] === cheongwanTarget) {
+      results.push({
+        name: '천관귀인',
+        description: '관직·직장운이 좋으며 승진과 명예에 인연이 있음',
+        effect: 'positive',
+        position: POSITION_NAMES[i],
+      })
+    }
+  }
+
+  // ── 천복귀인 (日干→지지) ──
+  const cheonbokTarget = CHEONBOK[dayGanIdx]
+  for (let i = 0; i < 4; i++) {
+    if (allJiji[i] === cheonbokTarget) {
+      results.push({
+        name: '천복귀인',
+        description: '타고난 복이 있어 의식주에 걱정이 적고 안정된 삶을 누림',
+        effect: 'positive',
+        position: POSITION_NAMES[i],
+      })
+    }
+  }
+
+  // ── 문곡귀인 (日干→지지) ──
+  const mungokTarget = MUNGOK[dayGanIdx]
+  for (let i = 0; i < 4; i++) {
+    if (allJiji[i] === mungokTarget) {
+      results.push({
+        name: '문곡귀인',
+        description: '예술·음악·문학에 재능이 있으며 감수성이 풍부함',
+        effect: 'positive',
+        position: POSITION_NAMES[i],
+      })
+    }
+  }
+
+  // ── 복성귀인 (日干→지지) ──
+  const bokseongTarget = BOKSEONG[dayGanIdx]
+  for (let i = 0; i < 4; i++) {
+    if (allJiji[i] === bokseongTarget) {
+      results.push({
+        name: '복성귀인',
+        description: '복이 따르며 남에게 베풀수록 더 큰 복이 돌아오는 구조',
+        effect: 'positive',
+        position: POSITION_NAMES[i],
+      })
+    }
+  }
+
+  // ── 홍란살 (日干→지지) ──
+  const hongranTarget = HONGRAN[dayGanIdx]
+  for (let i = 0; i < 4; i++) {
+    if (allJiji[i] === hongranTarget) {
+      results.push({
+        name: '홍란살',
+        description: '연애·결혼에 인연이 깊으며 이성에게 인기가 많음',
+        effect: 'positive',
+        position: POSITION_NAMES[i],
+      })
+    }
+  }
+
+  // ── 천마 (年支 기준 역마, 역마와 같은 매핑) ──
+  const cheonmaTarget = YEOKMA[yearJiIdx]
+  if (cheonmaTarget !== undefined) {
+    for (let i = 0; i < 4; i++) {
+      if (i === 0) continue
+      if (allJiji[i] === cheonmaTarget) {
+        results.push({
+          name: '천마',
+          description: '활동력과 이동성이 강하며 해외·무역 분야에 인연',
+          effect: 'neutral',
+          position: POSITION_NAMES[i],
+        })
+      }
+    }
+  }
+
+  // ── 함지살 (年支 기준 도화) ──
+  const hamjiTarget = DOHWA[yearJiIdx]
+  if (hamjiTarget !== undefined) {
+    for (let i = 0; i < 4; i++) {
+      if (i === 0) continue
+      if (allJiji[i] === hamjiTarget) {
+        results.push({
+          name: '함지살',
+          description: '성적 매력이 강하고 이성 문제에 관련된 일이 생기기 쉬움',
+          effect: 'neutral',
+          position: POSITION_NAMES[i],
+        })
+      }
+    }
+  }
+
+  // ── 원진살 (日支 기준) ──
+  const wonjinTarget = WONJIN[dayJiIdx]
+  if (wonjinTarget !== undefined) {
+    for (let i = 0; i < 4; i++) {
+      if (i === 2) continue
+      if (allJiji[i] === wonjinTarget) {
+        results.push({
+          name: '원진살',
+          description: '가까운 사이일수록 갈등이 생기기 쉬움. 밀당 관계에 주의',
+          effect: 'negative',
+          position: POSITION_NAMES[i],
+        })
+      }
+    }
+  }
+
+  // ── 귀문관살 (日支 기준) ──
+  const guimunTarget = GUIMUN[dayJiIdx]
+  if (guimunTarget !== undefined) {
+    for (let i = 0; i < 4; i++) {
+      if (i === 2) continue
+      if (allJiji[i] === guimunTarget) {
+        results.push({
+          name: '귀문관살',
+          description: '영감이 뛰어나고 직감이 날카로우나 정신적 스트레스에 주의',
+          effect: 'neutral',
+          position: POSITION_NAMES[i],
+        })
+      }
+    }
+  }
+
+  // ── 고신살 (年支 기준) ──
+  const gosinTarget = GOSIN[yearJiIdx]
+  if (gosinTarget !== undefined) {
+    for (let i = 0; i < 4; i++) {
+      if (i === 0) continue
+      if (allJiji[i] === gosinTarget) {
+        results.push({
+          name: '고신살',
+          description: '고독하고 독립적인 성향. 남성에게 불리하며 혼자 있는 시간이 많음',
+          effect: 'negative',
+          position: POSITION_NAMES[i],
+        })
+      }
+    }
+  }
+
+  // ── 과숙살 (年支 기준) ──
+  const gwasukTarget = GWASUK[yearJiIdx]
+  if (gwasukTarget !== undefined) {
+    for (let i = 0; i < 4; i++) {
+      if (i === 0) continue
+      if (allJiji[i] === gwasukTarget) {
+        results.push({
+          name: '과숙살',
+          description: '외로움과 고독의 기운. 여성에게 불리하며 배우자 인연이 늦을 수 있음',
+          effect: 'negative',
+          position: POSITION_NAMES[i],
+        })
+      }
+    }
+  }
+
+  // ── 상문살 (年支 기준, +2) ──
+  const sangmunTarget = getSangmunTarget(yearJiIdx)
+  for (let i = 0; i < 4; i++) {
+    if (i === 0) continue
+    if (allJiji[i] === sangmunTarget) {
+      results.push({
+        name: '상문살',
+        description: '상(喪)과 관련된 일에 주의. 건강 관리와 안전에 신경 쓸 것',
+        effect: 'negative',
+        position: POSITION_NAMES[i],
+      })
+    }
+  }
+
+  // ── 조객살 (年支 기준, -2) ──
+  const jogaekTarget = getJogaekTarget(yearJiIdx)
+  for (let i = 0; i < 4; i++) {
+    if (i === 0) continue
+    if (allJiji[i] === jogaekTarget) {
+      results.push({
+        name: '조객살',
+        description: '타인의 불행에 휘말리기 쉬움. 주변 관계에서 오는 근심이 있을 수 있음',
+        effect: 'negative',
+        position: POSITION_NAMES[i],
+      })
+    }
+  }
+
+  // ── 격각살 (日支 기준, ±3) ──
+  const gyeokgakTargets = getGyeokgakTargets(dayJiIdx)
+  for (let i = 0; i < 4; i++) {
+    if (i === 2) continue
+    if (gyeokgakTargets.includes(allJiji[i])) {
+      results.push({
+        name: '격각살',
+        description: '부모·배우자와 불화하기 쉬우며 이별수에 주의',
+        effect: 'negative',
+        position: POSITION_NAMES[i],
+      })
+    }
+  }
+
+  // ── 비인살 (日干→지지) ──
+  const biinTarget = BIIN[dayGanIdx]
+  for (let i = 0; i < 4; i++) {
+    if (allJiji[i] === biinTarget) {
+      results.push({
+        name: '비인살',
+        description: '도둑·사기에 주의하며 갑작스러운 재물 손실이 있을 수 있음',
+        effect: 'negative',
+        position: POSITION_NAMES[i],
+      })
+    }
+  }
+
+  // ── 록신 (日干→건록지) ──
+  const roksinTarget = ROKSIN[dayGanIdx]
+  for (let i = 0; i < 4; i++) {
+    if (allJiji[i] === roksinTarget) {
+      results.push({
+        name: '록신',
+        description: '안정적인 재물과 직업 기반이 있으며 의식주가 풍족함',
+        effect: 'positive',
+        position: POSITION_NAMES[i],
+      })
+    }
+  }
+
+  // ── 탕화살 (日支→지지) ──
+  const tanghwaTarget = TANGHWA[dayJiIdx]
+  if (tanghwaTarget !== undefined) {
+    for (let i = 0; i < 4; i++) {
+      if (i === 2) continue
+      if (allJiji[i] === tanghwaTarget) {
+        results.push({
+          name: '탕화살',
+          description: '화재·화상 등 불과 관련된 사고에 주의',
+          effect: 'negative',
+          position: POSITION_NAMES[i],
+        })
+      }
     }
   }
 

@@ -3,6 +3,7 @@ import type { Gongmang } from './gongmang'
 import type { RelationItem } from './relations'
 import type { GyeokgukResult } from './gyeokguk'
 import type { SinsalItem, SinsalByPillar, PillarInterpretation } from './sinsal'
+import type { YongsinResult } from './yongsin'
 
 // ── 사주 입력 ────────────────────────────────────────
 export interface SajuInput {
@@ -71,6 +72,7 @@ export interface SajuResult {
   pillarInterpretations: PillarInterpretation[]
   gongmang: Gongmang
   relations: RelationItem[]
+  yongsin: YongsinResult
   daeun: DaeunItem[]
   daeunStartAge: number
   jeolgiName: string

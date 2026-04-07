@@ -1,3 +1,9 @@
+import type { TwelveStage } from './twelve-stages'
+import type { Gongmang } from './gongmang'
+import type { RelationItem } from './relations'
+import type { GyeokgukResult } from './gyeokguk'
+import type { SinsalItem } from './sinsal'
+
 // ── 사주 입력 ────────────────────────────────────────
 export interface SajuInput {
   year: number
@@ -31,6 +37,17 @@ export interface SipsungResult {
   sijuJj: string        // 시주 지지 십성
 }
 
+// ── 12운성 결과 ──────────────────────────────────────
+export interface TwelveStagesResult {
+  yeonjuCg: TwelveStage
+  yeonjuJj: TwelveStage
+  woljuCg: TwelveStage
+  woljuJj: TwelveStage
+  iljuJj: TwelveStage
+  sijuCg: TwelveStage
+  sijuJj: TwelveStage
+}
+
 // ── 대운 아이템 ──────────────────────────────────────
 export interface DaeunItem {
   ganji: Ganji
@@ -38,7 +55,7 @@ export interface DaeunItem {
   endAge: number
 }
 
-// ── 사주 결과 ────────────────────────────────────────
+// ── 사주 결과 (전체) ─────────────────────────────────
 export interface SajuResult {
   input: SajuInput
   solarDate: { year: number; month: number; day: number }
@@ -47,6 +64,11 @@ export interface SajuResult {
   ilju: Ganji
   siju: Ganji
   sipsung: SipsungResult
+  twelveStages: TwelveStagesResult
+  gyeokguk: GyeokgukResult
+  sinsal: SinsalItem[]
+  gongmang: Gongmang
+  relations: RelationItem[]
   daeun: DaeunItem[]
   daeunStartAge: number
   jeolgiName: string

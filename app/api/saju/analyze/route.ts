@@ -29,7 +29,18 @@ export async function POST(req: Request) {
     const aiPrompt = sajuToAIPrompt(result)
 
     return NextResponse.json(
-      { success: true, data: result, aiPrompt },
+      {
+        success: true,
+        data: result,
+        aiPrompt,
+        costs: {
+          interpret: 2,      // AI 사주 해석: 2코인
+          fortune_today: 1,   // 일간 운세: 1코인
+          fortune_weekly: 1,  // 주간 운세: 1코인
+          fortune_monthly: 1, // 월간 운세: 1코인
+          fortune_yearly: 3,  // 년간 운세: 3코인
+        },
+      },
       { headers: corsHeaders },
     )
   } catch (error) {

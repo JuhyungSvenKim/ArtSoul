@@ -54,9 +54,11 @@ export default function Home() {
           <Link href="/" className="flex items-center gap-2">
             <span className="text-[#c8a45e] font-bold text-lg tracking-tight">ART.D.N.A.</span>
           </Link>
-          <div className="flex gap-6 text-sm">
+          <div className="flex gap-6 text-sm items-center">
             <Link href="/explore" className="text-[#888] hover:text-[#c8a45e] transition-colors">탐색</Link>
-            <Link href="/admin" className="text-[#888] hover:text-[#c8a45e] transition-colors">관리</Link>
+            <Link href="/charge" className="text-[#888] hover:text-[#c8a45e] transition-colors">충전</Link>
+            <Link href="/mypage" className="text-[#888] hover:text-[#c8a45e] transition-colors">마이</Link>
+            <Link href="/login" className="px-3 py-1 rounded-lg bg-[#c8a45e]/10 text-[#c8a45e] text-xs font-medium hover:bg-[#c8a45e]/20 transition-all">로그인</Link>
           </div>
         </div>
       </nav>

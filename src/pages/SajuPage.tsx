@@ -10,6 +10,8 @@ import { getOhaengBalance, getOhaengAnalysis, getYongsin, getLuckyItems, getPill
 import { analyzeYongsin } from "@/lib/saju/yongsin";
 import { matchSajuToCases, getTopBaseCases } from "@/lib/case-code";
 import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
+import CaseCodeArt from "@/components/CaseCodeArt";
+import { getRecommendedArtworks } from "@/data/sample-artworks";
 import { getCoinBalance, deductCoins, saveFortune, getLatestFortune } from "@/services/coins";
 import { callGemini } from "@/lib/gemini";
 
@@ -816,90 +818,101 @@ const SajuPage = () => {
         </div>
       </Section>
 
-      {/* 125 케이스코드 추천 */}
-      <Section title="ART DNA — 125 케이스코드">
-        <div className="space-y-4">
-          {/* 강화 용신 요약 */}
-          <div className="bg-card border border-border rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`text-lg font-bold ${getOhaengStyle(enhancedYongsin.dayOhaeng).text}`}>
-                {enhancedYongsin.dayOhaeng}
-              </span>
-              <span className="text-sm text-foreground">일간 · {enhancedYongsin.dayStrength}</span>
-              <span className="text-xs text-muted-foreground ml-auto">
-                용신: <span className={`font-semibold ${getOhaengStyle(enhancedYongsin.yongsin).text}`}>{enhancedYongsin.yongsin}</span>
-                {' · '}희신: {enhancedYongsin.huisin}
-              </span>
-            </div>
-            <p className="text-xs text-foreground/70">{enhancedYongsin.summary}</p>
-          </div>
+      {/* 나의 운명과 맞는 ARTs */}
+      <Section title="나의 운명과 맞는 ARTs">
+        <div className="space-y-5">
+          {/* 추천 요약 — 재미있게 */}
+          {(() => {
+            const top = caseCodeResults[0];
+            if (!top) return null;
+            const el = ELEMENT_MAP[top.element];
+            const en = ENERGY_MAP[top.energy];
+            const st = STYLE_MAP[top.style];
+            const yEl = enhancedYongsin.yongsin;
+            const dayOh = enhancedYongsin.dayOhaeng;
+            const strength = enhancedYongsin.dayStrength;
 
-          {/* Top 3 추천 케이스코드 */}
-          <div className="space-y-3">
-            {caseCodeResults.slice(0, 5).map((r, i) => {
+            const intro = strength === "강"
+              ? `${dayOh} 기운이 넘치는 당신, ${yEl}의 에너지가 담긴 그림이 사주의 열기를 식혀주고 마음에 균형을 가져다줄 거예요.`
+              : strength === "약"
+              ? `${dayOh}이(가) 조금 약한 당신에게 ${yEl}의 기운이 담긴 그림은 마치 좋은 보약 같은 존재예요. 공간에 두기만 해도 기운이 살아납니다.`
+              : `중화된 사주라 균형이 좋은 편이지만, ${yEl}의 포인트를 살짝 더하면 삶의 질이 확 달라질 수 있어요.`;
+
+            const artDesc = `${el?.labelKor}의 색감에 ${en?.labelKor}의 구도, ${st?.labelKor} 스타일 — 이 조합이 당신의 부족한 오행을 채워주면서도 자연스럽게 공간에 녹아듭니다.`;
+
+            return (
+              <div className="bg-card border border-primary/20 rounded-2xl p-5 glow-mystical">
+                <p className="text-sm font-semibold text-primary mb-2">당신의 사주가 부르는 그림</p>
+                <p className="text-sm text-foreground/85 leading-relaxed mb-3">{intro}</p>
+                <p className="text-xs text-foreground/70">{artDesc}</p>
+              </div>
+            );
+          })()}
+
+          {/* 추천 카드 3장 */}
+          <div className="grid grid-cols-3 gap-3">
+            {caseCodeResults.slice(0, 3).map((r, i) => {
               const el = ELEMENT_MAP[r.element];
               const en = ENERGY_MAP[r.energy];
               const st = STYLE_MAP[r.style];
               return (
-                <div key={r.caseCode} className="bg-card border border-border rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono px-2 py-0.5 rounded-full" style={{
-                        backgroundColor: `${el.color}20`, color: el.color, border: `1px solid ${el.color}40`
-                      }}>
-                        {r.caseCode}
-                      </span>
-                      <span className="text-sm font-semibold text-foreground">
-                        {i === 0 ? '최적 추천' : `${i + 1}순위`}
-                      </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                        {r.recommendationType === '보완형' ? '보완' : '활용'}
-                      </span>
-                    </div>
-                    <span className="text-lg font-bold text-primary">{r.totalScore}<span className="text-xs text-muted-foreground">점</span></span>
+                <div key={r.caseCode} className={`rounded-xl overflow-hidden border transition-all ${i === 0 ? "border-primary/30 glow-gold" : "border-border"}`}>
+                  <div className="aspect-[3/4]">
+                    <CaseCodeArt element={r.element} energy={r.energy} style={r.style} />
                   </div>
-
-                  <div className="grid grid-cols-3 gap-2 text-center mb-2">
-                    <div className="bg-surface rounded-lg py-1.5">
-                      <p className="text-[10px] text-muted-foreground">{el.labelKor}</p>
-                      <p className="text-xs font-medium" style={{ color: el.color }}>{el.label}</p>
-                    </div>
-                    <div className="bg-surface rounded-lg py-1.5">
-                      <p className="text-[10px] text-muted-foreground">에너지</p>
-                      <p className="text-xs font-medium text-foreground">{en.labelKor}</p>
-                    </div>
-                    <div className="bg-surface rounded-lg py-1.5">
-                      <p className="text-[10px] text-muted-foreground">스타일</p>
-                      <p className="text-xs font-medium text-foreground">{st.labelKor}</p>
+                  <div className="p-3 bg-surface">
+                    <p className="text-xs font-medium text-foreground">{el?.labelKor} · {en?.labelKor}</p>
+                    <p className="text-[10px] text-muted-foreground">{st?.labelKor} 스타일</p>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-[10px] text-primary font-medium">{i === 0 ? "최적 추천" : `${i + 1}순위`}</span>
+                      <span className="text-xs font-bold text-primary">{r.totalScore}점</span>
                     </div>
                   </div>
-
-                  <p className="text-xs text-foreground/70">{r.reason}</p>
                 </div>
               );
             })}
           </div>
 
-          {/* Base Case 요약 */}
-          {topBaseCases.length > 0 && (
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-2">Base Case (오행 × 에너지)</p>
-              <div className="flex gap-2">
-                {topBaseCases.map((bc) => {
-                  const el = ELEMENT_MAP[bc.element];
-                  const en = ENERGY_MAP[bc.energy];
-                  return (
-                    <div key={bc.baseCode} className="flex-1 text-center py-2 rounded-lg border" style={{
-                      backgroundColor: `${el.color}10`, borderColor: `${el.color}30`
-                    }}>
-                      <p className="text-sm font-mono font-bold" style={{ color: el.color }}>{bc.baseCode}</p>
-                      <p className="text-[10px] text-muted-foreground">{el.labelKor} × {en.labelKor}</p>
-                    </div>
-                  );
-                })}
+          {/* 왜 이 그림인지 설명 */}
+          {(() => {
+            const top3 = caseCodeResults.slice(0, 3);
+            const yEl = enhancedYongsin.yongsin;
+            const elements = [...new Set(top3.map(r => ELEMENT_MAP[r.element]?.labelKor))].join(', ');
+            const energies = [...new Set(top3.map(r => ENERGY_MAP[r.energy]?.labelKor))].join(', ');
+            const styles = [...new Set(top3.map(r => STYLE_MAP[r.style]?.labelKor))].join(', ');
+
+            return (
+              <div className="bg-surface rounded-xl p-4">
+                <p className="text-xs text-primary font-medium mb-2">왜 이 그림들일까요?</p>
+                <p className="text-xs text-foreground/80 leading-relaxed">
+                  당신의 용신인 <span className={`font-semibold ${getOhaengStyle(yEl).text}`}>{yEl}</span> 오행이 부족하기 때문에,
+                  {' '}{elements} 계열의 색감이 사주 균형을 맞춰줍니다.
+                  {' '}{energies} 에너지의 구도가 공간에 적절한 기운을 불어넣고,
+                  {' '}{styles} 스타일이 당신의 취향과 사주 모두를 만족시킵니다.
+                </p>
               </div>
+            );
+          })()}
+
+          {/* 추천 작품 (DB/샘플) */}
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-3">이런 작품은 어떠세요?</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {(() => {
+                const codes = caseCodeResults.slice(0, 4).map(r => r.caseCode);
+                const arts = getRecommendedArtworks(codes, 4);
+                return arts.map((art: any) => (
+                  <div key={art.id} className="group cursor-pointer" onClick={() => navigate(`/artwork/${art.id}`)}>
+                    <div className="aspect-square rounded-xl overflow-hidden border border-border mb-2 transition-all group-hover:border-primary/30">
+                      <CaseCodeArt element={art.element} energy={art.energy} style={art.style} />
+                    </div>
+                    <p className="text-xs font-medium text-foreground truncate">{art.title.split("—")[0].trim()}</p>
+                    <p className="text-[10px] text-muted-foreground">{art.artist}</p>
+                  </div>
+                ));
+              })()}
             </div>
-          )}
+          </div>
         </div>
       </Section>
 

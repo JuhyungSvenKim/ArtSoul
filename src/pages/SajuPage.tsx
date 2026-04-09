@@ -303,9 +303,44 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
     harmonyNote = `귀인과 살이 ${posCount}:${negCount}으로 균형. 기회와 시련이 교대로 오는 리듬이 있는 사주야. ${dayOh} 일간이 용신 ${yongsinOh}를 중심에 두면, 귀인은 더 강해지고 살은 에너지원으로 전환됨`;
   }
 
+  // 주 안에서의 의미 생성 (신살 + 위치 조합)
+  const getSinsalInContext = (s: SinsalItem) => {
+    const pos = s.position;
+    const posLabel = positionMeaning[pos];
+    const detail = SINSAL_DETAIL[s.name];
+    const siblings = groups[pos] || [];
+    const hasBoth = siblings.some(x => x.effect === 'positive') && siblings.some(x => x.effect === 'negative');
+
+    // 이 주에서 이 신살이 뭘 뜻하는지
+    let contextNote = '';
+    if (s.effect === 'positive') {
+      contextNote = `${pos}(${posLabel})에 있으니, ${posLabel.split('·')[0]} 쪽에서 이 귀인의 힘이 작동해. `;
+      if (pos === '시주') contextNote += '말년이 편안하거나 자녀 복이 있을 수 있음';
+      else if (pos === '일주') contextNote += '본인한테 직접 붙어있는 복이라 체감이 강함';
+      else if (pos === '월주') contextNote += '직장이나 사회생활에서 도움을 받기 쉬운 위치';
+      else if (pos === '연주') contextNote += '어릴 때부터 타고난 운이거나, 외부에서 복이 들어옴';
+    } else {
+      contextNote = `${pos}(${posLabel})에 있으니, ${posLabel.split('·')[0]} 쪽에서 이 에너지가 나타나기 쉬워. `;
+      if (pos === '시주') contextNote += '말년이나 결과물에서 변동이 생길 수 있음';
+      else if (pos === '일주') contextNote += '본인 성격이나 배우자 관계에 직접 영향';
+      else if (pos === '월주') contextNote += '직장, 사회생활에서 마찰이나 긴장이 생기기 쉬운 위치';
+      else if (pos === '연주') contextNote += '어린 시절 경험이나 외부 환경에서의 영향';
+    }
+
+    // 같은 주에 좋은살+나쁜살 공존 시 보완 해석
+    let complementNote = '';
+    if (hasBoth) {
+      const posGood = siblings.filter(x => x.effect === 'positive').map(x => x.name);
+      const posBad = siblings.filter(x => x.effect === 'negative').map(x => x.name);
+      complementNote = `같은 ${pos}에 ${posGood.join('·')}과(와) ${posBad.join('·')}이(가) 함께 있어서 서로 보완됨. 살의 날카로움을 귀인이 감싸주는 구조라 위기가 와도 반등이 빠른 편`;
+    }
+
+    return { contextNote, complementNote };
+  };
+
   return (
     <div className="space-y-5">
-      {/* 1) 4주별 배치 — 클릭하면 개별 해설 토글 */}
+      {/* 1) 4주별 배치 — 클릭하면 그 자리에서 해설 펼침 */}
       <div className="grid grid-cols-4 gap-2">
         {['시주', '일주', '월주', '연주'].map(pos => (
           <div key={pos}>
@@ -315,42 +350,43 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
               {groups[pos].length === 0 ? (
                 <p className="text-[10px] text-muted-foreground/30 text-center py-2">—</p>
               ) : (
-                groups[pos].map((s, i) => (
-                  <button key={i} onClick={() => setExpanded(expanded === s.name ? null : s.name)}
-                    className={`w-full text-[10px] px-1.5 py-1 rounded text-center font-medium border transition-all ${effectStyle(s.effect)} ${expanded === s.name ? "ring-1 ring-primary/30" : ""}`}>
-                    {s.name}
-                  </button>
-                ))
+                groups[pos].map((s, i) => {
+                  const key = `${pos}-${s.name}`;
+                  const isOpen = expanded === key;
+                  const detail = SINSAL_DETAIL[s.name];
+                  const { contextNote, complementNote } = getSinsalInContext(s);
+                  return (
+                    <div key={i}>
+                      <button onClick={() => setExpanded(isOpen ? null : key)}
+                        className={`w-full text-[10px] px-1.5 py-1 rounded text-center font-medium border transition-all ${effectStyle(s.effect)} ${isOpen ? "ring-1 ring-primary/30" : ""}`}>
+                        {s.name}
+                      </button>
+                      {isOpen && (
+                        <div className="mt-1.5 p-2.5 bg-card border border-border rounded-lg animate-fade-in text-left space-y-1.5">
+                          {detail ? (
+                            <>
+                              <p className="text-[11px] text-foreground/90 leading-relaxed">{detail.vibe}</p>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">{contextNote}</p>
+                              {complementNote && <p className="text-[10px] text-primary/80 leading-relaxed">{complementNote}</p>}
+                              <p className="text-[10px] text-muted-foreground/60">{detail.tip}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-[11px] text-foreground/80 leading-relaxed">{s.description}</p>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">{contextNote}</p>
+                              {complementNote && <p className="text-[10px] text-primary/80 leading-relaxed">{complementNote}</p>}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
         ))}
       </div>
-
-      {/* 2) 클릭한 신살 개별 해설 (하나씩) */}
-      {expanded && (() => {
-        const s = sinsal.find(x => x.name === expanded);
-        const detail = SINSAL_DETAIL[expanded];
-        if (!s) return null;
-        return (
-          <div className="bg-card border border-border rounded-xl p-4 animate-fade-in">
-            <div className="flex items-start gap-3">
-              <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium border ${effectStyle(s.effect)}`}>{s.name}</span>
-              <div className="flex-1">
-                {detail ? (
-                  <>
-                    <p className="text-xs text-foreground/90 leading-relaxed">{detail.vibe}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">{detail.tip}</p>
-                  </>
-                ) : (
-                  <p className="text-xs text-foreground/80 leading-relaxed">{s.description}</p>
-                )}
-                <p className="text-[9px] text-muted-foreground/60 mt-1.5">{s.position}에 위치 → {positionMeaning[s.position]}에 영향</p>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* 3) 전체 신살 해설 리스트 */}
       <div className="bg-surface border border-border rounded-xl p-4">

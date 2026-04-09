@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import { supabase } from "@/lib/supabase";
+import { getCoinPricing, setCoinPricing, type CoinPricing } from "@/lib/coin-pricing";
 import {
   MEDIUM_OPTIONS, SUBJECT_OPTIONS, STYLE_OPTIONS, COLOR_OPTIONS, ENERGY_OPTIONS,
   calculateOhaengScores, getPrimaryOhaeng, getAutoEumYang, getAutoEnergyLevel,
@@ -15,7 +16,7 @@ const OHAENG_TEXT: Record<string, string> = {
   목: "text-green-400", 화: "text-red-400", 토: "text-yellow-400", 금: "text-gray-300", 수: "text-blue-400",
 };
 
-type ViewMode = "list" | "create" | "artists";
+type ViewMode = "list" | "create" | "artists" | "settings";
 
 interface ArtistApplication {
   portfolio: string;
@@ -166,6 +167,7 @@ const AdminPage = () => {
           { key: "list" as ViewMode, label: "작품 목록" },
           { key: "create" as ViewMode, label: "작품 등록" },
           { key: "artists" as ViewMode, label: "작가 승인" },
+          { key: "settings" as ViewMode, label: "설정" },
         ]).map((tab) => (
           <button key={tab.key} onClick={() => setMode(tab.key)}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
@@ -325,9 +327,67 @@ const AdminPage = () => {
           ))}
         </div>
       )}
+
+      {/* ── 설정 (코인 비용) ──────────────────────────── */}
+      {mode === "settings" && <CoinPricingSettings onSave={() => { setSuccess("설정이 저장되었습니다"); setTimeout(() => setSuccess(null), 2000); }} />}
     </PageContainer>
   );
 };
+
+// ── 코인 비용 설정 컴포넌트 ────────────────────────
+function CoinPricingSettings({ onSave }: { onSave: () => void }) {
+  const [pricing, setPricingState] = useState<CoinPricing>(getCoinPricing);
+
+  const update = (key: keyof CoinPricing, value: number) => {
+    setPricingState(prev => ({ ...prev, [key]: Math.max(0, value) }));
+  };
+
+  const handleSave = () => {
+    setCoinPricing(pricing);
+    onSave();
+  };
+
+  const fields: { key: keyof CoinPricing; label: string; icon: string }[] = [
+    { key: "aiInterpretation", label: "AI 사주 해석", icon: "🔮" },
+    { key: "fortuneToday", label: "오늘의 운세", icon: "☀️" },
+    { key: "fortuneWeek", label: "금주의 운세", icon: "📅" },
+    { key: "fortuneMonth", label: "월간 운세", icon: "🗓️" },
+    { key: "fortuneYear", label: "올해 운세", icon: "🎯" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="text-sm font-semibold text-foreground mb-1">코인 비용 설정</p>
+        <p className="text-xs text-muted-foreground">각 기능에 필요한 코인 수를 설정합니다. 0으로 설정하면 무료입니다.</p>
+      </div>
+
+      <div className="space-y-3">
+        {fields.map(({ key, label, icon }) => (
+          <div key={key} className="bg-surface border border-border rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">{icon}</span>
+              <span className="text-sm text-foreground">{label}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => update(key, pricing[key] - 1)}
+                className="w-8 h-8 rounded-lg bg-card border border-border text-foreground flex items-center justify-center hover:border-primary/30">−</button>
+              <span className="w-10 text-center text-sm font-bold text-primary">{pricing[key]}</span>
+              <button onClick={() => update(key, pricing[key] + 1)}
+                className="w-8 h-8 rounded-lg bg-card border border-border text-foreground flex items-center justify-center hover:border-primary/30">+</button>
+              <span className="text-xs text-muted-foreground ml-1">코인</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button onClick={handleSave}
+        className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm">
+        설정 저장
+      </button>
+    </div>
+  );
+}
 
 // ── 하위 컴포넌트 ──────────────────────────────────
 

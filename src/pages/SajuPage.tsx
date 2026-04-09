@@ -197,10 +197,12 @@ function RelationsList({ relations }: { relations: RelationItem[] }) {
   );
 }
 
-// ── AI 해석 (코인 5개 + 1달 캐싱) ──────────────────
-const AI_INTERPRETATION_COST = 5;
+// ── AI 해석 (코인 동적 — 어드민 설정) ────────────────
+import { getCoinPricing } from "@/lib/coin-pricing";
 
 function AIInterpretation({ prompt, userId }: { prompt: string; userId: string | null }) {
+  const pricing = getCoinPricing();
+  const AI_INTERPRETATION_COST = pricing.aiInterpretation;
   const [interpretation, setInterpretation] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -316,9 +318,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-// ── 운세 타입 정의 ──────────────────────────────────
-const FORTUNE_TYPES = [
-  { key: 'today' as const, label: '오늘의 운세', cost: 1, icon: '☀️', promptExtra: `오늘 하루의 운세를 써주세요.
+// ── 운세 타입 정의 (비용은 동적) ────────────────────
+function getFortuneTypes() {
+  const p = getCoinPricing();
+  return [
+  { key: 'today' as const, label: '오늘의 운세', cost: p.fortuneToday, icon: '☀️', promptExtra: `오늘 하루의 운세를 써주세요.
 
 톤: 아침에 읽으면 기분 좋아지는 친한 언니/형 느낌. 가볍지만 찔리는 한마디가 있어야 함.
 구조: 오늘의 키워드 한 줄 → 전체 운세 (3~4줄) → 재물 한줄팁 → 연애 한줄팁 → 건강 한줄팁 → 오늘의 행동 조언 한 줄
@@ -345,13 +349,14 @@ const FORTUNE_TYPES = [
 구조: 올해의 한 줄 정의 → 대운과의 관계 → 1분기(1~3월)/2분기(4~6월)/3분기(7~9월)/4분기(10~12월) 각 한 단락 → 재물운 총평 → 연애운 총평 → 직업운 총평 → 건강 총평 → 올해를 관통하는 조언 한 문장
 예시 첫줄: "2026년은 당신에게 '선택의 해'입니다. 올해 고른 길이 향후 10년을 결정합니다."
 대운 흐름과 연결해서 왜 올해가 중요한지 설득력 있게.` },
-] as const;
+  ];
+}
 
 // ── 운세 섹션 (캐싱 지원) ───────────────────────────
 function FortuneSection({ prompt, userId }: { prompt: string; userId: string | null }) {
   const navigate = useNavigate();
   const [coins, setCoins] = useState<number | null>(null);
-  const [activeType, setActiveType] = useState<typeof FORTUNE_TYPES[number]['key'] | null>(null);
+  const [activeType, setActiveType] = useState<string | null>(null);
   const [fortuneResult, setFortuneResult] = useState<string | null>(null);
   const [fortuneExpiry, setFortuneExpiry] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -367,14 +372,14 @@ function FortuneSection({ prompt, userId }: { prompt: string; userId: string | n
     }
     // 캐시에서 기존 운세 로드
     const cached: Record<string, { text: string; expiresAt: string }> = {};
-    for (const type of FORTUNE_TYPES) {
+    for (const type of getFortuneTypes()) {
       const c = loadCache(`fortune_${type.key}`);
       if (c) cached[type.key] = { text: c.text, expiresAt: c.expiresAt };
     }
     setCachedFortunes(cached);
   }, [userId]);
 
-  const handleFortune = async (type: typeof FORTUNE_TYPES[number]) => {
+  const handleFortune = async (type: any) => {
     // 캐시가 있으면 그냥 보여줌
     if (cachedFortunes[type.key]) {
       setActiveType(type.key);
@@ -453,7 +458,7 @@ ${prompt}`;
 
       {/* 운세 버튼 4개 */}
       <div className="grid grid-cols-2 gap-2">
-        {FORTUNE_TYPES.map((type) => {
+        {getFortuneTypes().map((type) => {
           const hasCached = !!cachedFortunes[type.key];
           return (
             <button
@@ -512,8 +517,8 @@ ${prompt}`;
         <div className="bg-card border border-border rounded-xl p-4 glow-mystical animate-fade-in">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm">{FORTUNE_TYPES.find(t => t.key === activeType)?.icon}</span>
-              <p className="text-sm font-medium text-primary">{FORTUNE_TYPES.find(t => t.key === activeType)?.label}</p>
+              <span className="text-sm">{getFortuneTypes().find(t => t.key === activeType)?.icon}</span>
+              <p className="text-sm font-medium text-primary">{getFortuneTypes().find(t => t.key === activeType)?.label}</p>
             </div>
             {fortuneExpiry && (
               <span className="text-[10px] text-muted-foreground">{getRemainingText(fortuneExpiry)}</span>

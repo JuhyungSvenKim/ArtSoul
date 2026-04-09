@@ -53,14 +53,15 @@ const OHAENG_ARTWORKS: Record<string, Array<{ id: string; title: string; artist:
   ],
 };
 
-// localStorage에서 직접 onboarding 데이터 읽기
-function readOnboardingData() {
+// 사주 입력 데이터 읽기 (직접 저장 + zustand persist)
+function getSajuInput() {
+  try {
+    const direct = localStorage.getItem("artsoul-saju-input");
+    if (direct) { const d = JSON.parse(direct); if (d.birthDate && d.gender) return d; }
+  } catch {}
   try {
     const raw = localStorage.getItem("artsoul-onboarding");
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    const s = parsed.state || parsed;
-    if (s.birthDate && s.gender) return s;
+    if (raw) { const p = JSON.parse(raw); const s = p.state || p; if (s.birthDate && s.gender) return s; }
   } catch {}
   return null;
 }
@@ -69,17 +70,14 @@ const HomePage = () => {
   const navigate = useNavigate();
   const store = useOnboardingStore();
   const [subTab, setSubTab] = useState<"recommend" | "saju">("recommend");
-  const [, setTick] = useState(0);
+  const [directData, setDirectData] = useState<any>(null);
 
-  // hydration 대기
-  useEffect(() => { const t = setTimeout(() => setTick(1), 150); return () => clearTimeout(t); }, []);
+  useEffect(() => { const d = getSajuInput(); if (d) setDirectData(d); }, []);
 
-  const { nameKorean, birthDate, birthTime, gender } = useMemo(() => {
-    if (store.birthDate && store.gender) return store;
-    const ls = readOnboardingData();
-    if (ls) return ls;
-    return store;
-  }, [store.birthDate, store.gender, store.nameKorean, store.birthTime]);
+  const nameKorean = store.nameKorean || directData?.nameKorean || '';
+  const birthDate = store.birthDate || directData?.birthDate || '';
+  const birthTime = store.birthTime || directData?.birthTime || null;
+  const gender = store.gender || directData?.gender || null;
 
   const analysis = useMemo(() => {
     if (!birthDate || !gender) return null;

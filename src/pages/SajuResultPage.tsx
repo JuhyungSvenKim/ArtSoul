@@ -16,14 +16,24 @@ const OHAENG_COLORS: Record<string, { bg: string; text: string }> = {
   수: { bg: "bg-blue-500/20", text: "text-blue-400" },
 };
 
-// localStorage에서 직접 onboarding 데이터 읽기 (zustand hydration 무관)
-function readOnboardingData() {
+// 사주 입력 데이터 읽기 (3중 fallback)
+function getSajuInput() {
+  // 1순위: BirthInfoPage에서 직접 저장한 값
+  try {
+    const direct = localStorage.getItem("artsoul-saju-input");
+    if (direct) {
+      const d = JSON.parse(direct);
+      if (d.birthDate && d.gender) return d;
+    }
+  } catch {}
+  // 2순위: zustand persist 저장소
   try {
     const raw = localStorage.getItem("artsoul-onboarding");
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    const s = parsed.state || parsed;
-    if (s.birthDate && s.gender) return s;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const s = parsed.state || parsed;
+      if (s.birthDate && s.gender) return s;
+    }
   } catch {}
   return null;
 }
@@ -31,28 +41,19 @@ function readOnboardingData() {
 const SajuResultPage = () => {
   const navigate = useNavigate();
   const store = useOnboardingStore();
-  const [hydrated, setHydrated] = useState(false);
+  const [directData, setDirectData] = useState<any>(null);
 
-  // zustand hydration 완료 대기 + localStorage 직접 읽기
+  // mount 시 localStorage에서 직접 읽기
   useEffect(() => {
-    // 즉시 한번, 100ms 후 한번 더 체크 (hydration 타이밍 보장)
-    setHydrated(true);
-    const timer = setTimeout(() => setHydrated((v) => !v || true), 150);
-    return () => clearTimeout(timer);
+    const d = getSajuInput();
+    if (d) setDirectData(d);
   }, []);
 
-  const data = useMemo(() => {
-    // 1순위: zustand store
-    if (store.birthDate && store.gender) {
-      return { nameKorean: store.nameKorean, birthDate: store.birthDate, birthTime: store.birthTime, gender: store.gender };
-    }
-    // 2순위: localStorage 직접
-    const ls = readOnboardingData();
-    if (ls) return { nameKorean: ls.nameKorean || '', birthDate: ls.birthDate, birthTime: ls.birthTime, gender: ls.gender };
-    return null;
-  }, [store.birthDate, store.gender, store.nameKorean, store.birthTime, hydrated]);
-
-  const { nameKorean, birthDate, birthTime, gender } = data || { nameKorean: '', birthDate: '', birthTime: null, gender: null };
+  // store 또는 직접 읽은 데이터
+  const nameKorean = store.nameKorean || directData?.nameKorean || '';
+  const birthDate = store.birthDate || directData?.birthDate || '';
+  const birthTime = store.birthTime || directData?.birthTime || null;
+  const gender = store.gender || directData?.gender || null;
 
   const analysis = useMemo(() => {
     if (!birthDate || !gender) return null;

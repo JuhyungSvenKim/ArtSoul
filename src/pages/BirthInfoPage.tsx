@@ -100,6 +100,8 @@ const BirthInfoPage = () => {
       const user = await createUser(data);
       setBirthInfo(data);
       setUserId(user.id);
+      // zustand persist 외에 직접 저장 (hydration 문제 우회)
+      localStorage.setItem("artsoul-saju-input", JSON.stringify(data));
       navigate("/mbti");
     } catch (e: any) {
       console.error("Failed to save:", e);

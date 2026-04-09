@@ -22,6 +22,7 @@ import SajuChatPage from "./pages/SajuChatPage";
 import CoinShopPage from "./pages/CoinShopPage";
 import AdminPage from "./pages/AdminPage";
 import ArtworkDetailPage from "./pages/ArtworkDetailPage";
+import CartPage from "./pages/CartPage";
 import PurchaseFlowPage from "./pages/PurchaseFlowPage";
 import RentalFlowPage from "./pages/RentalFlowPage";
 import ArtistProfilePage from "./pages/ArtistProfilePage";
@@ -54,6 +55,7 @@ const App = () => (
           {/* 서브 */}
           <Route path="/saju" element={<SajuPage />} />
           <Route path="/saju-chat" element={<SajuChatPage />} />
+          <Route path="/cart" element={<CartPage />} />
           <Route path="/coin-shop" element={<CoinShopPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/artwork/:id" element={<ArtworkDetailPage />} />

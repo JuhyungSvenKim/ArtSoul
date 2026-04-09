@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Heart, Share2, ChevronLeft, Palette, MapPin, Sparkles } from "lucide-react";
+import { Heart, Share2, ChevronLeft, Palette, MapPin, Sparkles, ShoppingBag } from "lucide-react";
 import CaseCodeArt from "@/components/CaseCodeArt";
 import { getSampleArtworks } from "@/data/sample-artworks";
 import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
 import { curate, calculateRentalPrice } from "@/lib/curation-engine";
+import { addToCart } from "@/lib/cart";
 
 // localStorage에서 사주 데이터 읽기
 function loadUserSaju() {
@@ -199,15 +200,34 @@ const ArtworkDetailPage = () => {
               }`}>
               <Heart className="w-5 h-5" fill={isLiked ? "currentColor" : "none"} />
             </button>
-            <button className="w-11 h-11 rounded-xl border border-border flex items-center justify-center text-muted-foreground">
-              <Share2 className="w-5 h-5" />
+            <button onClick={() => {
+              addToCart({
+                artworkId: artwork.id, title: artwork.title, artist: artwork.artist,
+                element: artwork.element, energy: artwork.energy, style: artwork.style,
+                purchasePrice, rentalPrice, type: "purchase", addedAt: "",
+              });
+              alert("장바구니에 담았습니다!");
+            }} className="w-11 h-11 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 transition-colors">
+              <ShoppingBag className="w-5 h-5" />
             </button>
-            <button onClick={() => navigate(`/rental?title=${encodeURIComponent(artwork.title)}&price=${rentalPrice}`)}
-              className="flex-1 py-3 rounded-xl border border-primary/40 text-sm font-medium text-primary">
+            <button onClick={() => {
+              addToCart({
+                artworkId: artwork.id, title: artwork.title, artist: artwork.artist,
+                element: artwork.element, energy: artwork.energy, style: artwork.style,
+                purchasePrice, rentalPrice, type: "rental", addedAt: "",
+              });
+              navigate("/cart");
+            }} className="flex-1 py-3 rounded-xl border border-primary/40 text-sm font-medium text-primary">
               렌탈 월 ₩{rentalPrice.toLocaleString()}
             </button>
-            <button onClick={() => navigate(`/purchase?title=${encodeURIComponent(artwork.title)}&price=${purchasePrice}`)}
-              className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
+            <button onClick={() => {
+              addToCart({
+                artworkId: artwork.id, title: artwork.title, artist: artwork.artist,
+                element: artwork.element, energy: artwork.energy, style: artwork.style,
+                purchasePrice, rentalPrice, type: "purchase", addedAt: "",
+              });
+              navigate("/cart");
+            }} className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
               구매 ₩{purchasePrice.toLocaleString()}
             </button>
           </div>

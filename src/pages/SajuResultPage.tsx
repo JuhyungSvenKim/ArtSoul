@@ -49,8 +49,13 @@ const SajuResultPage = () => {
   const birthTime = data?.birthTime || null;
   const gender = data?.gender || null;
 
+  const [calcError, setCalcError] = useState<string | null>(null);
+
   const analysis = useMemo(() => {
-    if (!birthDate || !gender) return null;
+    if (!birthDate || !gender) {
+      setCalcError?.(`데이터 없음: birthDate=${birthDate}, gender=${gender}, hash=${window.location.hash.slice(1, 20)}...`);
+      return null;
+    }
     try {
       const [y, m, d] = birthDate.split("-").map(Number);
       const hour = birthTime ? Number(birthTime.split(":")[0]) : 12;
@@ -74,17 +79,23 @@ const SajuResultPage = () => {
       const topCase = recommendation.all[0];
 
       return { result, yongsin, lucky, enhancedYongsin, topCase, balance };
-    } catch {
+    } catch (e: any) {
+      setCalcError?.(`사주 계산 오류: ${e?.message || e}`);
       return null;
     }
   }, [birthDate, birthTime, gender]);
 
   if (!analysis) {
     return (
-      <PageContainer className="items-center justify-center text-center">
-        <p className="text-muted-foreground">사주 정보가 없습니다.</p>
+      <PageContainer className="items-center justify-center text-center gap-4">
+        <p className="text-muted-foreground">사주 분석 중 문제가 발생했습니다.</p>
+        {calcError && <p className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2 text-left max-w-sm break-all">{calcError}</p>}
+        <p className="text-[10px] text-muted-foreground bg-surface rounded-lg px-3 py-2 text-left max-w-sm break-all">
+          hash: {window.location.hash.slice(0, 50)}...
+          <br />data: {data ? JSON.stringify(data).slice(0, 100) : "null"}
+        </p>
         <button onClick={() => navigate("/birth-info")}
-          className="mt-4 text-primary text-sm">다시 입력하기</button>
+          className="mt-2 px-6 py-2 rounded-lg bg-primary text-primary-foreground text-sm">다시 입력하기</button>
       </PageContainer>
     );
   }

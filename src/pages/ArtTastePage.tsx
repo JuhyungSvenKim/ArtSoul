@@ -44,7 +44,7 @@ const ArtTastePage = () => {
       } finally {
         setSaving(false);
       }
-      setTimeout(() => navigate("/art-dna"), 400);
+      setTimeout(() => navigate("/result"), 400);
     } else {
       setTimeout(() => setRound(round + 1), 300);
     }
@@ -52,7 +52,7 @@ const ArtTastePage = () => {
 
   const handleSkip = () => {
     if (isLastRound) {
-      navigate("/art-dna");
+      navigate("/result");
     } else {
       setRound(round + 1);
     }

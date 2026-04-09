@@ -96,7 +96,7 @@ const BirthInfoPage = () => {
       const user = await createUser(data);
       setBirthInfo(data);
       setUserId(user.id);
-      navigate("/result");
+      navigate("/mbti");
     } catch (e: any) {
       console.error("Failed to save:", e);
       setError(e.message || "저장에 실패했습니다. 다시 시도해주세요.");

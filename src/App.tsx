@@ -7,6 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 // 온보딩 플로우
 import LoginPage from "./pages/LoginPage";
 import BirthInfoPage from "./pages/BirthInfoPage";
+import MbtiPage from "./pages/MbtiPage";
+import ArtTastePage from "./pages/ArtTastePage";
 import SajuResultPage from "./pages/SajuResultPage";
 
 // 메인 탭
@@ -37,9 +39,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* 온보딩: 로그인 → 사주 입력 → 결과 → 메인 */}
+          {/* 온보딩: 로그인 → 사주입력 → MBTI → 취향테스트 → 결과 → 메인 */}
           <Route path="/" element={<LoginPage />} />
           <Route path="/birth-info" element={<BirthInfoPage />} />
+          <Route path="/mbti" element={<MbtiPage />} />
+          <Route path="/art-taste" element={<ArtTastePage />} />
           <Route path="/result" element={<SajuResultPage />} />
 
           {/* 메인 3탭 */}

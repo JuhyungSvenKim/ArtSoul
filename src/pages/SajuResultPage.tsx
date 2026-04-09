@@ -18,7 +18,22 @@ const OHAENG_COLORS: Record<string, { bg: string; text: string }> = {
 
 const SajuResultPage = () => {
   const navigate = useNavigate();
-  const { nameKorean, birthDate, birthTime, gender } = useOnboardingStore();
+  const store = useOnboardingStore();
+
+  // store에서 읽기 + localStorage 직접 fallback
+  const { nameKorean, birthDate, birthTime, gender } = useMemo(() => {
+    if (store.birthDate && store.gender) return store;
+    // zustand persist가 아직 hydrate 안 됐을 수 있음 → localStorage 직접 읽기
+    try {
+      const raw = localStorage.getItem("artsoul-onboarding");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const s = parsed.state || parsed;
+        if (s.birthDate && s.gender) return s;
+      }
+    } catch {}
+    return store;
+  }, [store]);
 
   const analysis = useMemo(() => {
     if (!birthDate || !gender) return null;

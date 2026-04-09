@@ -14,28 +14,29 @@ const tabs = [
 const TabBar = ({ activeTab }: TabBarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const currentTab = activeTab || tabs.find((t) => location.pathname.startsWith(t.path))?.key;
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-card/80 backdrop-blur-xl border-t border-border z-50">
-      <div className="flex items-center justify-around py-2 pb-[env(safe-area-inset-bottom,8px)]">
-        {tabs.map((tab) => {
-          const isActive = currentTab === tab.key;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => navigate(tab.path)}
-              className={`flex flex-col items-center gap-0.5 px-6 py-1.5 transition-colors ${
-                isActive ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 1.5} />
-              <span className="text-[10px] font-medium">{tab.label}</span>
-            </button>
-          );
-        })}
+    <nav className="fixed top-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-b border-border z-50">
+      <div className="max-w-5xl mx-auto flex items-center justify-between px-6 lg:px-12 h-14">
+        <button onClick={() => navigate("/home")} className="text-lg font-display text-gold-gradient font-semibold tracking-tight">
+          ART.D.N.A.
+        </button>
+        <div className="flex items-center gap-1">
+          {tabs.map((tab) => {
+            const isActive = currentTab === tab.key;
+            const Icon = tab.icon;
+            return (
+              <button key={tab.key} onClick={() => navigate(tab.path)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}>
+                <Icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );

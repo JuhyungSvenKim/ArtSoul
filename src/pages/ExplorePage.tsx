@@ -45,7 +45,7 @@ const ExplorePage = () => {
   }, [allArtworks, selectedElement, selectedStyle, query]);
 
   return (
-    <PageContainer className="pb-24">
+    <PageContainer className="pt-20">
       {/* 검색 */}
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -98,7 +98,7 @@ const ExplorePage = () => {
       <p className="text-xs text-muted-foreground mb-3">{filtered.length}개 작품</p>
 
       {/* 그리드 */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {filtered.slice(0, 30).map((art) => {
           const el = ELEMENT_MAP[art.element];
           return (

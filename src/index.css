@@ -98,8 +98,4 @@
   .glow-mystical {
     box-shadow: 0 0 30px hsl(var(--mystical-glow) / 0.1), 0 0 80px hsl(var(--gold) / 0.05);
   }
-
-  .mobile-container {
-    @apply mx-auto w-full max-w-[430px] min-h-screen;
-  }
 }

@@ -40,7 +40,7 @@ const MyPage = () => {
   const displayMbti = mbti || MOCK_USER.mbti;
 
   return (
-    <PageContainer className="pb-24">
+    <PageContainer className="pt-20">
       {/* Profile */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">

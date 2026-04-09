@@ -567,7 +567,7 @@ const SajuPage = () => {
 
   if (!result) {
     return (
-      <PageContainer className="pb-24">
+      <PageContainer className="pt-20">
         <h1 className="text-2xl font-display text-gold-gradient font-semibold mb-2">사주팔자 분석</h1>
         <p className="text-sm text-muted-foreground mb-8">생년월일시를 입력하면 사주를 분석해드립니다</p>
         <SajuInputForm onAnalyze={setResult} />
@@ -599,7 +599,7 @@ const SajuPage = () => {
   const topBaseCases = getTopBaseCases(caseCodeRecommendation, 3);
 
   return (
-    <PageContainer className="pb-24">
+    <PageContainer className="pt-20">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-display text-gold-gradient font-semibold">사주팔자 분석 결과</h1>

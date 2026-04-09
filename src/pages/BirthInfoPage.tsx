@@ -66,7 +66,7 @@ const BirthInfoPage = () => {
     ? `${timeDigits.slice(0, 2)}:${timeDigits.slice(2).padEnd(2, "0")}`
     : "";
 
-  const isValid = birthDate && name && gender;
+  const isValid = birthDate && name && gender && (birthTime || unknownTime);
 
   // 위치 기반 시간대 자동 감지
   useEffect(() => {
@@ -191,7 +191,32 @@ const BirthInfoPage = () => {
 
         {/* 태어난 시간 */}
         <section className="space-y-2">
-          <label className="text-sm font-medium text-foreground">태어난 시간</label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-foreground">태어난 시간 *</label>
+            <details className="relative">
+              <summary className="text-[10px] text-primary cursor-pointer hover:underline">생시를 모르겠어요?</summary>
+              <div className="absolute right-0 top-6 z-10 w-72 bg-card border border-border rounded-xl p-4 shadow-xl text-left">
+                <p className="text-xs font-semibold text-foreground mb-2">생시 추정 방법</p>
+                <div className="text-[11px] text-muted-foreground space-y-2 leading-relaxed">
+                  <p><span className="text-foreground font-medium">1. 부모님께 확인</span><br />출생신고서, 산모수첩, 아기수첩에 기록이 있을 수 있습니다.</p>
+                  <p><span className="text-foreground font-medium">2. 병원 기록 조회</span><br />출생 병원에 문의하면 출생 시각을 확인할 수 있습니다.</p>
+                  <p><span className="text-foreground font-medium">3. 시간대 추정</span><br />대략적 시간대라도 알면 사주 정확도가 높아집니다.</p>
+                  <div className="bg-surface rounded-lg p-2.5 mt-2">
+                    <p className="text-[10px] text-foreground font-medium mb-1">12시진 기준 (2시간 단위)</p>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
+                      <span>子시 23:00~01:00</span><span>午시 11:00~13:00</span>
+                      <span>丑시 01:00~03:00</span><span>未시 13:00~15:00</span>
+                      <span>寅시 03:00~05:00</span><span>申시 15:00~17:00</span>
+                      <span>卯시 05:00~07:00</span><span>酉시 17:00~19:00</span>
+                      <span>辰시 07:00~09:00</span><span>戌시 19:00~21:00</span>
+                      <span>巳시 09:00~11:00</span><span>亥시 21:00~23:00</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-primary mt-1">정확한 시간을 모르면 아래 "모름" 체크 후 진행할 수 있습니다. (정오 12:00 기준 분석)</p>
+                </div>
+              </div>
+            </details>
+          </div>
           <input type="tel" placeholder="1430 (24시간제)" value={unknownTime ? "" : timeFormatted}
             onChange={(e) => setTimeDigits(e.target.value.replace(/\D/g, "").slice(0, 4))}
             disabled={unknownTime}
@@ -201,7 +226,7 @@ const BirthInfoPage = () => {
             <input type="checkbox" checked={unknownTime}
               onChange={(e) => { setUnknownTime(e.target.checked); if (e.target.checked) setTimeDigits(""); }}
               className="w-4 h-4 rounded border-border accent-primary" />
-            <span className="text-xs text-muted-foreground">태어난 시간을 모릅니다</span>
+            <span className="text-xs text-muted-foreground">태어난 시간을 모릅니다 (정오 12:00 기준 분석)</span>
           </label>
         </section>
 

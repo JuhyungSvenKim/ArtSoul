@@ -76,7 +76,9 @@ const TopPicksPage = () => {
           const el = ELEMENT_MAP[c.element];
           const en = ENERGY_MAP[c.energy];
           const st = STYLE_MAP[c.style];
-          const matchArt = data.artworks.find(a => a.caseCode === c.caseCode);
+          const matchArt = data.artworks.find(a => a.caseCode === c.caseCode)
+            || data.artworks.find(a => a.element === c.element);
+          const artId = matchArt?.id;
           const rankLabel = i === 0 ? "최적 추천" : `${i + 1}순위`;
           const funDesc = c.recommendationType === "보완형"
             ? `부족한 ${el?.labelKor} 기운을 ${en?.labelKor} 에너지의 ${st?.labelKor} 작품으로 채워보세요`
@@ -84,7 +86,7 @@ const TopPicksPage = () => {
 
           return (
             <div key={c.caseCode}
-              onClick={() => matchArt && navigate(`/artwork/${matchArt.id}`)}
+              onClick={() => artId && navigate(`/artwork/${artId}`)}
               className={`bg-card border rounded-xl p-4 flex gap-4 items-center transition-all cursor-pointer hover:border-primary/30 ${
                 i === 0 ? "border-primary/30 glow-mystical" : "border-border"
               }`}>

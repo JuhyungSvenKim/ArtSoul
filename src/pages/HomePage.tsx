@@ -198,14 +198,16 @@ const HomePage = () => {
                     const el = ELEMENT_MAP[c.element];
                     const en = ENERGY_MAP[c.energy];
                     const st = STYLE_MAP[c.style];
-                    const matchArt = (analysis.artworks || []).find(a => a.caseCode === c.caseCode);
+                    const matchArt = (analysis.artworks || []).find(a => a.caseCode === c.caseCode)
+                      || (analysis.artworks || []).find(a => a.element === c.element);
+                    const artId = matchArt?.id;
                     const rankLabel = i === 0 ? "최적 추천" : `${i + 1}순위`;
                     const funDesc = c.recommendationType === "보완형"
                       ? `부족한 ${el?.labelKor} 기운을 ${en?.labelKor} 에너지의 ${st?.labelKor} 작품으로 채워보세요`
                       : `강한 ${el?.labelKor}을 더 살려줄 ${en?.labelKor} 에너지 — ${st?.labelKor} 스타일이 딱이에요`;
                     return (
                       <div key={c.caseCode}
-                        onClick={() => matchArt && navigate(`/artwork/${matchArt.id}`)}
+                        onClick={() => artId && navigate(`/artwork/${artId}`)}
                         className={`bg-card border rounded-xl p-4 flex gap-4 items-center transition-all cursor-pointer hover:border-primary/30 ${i === 0 ? "border-primary/30 glow-mystical" : "border-border"}`}>
                         {/* 섬네일 */}
                         <div className="shrink-0 w-16 h-20 rounded-lg overflow-hidden border border-border">

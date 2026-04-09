@@ -252,30 +252,32 @@ const SajuResultPage = () => {
                 <CaseCodeArt element={topCase.element} energy={topCase.energy} style={topCase.style} />
               </div>
               <div className="p-3 bg-surface">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{
-                    backgroundColor: `${el?.color}20`, color: el?.color, border: `1px solid ${el?.color}40`
-                  }}>{topCase.caseCode}</span>
-                  <span className="text-[10px] text-primary">{topCase.totalScore}점 매칭</span>
-                </div>
                 <p className="text-sm font-medium text-foreground">{recommendedArtworks[0]?.title || "추천 작품"}</p>
-                <p className="text-[10px] text-muted-foreground">{recommendedArtworks[0]?.artist || ""}</p>
+                <p className="text-xs text-foreground/70 mt-0.5">
+                  {el?.labelKor} 계열 · {en?.labelKor} 에너지 · {st?.labelKor} 스타일
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{recommendedArtworks[0]?.artist || ""} · 매칭 {topCase.totalScore}점</p>
               </div>
             </div>
 
             {/* 추가 추천 3개 */}
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
-              {recommendedArtworks.slice(1, 4).map((art) => (
-                <div key={art.id} className="shrink-0 w-28">
-                  <div className="aspect-square rounded-lg overflow-hidden border border-border mb-1">
-                    <CaseCodeArt element={art.element} energy={art.energy} style={art.style} />
+            <div className="grid grid-cols-3 gap-2">
+              {recommendedArtworks.slice(1, 4).map((art) => {
+                const artEl = ELEMENT_MAP[art.element];
+                const artEn = ENERGY_MAP[art.energy];
+                return (
+                  <div key={art.id}>
+                    <div className="aspect-square rounded-lg overflow-hidden border border-border mb-1">
+                      <CaseCodeArt element={art.element} energy={art.energy} style={art.style} />
+                    </div>
+                    <p className="text-[10px] font-medium text-foreground truncate">{art.title.split("—")[0].trim()}</p>
+                    <p className="text-[9px] text-muted-foreground">{art.artist}</p>
                   </div>
-                  <p className="text-[10px] font-medium text-foreground truncate">{art.title.split("—")[0].trim()}</p>
-                  <p className="text-[9px] text-muted-foreground">{art.artist}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
+            {/* 이런 그림을 두면 좋아요 — 이모지 태그 */}
             <div className="bg-surface rounded-xl p-3.5 mt-3">
               <p className="text-xs text-primary font-medium mb-2">이런 그림을 두면 좋아요</p>
               <div className="flex flex-wrap gap-1.5">

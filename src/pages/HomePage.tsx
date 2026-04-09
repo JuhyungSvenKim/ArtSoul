@@ -198,26 +198,24 @@ const HomePage = () => {
                     const en = ENERGY_MAP[c.energy];
                     const st = STYLE_MAP[c.style];
                     const matchArt = (analysis.artworks || []).find(a => a.caseCode === c.caseCode);
+                    const rankLabel = i === 0 ? "최적 추천" : `${i + 1}순위`;
                     const funDesc = c.recommendationType === "보완형"
-                      ? `부족한 ${el?.labelKor} 기운을 채워주는 ${en?.labelKor} 에너지의 ${st?.labelKor} 작품`
-                      : `당신의 강점 ${el?.labelKor}을 더 살려주는 ${en?.labelKor} 에너지의 작품`;
+                      ? `부족한 ${el?.labelKor} 기운을 ${en?.labelKor} 에너지의 ${st?.labelKor} 작품으로 채워보세요`
+                      : `강한 ${el?.labelKor}을 더 살려줄 ${en?.labelKor} 에너지 — ${st?.labelKor} 스타일이 딱이에요`;
                     return (
-                      <div key={c.caseCode} className="bg-card border border-border rounded-xl p-4 flex gap-4 items-center transition-all hover:border-primary/30">
-                        {/* 랭크 */}
-                        <div className="shrink-0 w-8 text-center">
-                          <span className={`text-lg font-bold ${i === 0 ? "text-primary" : "text-muted-foreground"}`}>{i + 1}</span>
-                        </div>
+                      <div key={c.caseCode} className={`bg-card border rounded-xl p-4 flex gap-4 items-center transition-all hover:border-primary/30 ${i === 0 ? "border-primary/30 glow-mystical" : "border-border"}`}>
                         {/* 섬네일 */}
                         <div className="shrink-0 w-16 h-20 rounded-lg overflow-hidden border border-border">
                           <CaseCodeArt element={c.element} energy={c.energy} style={c.style} />
                         </div>
                         {/* 설명 */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">
-                            {el?.labelKor} × {en?.labelKor} × {st?.labelKor}
-                          </p>
-                          <p className="text-xs text-foreground/70 mt-0.5">{funDesc}</p>
-                          {matchArt && <p className="text-[10px] text-muted-foreground mt-1">{matchArt.artist} · {matchArt.title.split("—")[0].trim()}</p>}
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className={`text-xs font-semibold ${i === 0 ? "text-primary" : "text-foreground"}`}>{rankLabel}</span>
+                            <span className="text-[10px] text-muted-foreground">{el?.labelKor} · {en?.labelKor} · {st?.labelKor}</span>
+                          </div>
+                          <p className="text-xs text-foreground/80">{funDesc}</p>
+                          {matchArt && <p className="text-[10px] text-muted-foreground mt-0.5">{matchArt.artist} — {matchArt.title.split("—")[0].trim()}</p>}
                         </div>
                         {/* 점수 */}
                         <div className="shrink-0 text-right">

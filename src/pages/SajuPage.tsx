@@ -338,9 +338,25 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
     return { contextNote, complementNote };
   };
 
+  // 주별 보완 해석 (귀인+살 공존하는 주만)
+  const pillarComplement: { pos: string; note: string }[] = [];
+  for (const [pos, items] of Object.entries(groups)) {
+    if (items.length === 0) continue;
+    const posGood = items.filter(x => x.effect === 'positive');
+    const posBad = items.filter(x => x.effect === 'negative');
+    const posLabel = positionMeaning[pos];
+    if (posGood.length > 0 && posBad.length > 0) {
+      pillarComplement.push({ pos, note: `${pos}(${posLabel})에 ${posGood.map(x => x.name).join('·')}과(와) ${posBad.map(x => x.name).join('·')}이(가) 같이 있어서 서로 보완됨. 살의 날카로움을 귀인이 감싸주는 구조라, 이 영역에서 위기가 와도 반등이 빠른 편` });
+    } else if (posGood.length > 0) {
+      pillarComplement.push({ pos, note: `${pos}(${posLabel})는 ${posGood.map(x => x.name).join('·')}으로 보호받는 구간. 이쪽에서 행운이 들어옴` });
+    } else if (posBad.length > 0) {
+      pillarComplement.push({ pos, note: `${pos}(${posLabel})에 ${posBad.map(x => x.name).join('·')}이(가) 집중. 에너지가 강한 구간이라 잘 다루면 무기가 됨` });
+    }
+  }
+
   return (
     <div className="space-y-5">
-      {/* 1) 4주별 배치 — 클릭하면 그 자리에서 해설 펼침 */}
+      {/* 1) 4주별 배치 — 클릭하면 그 자리에서 vibe + 위치의미 */}
       <div className="grid grid-cols-4 gap-2">
         {['시주', '일주', '월주', '연주'].map(pos => (
           <div key={pos}>
@@ -354,7 +370,7 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
                   const key = `${pos}-${s.name}`;
                   const isOpen = expanded === key;
                   const detail = SINSAL_DETAIL[s.name];
-                  const { contextNote, complementNote } = getSinsalInContext(s);
+                  const { contextNote } = getSinsalInContext(s);
                   return (
                     <div key={i}>
                       <button onClick={() => setExpanded(isOpen ? null : key)}
@@ -362,21 +378,9 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
                         {s.name}
                       </button>
                       {isOpen && (
-                        <div className="mt-1.5 p-2.5 bg-card border border-border rounded-lg animate-fade-in text-left space-y-1.5">
-                          {detail ? (
-                            <>
-                              <p className="text-[11px] text-foreground/90 leading-relaxed">{detail.vibe}</p>
-                              <p className="text-[10px] text-muted-foreground leading-relaxed">{contextNote}</p>
-                              {complementNote && <p className="text-[10px] text-primary/80 leading-relaxed">{complementNote}</p>}
-                              <p className="text-[10px] text-muted-foreground/60">{detail.tip}</p>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-[11px] text-foreground/80 leading-relaxed">{s.description}</p>
-                              <p className="text-[10px] text-muted-foreground leading-relaxed">{contextNote}</p>
-                              {complementNote && <p className="text-[10px] text-primary/80 leading-relaxed">{complementNote}</p>}
-                            </>
-                          )}
+                        <div className="mt-1.5 p-2.5 bg-card border border-border rounded-lg animate-fade-in text-left space-y-1">
+                          <p className="text-[11px] text-foreground/90 leading-relaxed">{detail?.vibe || s.description}</p>
+                          <p className="text-[10px] text-muted-foreground leading-relaxed">{contextNote}</p>
                         </div>
                       )}
                     </div>
@@ -388,41 +392,16 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
         ))}
       </div>
 
-      {/* 3) 전체 신살 해설 리스트 */}
+      {/* 2) 주별 보완 해석 (별도 섹션) */}
       <div className="bg-surface border border-border rounded-xl p-4">
-        <p className="text-xs text-foreground font-medium mb-3">내가 가진 신살, 이런 뜻이야</p>
-        <div className="space-y-3">
-          {sinsal.filter(s => SINSAL_DETAIL[s.name]).reduce<SinsalItem[]>((acc, s) => {
-            if (!acc.some(x => x.name === s.name)) acc.push(s);
-            return acc;
-          }, []).map((s, i) => {
-            const detail = SINSAL_DETAIL[s.name];
-            return (
-              <div key={i} className="flex gap-3">
-                <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium self-start mt-0.5 border ${effectStyle(s.effect)}`}>{s.name}</span>
-                <div>
-                  <p className="text-xs text-foreground/90 leading-relaxed">{detail.vibe}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{detail.tip}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 4) 주별 종합 판단 */}
-      <div className="bg-surface border border-border rounded-xl p-4">
-        <p className="text-xs text-foreground font-medium mb-3">주(柱)별로 보면</p>
+        <p className="text-xs text-foreground font-medium mb-3">주(柱)별 신살 조합</p>
         <div className="space-y-2.5">
-          {['연주', '월주', '일주', '시주'].map(pos => {
-            if (!pillarNotes[pos]) return null;
-            return (
-              <div key={pos} className="flex gap-3">
-                <span className="shrink-0 text-[10px] text-muted-foreground w-8 pt-0.5">{pos}</span>
-                <p className="text-xs text-foreground/80 leading-relaxed">{pillarNotes[pos]}</p>
-              </div>
-            );
-          })}
+          {pillarComplement.map(({ pos, note }) => (
+            <div key={pos} className="flex gap-3">
+              <span className="shrink-0 text-[10px] text-muted-foreground w-8 pt-0.5 font-medium">{pos}</span>
+              <p className="text-xs text-foreground/80 leading-relaxed">{note}</p>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -1001,27 +980,37 @@ const SajuPage = () => {
       </Section>
 
       <Section title="사주팔자 (四柱八字)">
-        <div className="flex gap-2">
-          <PillarCard label="시주" ganji={siju} sipsungCg={sipsung.sijuCg} sipsungJj={sipsung.sijuJj} twelveJj={twelveStages.sijuJj} />
-          <PillarCard label="일주 (나)" ganji={ilju} sipsungJj={sipsung.iljuJj} twelveJj={twelveStages.iljuJj} />
-          <PillarCard label="월주" ganji={wolju} sipsungCg={sipsung.woljuCg} sipsungJj={sipsung.woljuJj} twelveJj={twelveStages.woljuJj} />
-          <PillarCard label="연주" ganji={yeonju} sipsungCg={sipsung.yeonjuCg} sipsungJj={sipsung.yeonjuJj} twelveJj={twelveStages.yeonjuJj} />
-        </div>
-
-        {/* 주별 해석 — 4주 바로 아래 */}
-        <div className="space-y-3 mt-5">
-          {pillarMeanings.map((pm, i) => (
-            <div key={i} className="bg-surface border border-border rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium text-foreground">{pm.label}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">{pm.lifeStage}</span>
-                <span className="text-[10px] text-muted-foreground">{pm.ageRange}</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground mb-1">관계: {pm.relationship}</p>
-              <p className="text-xs text-foreground/80 leading-relaxed">{pm.description}</p>
+        {/* 4주 카드 + 각 주 아래 해석 — 가로 배치 */}
+        {(() => {
+          const pillars = [
+            { label: "시주", ganji: siju, sipsungCg: sipsung.sijuCg, sipsungJj: sipsung.sijuJj, twelveJj: twelveStages.sijuJj, pmKey: "시주 (時柱)" },
+            { label: "일주 (나)", ganji: ilju, sipsungCg: undefined, sipsungJj: sipsung.iljuJj, twelveJj: twelveStages.iljuJj, pmKey: "일주 (日柱)" },
+            { label: "월주", ganji: wolju, sipsungCg: sipsung.woljuCg, sipsungJj: sipsung.woljuJj, twelveJj: twelveStages.woljuJj, pmKey: "월주 (月柱)" },
+            { label: "연주", ganji: yeonju, sipsungCg: sipsung.yeonjuCg, sipsungJj: sipsung.yeonjuJj, twelveJj: twelveStages.yeonjuJj, pmKey: "연주 (年柱)" },
+          ];
+          return (
+            <div className="grid grid-cols-4 gap-2">
+              {pillars.map((p, i) => {
+                const pm = pillarMeanings.find(m => m.label === p.pmKey);
+                return (
+                  <div key={i} className="flex flex-col">
+                    <PillarCard label={p.label} ganji={p.ganji} sipsungCg={p.sipsungCg} sipsungJj={p.sipsungJj} twelveJj={p.twelveJj} />
+                    {pm && (
+                      <div className="mt-2 bg-surface border border-border rounded-lg p-2">
+                        <div className="flex items-center gap-1 mb-1 flex-wrap">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">{pm.lifeStage}</span>
+                          <span className="text-[9px] text-muted-foreground">{pm.ageRange}</span>
+                        </div>
+                        <p className="text-[9px] text-muted-foreground mb-0.5">관계: {pm.relationship}</p>
+                        <p className="text-[10px] text-foreground/80 leading-relaxed">{pm.description}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          );
+        })()}
       </Section>
 
       {/* 오행 밸런스 */}

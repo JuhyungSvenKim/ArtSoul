@@ -230,34 +230,60 @@ const HomePage = () => {
                 </div>
               </div>
 
-              {/* 행운 색상 + 스타일 */}
+              {/* 행운 색상 + 아트 스타일 */}
               <div className="bg-card border border-border rounded-2xl p-6">
-                <p className="text-sm font-semibold text-foreground mb-4">사주가 추천하는 아트 스타일</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                  <div className="text-center">
-                    <p className="text-[10px] text-muted-foreground mb-2">행운 컬러</p>
-                    <div className="flex justify-center gap-2">
-                      {analysis.lucky.colorHexes.map((hex, i) => (
-                        <div key={i} className="flex flex-col items-center">
-                          <div className="w-8 h-8 rounded-full border border-border" style={{ backgroundColor: hex }} />
-                          <span className="text-[9px] text-muted-foreground mt-1">{analysis.lucky.colors[i]}</span>
+                <p className="text-sm font-semibold text-foreground mb-5">사주가 추천하는 아트 스타일</p>
+
+                {/* 행운 컬러 */}
+                <div className="mb-5">
+                  <p className="text-xs text-muted-foreground mb-2">행운 컬러</p>
+                  <div className="flex gap-3">
+                    {analysis.lucky.colorHexes.map((hex, i) => (
+                      <div key={i} className="flex items-center gap-2 bg-surface rounded-lg px-3 py-2 border border-border">
+                        <div className="w-6 h-6 rounded-full border border-border shrink-0" style={{ backgroundColor: hex }} />
+                        <span className="text-xs text-foreground">{analysis.lucky.colors[i]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 화풍 / 소재 / 분위기 — 이모지 카드 */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">추천 화풍</p>
+                    <div className="space-y-1.5">
+                      {analysis.lucky.artStyles.map((s, i) => (
+                        <div key={i} className="flex items-center gap-2 bg-surface rounded-lg px-3 py-2 border border-border">
+                          <span className="text-base">{s.emoji}</span>
+                          <span className="text-xs text-foreground">{s.label}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-[10px] text-muted-foreground mb-2">추천 화풍</p>
-                    <p className="text-xs text-foreground">{analysis.lucky.artStyles.join(', ')}</p>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">추천 소재</p>
+                    <div className="space-y-1.5">
+                      {analysis.lucky.artSubjects.map((s, i) => (
+                        <div key={i} className="flex items-center gap-2 bg-surface rounded-lg px-3 py-2 border border-border">
+                          <span className="text-base">{s.emoji}</span>
+                          <span className="text-xs text-foreground">{s.label}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-[10px] text-muted-foreground mb-2">추천 소재</p>
-                    <p className="text-xs text-foreground">{analysis.lucky.artSubjects.slice(0, 2).join(', ')}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[10px] text-muted-foreground mb-2">추천 분위기</p>
-                    <p className="text-xs text-foreground">{analysis.lucky.artMoods.join(', ')}</p>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">추천 분위기</p>
+                    <div className="space-y-1.5">
+                      {analysis.lucky.artMoods.map((s, i) => (
+                        <div key={i} className="flex items-center gap-2 bg-surface rounded-lg px-3 py-2 border border-border">
+                          <span className="text-base">{s.emoji}</span>
+                          <span className="text-xs text-foreground">{s.label}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
+
                 <p className="text-xs text-muted-foreground">
                   {analysis.lucky.direction}에 두면 기운이 강해지고, {analysis.lucky.season}에 특히 효과적이에요.
                 </p>

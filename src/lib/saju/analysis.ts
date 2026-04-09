@@ -89,9 +89,9 @@ export interface LuckyItems {
   direction: string;
   season: string;
   number: string;
-  artStyles: string[];
-  artSubjects: string[];
-  artMoods: string[];
+  artStyles: { label: string; emoji: string }[];
+  artSubjects: { label: string; emoji: string }[];
+  artMoods: { label: string; emoji: string }[];
 }
 
 const OHAENG_LUCKY: Record<string, LuckyItems> = {
@@ -101,9 +101,21 @@ const OHAENG_LUCKY: Record<string, LuckyItems> = {
     direction: '동쪽',
     season: '봄',
     number: '3, 8',
-    artStyles: ['수묵화', '자연주의', '인상주의'],
-    artSubjects: ['나무·숲 풍경', '봄꽃 정물', '대나무 수묵'],
-    artMoods: ['성장', '생명력', '자유'],
+    artStyles: [
+      { label: '수묵화', emoji: '🖌️' },
+      { label: '자연주의', emoji: '🌿' },
+      { label: '인상주의', emoji: '🎨' },
+    ],
+    artSubjects: [
+      { label: '숲·나무', emoji: '🌲' },
+      { label: '봄꽃 정물', emoji: '🌸' },
+      { label: '대나무·난초', emoji: '🎋' },
+    ],
+    artMoods: [
+      { label: '성장', emoji: '🌱' },
+      { label: '생명력', emoji: '✨' },
+      { label: '자유', emoji: '🕊️' },
+    ],
   },
   화: {
     colors: ['빨강', '주황', '보라'],
@@ -111,9 +123,21 @@ const OHAENG_LUCKY: Record<string, LuckyItems> = {
     direction: '남쪽',
     season: '여름',
     number: '2, 7',
-    artStyles: ['표현주의', '팝아트', '추상화'],
-    artSubjects: ['노을·불꽃 풍경', '강렬한 추상', '열정적 인물화'],
-    artMoods: ['열정', '강렬함', '에너지'],
+    artStyles: [
+      { label: '표현주의', emoji: '🔥' },
+      { label: '팝아트', emoji: '💥' },
+      { label: '추상화', emoji: '🌀' },
+    ],
+    artSubjects: [
+      { label: '노을·석양', emoji: '🌅' },
+      { label: '강렬한 추상', emoji: '💫' },
+      { label: '인물·초상', emoji: '👤' },
+    ],
+    artMoods: [
+      { label: '열정', emoji: '❤️‍🔥' },
+      { label: '강렬함', emoji: '⚡' },
+      { label: '에너지', emoji: '🌟' },
+    ],
   },
   토: {
     colors: ['노랑', '갈색', '베이지'],
@@ -121,9 +145,21 @@ const OHAENG_LUCKY: Record<string, LuckyItems> = {
     direction: '중앙',
     season: '환절기',
     number: '5, 10',
-    artStyles: ['정물화', '도자기', '전통 민화'],
-    artSubjects: ['대지·산 풍경', '전통 정물', '도자기·옹기'],
-    artMoods: ['안정', '따뜻함', '전통'],
+    artStyles: [
+      { label: '정물화', emoji: '🏺' },
+      { label: '민화', emoji: '🎎' },
+      { label: '도예 작품', emoji: '🫖' },
+    ],
+    artSubjects: [
+      { label: '전통 도자기', emoji: '🍶' },
+      { label: '들판·수확', emoji: '🌾' },
+      { label: '옛 마을 풍경', emoji: '🏡' },
+    ],
+    artMoods: [
+      { label: '안정', emoji: '🧘' },
+      { label: '따뜻함', emoji: '☕' },
+      { label: '전통', emoji: '📜' },
+    ],
   },
   금: {
     colors: ['흰색', '은색', '금색'],
@@ -131,9 +167,21 @@ const OHAENG_LUCKY: Record<string, LuckyItems> = {
     direction: '서쪽',
     season: '가을',
     number: '4, 9',
-    artStyles: ['미니멀리즘', '건축 사진', '금속 조각'],
-    artSubjects: ['가을 풍경', '미니멀 구성', '금속·보석 정물'],
-    artMoods: ['절제', '정밀', '고요'],
+    artStyles: [
+      { label: '미니멀리즘', emoji: '◻️' },
+      { label: '건축 사진', emoji: '🏛️' },
+      { label: '금속 조각', emoji: '⚙️' },
+    ],
+    artSubjects: [
+      { label: '가을 단풍', emoji: '🍂' },
+      { label: '기하학 구성', emoji: '📐' },
+      { label: '보석·메탈', emoji: '💎' },
+    ],
+    artMoods: [
+      { label: '절제', emoji: '🪷' },
+      { label: '정밀', emoji: '🔍' },
+      { label: '고요', emoji: '🌙' },
+    ],
   },
   수: {
     colors: ['검정', '남색', '파랑'],
@@ -141,9 +189,21 @@ const OHAENG_LUCKY: Record<string, LuckyItems> = {
     direction: '북쪽',
     season: '겨울',
     number: '1, 6',
-    artStyles: ['수채화', '몽환적 추상', '수묵담채'],
-    artSubjects: ['바다·호수 풍경', '비 오는 거리', '겨울 설경'],
-    artMoods: ['몽환', '유동', '깊이'],
+    artStyles: [
+      { label: '수채화', emoji: '💧' },
+      { label: '몽환적 추상', emoji: '🌌' },
+      { label: '수묵담채', emoji: '🖋️' },
+    ],
+    artSubjects: [
+      { label: '바다·호수', emoji: '🌊' },
+      { label: '비 오는 거리', emoji: '🌧️' },
+      { label: '겨울 설경', emoji: '❄️' },
+    ],
+    artMoods: [
+      { label: '몽환', emoji: '🔮' },
+      { label: '유동', emoji: '🌀' },
+      { label: '깊이', emoji: '🕳️' },
+    ],
   },
 };
 

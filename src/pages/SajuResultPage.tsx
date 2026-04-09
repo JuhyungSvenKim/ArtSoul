@@ -276,15 +276,17 @@ const SajuResultPage = () => {
               ))}
             </div>
 
-            <div className="bg-surface rounded-xl p-3.5 mt-3 space-y-1.5">
-              <p className="text-xs text-foreground">
-                <span className="text-primary font-medium">이런 그림을 두면 좋아요</span>
-              </p>
-              <p className="text-xs text-foreground/70">
-                {lucky.artStyles.slice(0, 2).join(', ')} 계열 · {lucky.artSubjects[0]} · {lucky.artMoods.join(' · ')}의 분위기
-              </p>
-              <p className="text-xs text-foreground/70">
-                {lucky.direction}에 두면 기운이 더 강해지고, {lucky.season}에 특히 효과적이에요.
+            <div className="bg-surface rounded-xl p-3.5 mt-3">
+              <p className="text-xs text-primary font-medium mb-2">이런 그림을 두면 좋아요</p>
+              <div className="flex flex-wrap gap-1.5">
+                {[...lucky.artStyles, ...lucky.artSubjects, ...lucky.artMoods].map((item, i) => (
+                  <span key={i} className="text-[11px] bg-card border border-border rounded-full px-2.5 py-1 text-foreground/80">
+                    {item.emoji} {item.label}
+                  </span>
+                ))}
+              </div>
+              <p className="text-[10px] text-foreground/60 mt-2">
+                {lucky.direction}에 두면 기운이 강해지고, {lucky.season}에 특히 효과적이에요.
               </p>
             </div>
           </section>

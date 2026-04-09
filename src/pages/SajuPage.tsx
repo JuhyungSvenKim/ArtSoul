@@ -551,32 +551,50 @@ const SajuPage = () => {
   const store = useOnboardingStore();
   const userId = store.userId;
 
-  // 동기적으로 초기 렌더 시 사주 계산 (블랙 화면 방지)
-  const [result, setResult] = useState<SajuResult | null>(() => {
-    let bd = '', bt: string | null = null, g = '';
-    // 1순위: localStorage 직접
-    const ls = loadSajuInput();
-    if (ls) { bd = ls.birthDate; bt = ls.birthTime; g = ls.gender; }
-    // 2순위: zustand (이미 hydrate 됐을 수도)
-    if (!bd && store.birthDate) { bd = store.birthDate; bt = store.birthTime; g = store.gender || ''; }
+  const [result, setResult] = useState<SajuResult | null>(null);
 
-    if (!bd || !g) return null;
-    try {
-      const [y, m, d] = bd.split("-").map(Number);
-      const hour = bt ? Number(bt.split(":")[0]) : 12;
-      return getSaju({ year: y, month: m, day: d, hour, gender: g === "male" ? "남" : "여", calendarType: "양력" });
-    } catch { return null; }
-  });
+  // 사주 자동 계산 — mount + store 변경 + 200ms 후 재시도
+  useEffect(() => {
+    function tryCalc() {
+      let bd = '', bt: string | null = null, g = '';
+      const ls = loadSajuInput();
+      if (ls) { bd = ls.birthDate; bt = ls.birthTime; g = ls.gender; }
+      if (!bd && store.birthDate) { bd = store.birthDate; bt = store.birthTime; g = store.gender || ''; }
+      if (!bd || !g) return false;
+      try {
+        const [y, m, d] = bd.split("-").map(Number);
+        const hour = bt ? Number(bt.split(":")[0]) : 12;
+        setResult(getSaju({ year: y, month: m, day: d, hour, gender: g === "male" ? "남" : "여", calendarType: "양력" }));
+        return true;
+      } catch { return false; }
+    }
+    if (!tryCalc()) {
+      // 즉시 실패하면 200ms 후 재시도 (zustand hydration 대기)
+      const t = setTimeout(tryCalc, 200);
+      return () => clearTimeout(t);
+    }
+  }, [store.birthDate, store.gender]);
 
   const aiPrompt = useMemo(() => result ? sajuToAIPrompt(result) : "", [result]);
 
   if (!result) {
+    // localStorage에 데이터가 있으면 잠시 로딩 표시 (hydration 대기)
+    const hasLocalData = !!loadSajuInput();
     return (
       <PageContainer className="pt-20">
-        <h1 className="text-2xl font-display text-gold-gradient font-semibold mb-2">사주팔자 분석</h1>
-        <p className="text-sm text-muted-foreground mb-8">생년월일시를 입력하면 사주를 분석해드립니다</p>
-        <SajuInputForm onAnalyze={setResult} />
         <TabBar activeTab="home" />
+        {hasLocalData ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent mb-3" />
+            <p className="text-sm text-muted-foreground">사주를 분석하고 있습니다...</p>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-2xl font-display text-gold-gradient font-semibold mb-2">사주팔자 분석</h1>
+            <p className="text-sm text-muted-foreground mb-8">생년월일시를 입력하면 사주를 분석해드립니다</p>
+            <SajuInputForm onAnalyze={setResult} />
+          </>
+        )}
       </PageContainer>
     );
   }

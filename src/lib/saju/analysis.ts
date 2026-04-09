@@ -222,35 +222,35 @@ export interface PillarMeaning {
 
 // 십성별 의미
 const SIPSUNG_MEANING: Record<string, string> = {
-  비견: "나와 같은 기운, 경쟁자이자 동료. 독립심과 자존심이 강하고 형제·동료와의 관계가 핵심",
-  겁재: "나를 빼앗는 기운, 승부욕과 도전. 투기적 성향이 있고 재물이 들어와도 쉽게 나감",
-  식신: "내가 낳는 기운, 재능과 여유. 먹고 즐기는 복이 있고 표현력과 창의성이 뛰어남",
-  상관: "내가 쏟아내는 기운, 날카로운 말과 예술적 재능. 기존 질서를 깨는 힘, 관과 충돌",
-  편재: "내가 다스리는 재물, 큰돈과 투자. 사업수완과 이성관계에 적극적, 돈이 크게 왔다감",
-  정재: "꾸준히 모으는 재물, 안정적 수입. 성실하고 검소하며 현실적, 월급형 재물",
-  편관: "나를 공격하는 힘, 권력과 통제. 카리스마와 리더십이 있으나 스트레스와 압박도 강함",
-  정관: "나를 바르게 세우는 힘, 명예와 책임. 조직에서 인정받고 규칙을 잘 따르며 신뢰받음",
-  편인: "남다른 학습, 특수 재능. 일반적이지 않은 사고방식, 연구·기술·영성에 강함",
-  정인: "학문과 어머니 복, 자격과 문서. 공부를 좋아하고 논리적이며 보호받는 기운",
+  비견: "나랑 똑같은 에너지를 가진 존재. 쉽게 말하면 '내편이지만 라이벌'인 느낌. 혼자 해야 직성이 풀리는 타입",
+  겁재: "승부욕 MAX. 이기고 싶은 마음이 강한데, 돈도 크게 벌고 크게 씀. 통장 잔고가 롤러코스터",
+  식신: "타고난 맛집러+크리에이터. 먹는 복 있고, 뭔가 만들어내는 재주가 있음. 여유로운 에너지",
+  상관: "입이 거침없고 창의적. 기존 룰? 나한테 안 맞으면 부숴버리는 타입. 예술가 기질 폭발",
+  편재: "큰돈이 왔다갔다하는 기운. 사업 수완이 있고 이성한테 적극적. 인생이 다이내믹함",
+  정재: "월급 꼬박꼬박 모으는 타입. 성실하고 현실적이고 돈 관리 잘함. 안정감의 대명사",
+  편관: "카리스마+압박이 동시에 오는 기운. 리더십은 있는데 스트레스도 세게 옴. 센 에너지",
+  정관: "조직에서 인정받는 타입. 규칙 잘 지키고 신뢰받고 명예가 따라옴. 반듯한 에너지",
+  편인: "남들이랑 다른 뇌구조. 일반적인 사고방식? 그런 거 없음. 독학으로 뭐든 파는 타입",
+  정인: "공부 좋아하고 엄마 복 있는 기운. 자격증, 문서, 학위 — 이쪽으로 복이 옴",
 };
 
-// 오행 조합 해석
+// 오행 조합 해석 (MZ 버전)
 const OHAENG_COMBO: Record<string, string> = {
-  "목목": "목이 겹쳐 성장 에너지가 강하지만 고집도 셈",
-  "목화": "목생화, 재능이 자연스럽게 표출되는 조합",
-  "목토": "목극토, 추진력은 있으나 안정감과 충돌할 수 있음",
-  "목금": "금극목, 외부 압력과 단련을 통해 성장하는 구조",
-  "목수": "수생목, 지혜가 성장을 도와주는 좋은 흐름",
-  "화화": "화가 겹쳐 열정은 넘치지만 과열 주의",
-  "화토": "화생토, 열정이 현실적 결실로 이어지는 조합",
-  "화금": "화극금, 감정과 이성이 충돌하기 쉬움",
-  "화수": "수극화, 감정이 억눌리거나 내면 갈등이 생김",
-  "토토": "토가 겹쳐 안정은 좋으나 변화에 둔할 수 있음",
-  "토금": "토생금, 안정 속에서 결단력이 나오는 구조",
-  "토수": "토극수, 현실과 이상 사이의 갈등",
-  "금금": "금이 겹쳐 의지가 강하나 융통성이 부족할 수 있음",
-  "금수": "금생수, 결단이 지혜로 이어지는 좋은 흐름",
-  "수수": "수가 겹쳐 생각이 많고 감성이 깊으나 우유부단할 수 있음",
+  "목목": "나무+나무라 성장 에너지가 넘치는데, 고집도 나무급으로 셈",
+  "목화": "나무가 불을 살리듯, 재능이 자연스럽게 빛나는 좋은 조합",
+  "목토": "나무가 흙을 뚫고 나가려는 기운. 추진력은 있는데 안정감이랑 부딪힐 수 있음",
+  "목금": "쇠가 나무를 다듬듯, 외부 압력이 나를 단련시키는 구조. 힘들지만 강해짐",
+  "목수": "물이 나무를 키우듯, 지혜가 성장을 도와주는 흐름. 배우면 배울수록 커짐",
+  "화화": "불+불이라 열정은 폭발인데, 가끔 과열되서 본인이 타버릴 수 있음",
+  "화토": "불이 흙을 만들듯, 열정이 현실 성과로 이어지는 좋은 구조",
+  "화금": "불이 쇠를 녹이듯, 감정이랑 이성이 충돌하기 쉬움. 내면 갈등 주의",
+  "화수": "물이 불을 끄듯, 감정이 억눌리거나 하고 싶은 걸 참게 되는 기운",
+  "토토": "흙+흙이라 안정감은 최고인데, 변화에 좀 느릴 수 있음. 편한 게 좋은 타입",
+  "토금": "흙에서 금이 나오듯, 안정된 상태에서 결단력이 나옴. 묵직한 추진력",
+  "토수": "흙이 물을 막듯, 현실이랑 이상 사이에서 갈등이 생기기 쉬움",
+  "금금": "쇠+쇠라 의지가 강철급인데, 융통성은 좀 부족할 수 있음",
+  "금수": "쇠가 물을 낳듯, 결단력이 지혜로 이어지는 좋은 흐름",
+  "수수": "물+물이라 생각이 정말 많음. 감성은 깊은데 결정장애 올 수 있음",
 };
 
 function getComboDesc(oh1: string, oh2: string): string {
@@ -266,10 +266,14 @@ export function getPillarMeanings(result: SajuResult): PillarMeaning[] {
 
   const sinsalText = (pos: string) => {
     const list = sinsalByPos[pos];
-    return list.length > 0 ? ` 신살로 ${list.join(', ')}이(가) 자리해 ${list.some(n => n.includes('귀인')) ? '도움을 받는 기운이 있습니다' : '특별한 에너지가 작동합니다'}.` : '';
+    if (list.length === 0) return '';
+    const hasGuiin = list.some(n => n.includes('귀인'));
+    const hasSal = list.some(n => n.includes('살'));
+    if (hasGuiin && hasSal) return ` 여기에 ${list.join(', ')}이 같이 붙어있어서, 기회랑 시련이 동시에 오는 자리야.`;
+    if (hasGuiin) return ` ${list.join(', ')}이 붙어있어서, 이 시기에 도움 줄 사람이 나타날 확률 높음.`;
+    return ` ${list.join(', ')}이 붙어있어서, 에너지가 꽤 강하게 작동하는 자리야.`;
   };
 
-  // 십성 해석 텍스트
   const sipsungDesc = (name: string) => SIPSUNG_MEANING[name] || name;
 
   return [
@@ -278,28 +282,28 @@ export function getPillarMeanings(result: SajuResult): PillarMeaning[] {
       lifeStage: '초년운',
       relationship: '조상·조부모',
       ageRange: '1~15세',
-      description: `${yeonju.cheonganKor}${yeonju.jijiKor}(${yeonju.ohaeng}/${yeonju.jijiOhaeng}). 천간 십성은 ${sipsung.yeonjuCg}으로, ${sipsungDesc(sipsung.yeonjuCg).split('.')[0]}. ${getComboDesc(yeonju.ohaeng, yeonju.jijiOhaeng)}. 어린 시절 가정 환경에 이 기운이 반영됩니다.${sinsalText('연주')}`,
+      description: `어린 시절 에너지를 보여주는 자리야. 위에 ${sipsung.yeonjuCg}(${sipsungDesc(sipsung.yeonjuCg).split('.')[0]})이 떠 있고, ${getComboDesc(yeonju.ohaeng, yeonju.jijiOhaeng)}. 어릴 때 집안 분위기나 성장 환경이 이 기운으로 깔려 있었다고 보면 돼.${sinsalText('연주')}`,
     },
     {
       label: '월주 (月柱)',
       lifeStage: '청년운',
       relationship: '부모·형제',
       ageRange: '16~30세',
-      description: `${wolju.cheonganKor}${wolju.jijiKor}(${wolju.ohaeng}/${wolju.jijiOhaeng}). 천간 십성은 ${sipsung.woljuCg}으로, ${sipsungDesc(sipsung.woljuCg).split('.')[0]}. ${getComboDesc(wolju.ohaeng, wolju.jijiOhaeng)}. 사회 진출기의 환경과 직업 방향에 큰 영향을 줍니다.${sinsalText('월주')}`,
+      description: `사회에 나가기 시작하는 시기의 기운이야. ${sipsung.woljuCg}(${sipsungDesc(sipsung.woljuCg).split('.')[0]})이 깔려 있고, ${getComboDesc(wolju.ohaeng, wolju.jijiOhaeng)}. 첫 직장이나 진로를 정할 때 이 에너지가 크게 영향을 줘.${sinsalText('월주')}`,
     },
     {
       label: '일주 (日柱)',
       lifeStage: '장년운',
       relationship: '나·배우자',
       ageRange: '31~45세',
-      description: `${ilju.cheonganKor}${ilju.jijiKor}(${ilju.ohaeng}/${ilju.jijiOhaeng}). 일간 ${ilju.cheonganKor}(${ilju.ohaeng})이 사주의 주인이고, 지지 십성은 ${sipsung.iljuJj}로 ${sipsungDesc(sipsung.iljuJj).split('.')[0]}. ${getComboDesc(ilju.ohaeng, ilju.jijiOhaeng)}. 배우자와의 관계, 본인의 핵심 성격이 여기서 드러납니다.${sinsalText('일주')}`,
+      description: `여기가 사주의 메인이야. 일간 ${ilju.cheonganKor}(${ilju.ohaeng})이 바로 "나" 자신이고, 아래 깔린 ${sipsung.iljuJj}(${sipsungDesc(sipsung.iljuJj).split('.')[0]})이 배우자나 내면의 기질을 보여줘. ${getComboDesc(ilju.ohaeng, ilju.jijiOhaeng)}.${sinsalText('일주')}`,
     },
     {
       label: '시주 (時柱)',
       lifeStage: '말년운',
       relationship: '자식·후배',
       ageRange: '46세~',
-      description: `${siju.cheonganKor}${siju.jijiKor}(${siju.ohaeng}/${siju.jijiOhaeng}). 천간 십성은 ${sipsung.sijuCg}으로, ${sipsungDesc(sipsung.sijuCg).split('.')[0]}. ${getComboDesc(siju.ohaeng, siju.jijiOhaeng)}. 말년의 방향성과 자녀복, 인생 후반의 결실이 담겨 있습니다.${sinsalText('시주')}`,
+      description: `인생 후반부의 에너지야. ${sipsung.sijuCg}(${sipsungDesc(sipsung.sijuCg).split('.')[0]})이 떠 있고, ${getComboDesc(siju.ohaeng, siju.jijiOhaeng)}. 말년의 방향, 자녀 복, 인생 마무리가 어떤 느낌인지가 여기에 담겨 있어.${sinsalText('시주')}`,
     },
   ];
 }
@@ -311,11 +315,11 @@ export function getSajuSummary(result: SajuResult): string {
   const yongsin = getYongsin(balance, result.ilju.ohaeng);
 
   const ilganDesc: Record<string, string> = {
-    목: '나무처럼 성장하고 뻗어나가려는 기질이 강합니다. 창의적이고 진취적이며 인정이 많습니다.',
-    화: '불처럼 열정적이고 활발합니다. 예의 바르고 표현력이 뛰어나며 리더십이 있습니다.',
-    토: '대지처럼 신뢰감 있고 안정적입니다. 포용력이 크고 중재 능력이 뛰어납니다.',
-    금: '쇠처럼 단단하고 결단력이 있습니다. 의리가 강하고 정의감이 넘칩니다.',
-    수: '물처럼 지혜롭고 유연합니다. 총명하고 적응력이 뛰어나며 깊은 사고력을 가졌습니다.',
+    목: '나무 같은 사람이야. 성장하고 뻗어나가려는 기질이 강하고, 창의적이고 정 많은 타입.',
+    화: '불 같은 사람이야. 열정적이고 활발하고, 표현력이 좋아서 사람들 앞에 서는 걸 잘해.',
+    토: '땅 같은 사람이야. 믿음직하고 안정적이고, 사람들 사이에서 중심을 잡아주는 역할.',
+    금: '쇠 같은 사람이야. 한번 정하면 안 바꾸고, 의리 있고 선이 분명한 타입.',
+    수: '물 같은 사람이야. 머리가 좋고 유연하고, 상황 파악이 빠른 타입. 생각이 깊음.',
   };
 
   const gyeokgukName = result.gyeokguk.name;
@@ -323,9 +327,9 @@ export function getSajuSummary(result: SajuResult): string {
   const domStr = dominant.join(', ');
   const lackStr = lacking.length > 0 ? lacking.join(', ') : '없음';
 
-  return `일간 ${result.ilju.cheongan}(${result.ilju.cheonganKor}/${result.ilju.ohaeng}) — ${ilganDesc[result.ilju.ohaeng] || ''}\n\n` +
-    `오행 구성에서 ${domStr}이(가) 강하고 ${lackStr}이(가) 부족합니다. ` +
-    `용신은 ${yongsin.element}으로, ${yongsin.element} 기운을 보충하면 운이 트입니다.\n\n` +
-    `격국은 "${gyeokgukName}"이며, ${result.gyeokguk.description}\n\n` +
-    `총 ${sinsalCount}개의 신살이 발견되었습니다.`;
+  return `일간 ${result.ilju.cheongan}(${result.ilju.cheonganKor}·${result.ilju.ohaeng}) — ${ilganDesc[result.ilju.ohaeng] || ''}\n\n` +
+    `오행을 보면 ${domStr}이(가) 강하고 ${lackStr}이(가) 부족해. ` +
+    `그래서 용신은 ${yongsin.element}인데, 쉽게 말하면 ${yongsin.element} 기운을 보충하면 운이 풀리는 구조야.\n\n` +
+    `격국은 "${gyeokgukName}" — ${result.gyeokguk.description}\n\n` +
+    `신살은 총 ${sinsalCount}개가 잡혀. 자세한 건 아래에서 확인해봐.`;
 }

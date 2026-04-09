@@ -1007,6 +1007,21 @@ const SajuPage = () => {
           <PillarCard label="월주" ganji={wolju} sipsungCg={sipsung.woljuCg} sipsungJj={sipsung.woljuJj} twelveJj={twelveStages.woljuJj} />
           <PillarCard label="연주" ganji={yeonju} sipsungCg={sipsung.yeonjuCg} sipsungJj={sipsung.yeonjuJj} twelveJj={twelveStages.yeonjuJj} />
         </div>
+
+        {/* 주별 해석 — 4주 바로 아래 */}
+        <div className="space-y-3 mt-5">
+          {pillarMeanings.map((pm, i) => (
+            <div key={i} className="bg-surface border border-border rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-medium text-foreground">{pm.label}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">{pm.lifeStage}</span>
+                <span className="text-[10px] text-muted-foreground">{pm.ageRange}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mb-1">관계: {pm.relationship}</p>
+              <p className="text-xs text-foreground/80 leading-relaxed">{pm.description}</p>
+            </div>
+          ))}
+        </div>
       </Section>
 
       {/* 오행 밸런스 */}
@@ -1041,22 +1056,7 @@ const SajuPage = () => {
         </div>
       </Section>
 
-      {/* 주별 해석 */}
-      <Section title="주별 해석 (柱別 解釋)">
-        <div className="space-y-3">
-          {pillarMeanings.map((pm, i) => (
-            <div key={i} className="bg-surface border border-border rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium text-foreground">{pm.label}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">{pm.lifeStage}</span>
-                <span className="text-[10px] text-muted-foreground">{pm.ageRange}</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground mb-1">관계: {pm.relationship}</p>
-              <p className="text-xs text-foreground/80">{pm.description}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
+      {/* 주별 해석은 위 사주팔자 섹션 안에 통합됨 */}
 
       {/* 격국 */}
       <Section title="격국 (格局)">

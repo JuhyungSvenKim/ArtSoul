@@ -349,8 +349,13 @@ const AdminPage = () => {
       {/* ── 회원 관리 ──────────────────────────────── */}
       {mode === "users" && <UserManagement onMessage={(msg) => { setSuccess(msg); setTimeout(() => setSuccess(null), 2000); }} />}
 
-      {/* ── 설정 (코인 비용) ──────────────────────────── */}
-      {mode === "settings" && <CoinPricingSettings onSave={() => { setSuccess("설정이 저장되었습니다"); setTimeout(() => setSuccess(null), 2000); }} />}
+      {/* ── 설정 ──────────────────────────── */}
+      {mode === "settings" && (
+        <div className="space-y-8">
+          <CoinPricingSettings onSave={() => { setSuccess("설정이 저장되었습니다"); setTimeout(() => setSuccess(null), 2000); }} />
+          <PromptSettings onSave={(msg) => { setSuccess(msg); setTimeout(() => setSuccess(null), 2000); }} />
+        </div>
+      )}
     </PageContainer>
   );
 };
@@ -406,6 +411,101 @@ function CoinPricingSettings({ onSave }: { onSave: () => void }) {
         className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm">
         설정 저장
       </button>
+    </div>
+  );
+}
+
+// ── AI 프롬프트 설정 컴포넌트 ──────────────────────
+const PROMPT_FIELDS = [
+  { key: "saju_system_prompt", label: "사주 해석 프롬프트", desc: "AI 사주 해석 시스템 프롬프트" },
+  { key: "fortune_today_prompt", label: "오늘의 운세 프롬프트", desc: "비워두면 기본값 사용" },
+  { key: "fortune_week_prompt", label: "금주의 운세 프롬프트", desc: "비워두면 기본값 사용" },
+  { key: "fortune_month_prompt", label: "월간 운세 프롬프트", desc: "비워두면 기본값 사용" },
+  { key: "fortune_year_prompt", label: "올해 운세 프롬프트", desc: "비워두면 기본값 사용" },
+];
+
+function PromptSettings({ onSave }: { onSave: (msg: string) => void }) {
+  const [prompts, setPrompts] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadPrompts();
+  }, []);
+
+  const loadPrompts = async () => {
+    setLoading(true);
+    try {
+      const { data } = await supabase.from("app_settings")
+        .select("key, value")
+        .in("key", PROMPT_FIELDS.map(f => f.key));
+      if (data) {
+        const map: Record<string, string> = {};
+        data.forEach(row => { map[row.key] = row.value; });
+        setPrompts(map);
+      }
+    } catch {}
+    setLoading(false);
+  };
+
+  const savePrompt = async (key: string) => {
+    setSaving(key);
+    try {
+      await supabase.from("app_settings").upsert({
+        key,
+        value: prompts[key] || "",
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "key" });
+      onSave(`"${PROMPT_FIELDS.find(f => f.key === key)?.label}" 저장 완료`);
+    } catch {
+      onSave("저장 실패");
+    }
+    setSaving(null);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm font-semibold text-foreground mb-1">AI 프롬프트 설정</p>
+        <p className="text-xs text-muted-foreground">Supabase에서 바로 수정됩니다. 배포 없이 실시간 반영 (5분 캐시).</p>
+      </div>
+
+      {loading && <p className="text-xs text-muted-foreground text-center py-4">불러오는 중...</p>}
+
+      {!loading && PROMPT_FIELDS.map(({ key, label, desc }) => (
+        <div key={key} className="bg-surface border border-border rounded-xl overflow-hidden">
+          <button
+            onClick={() => setExpanded(expanded === key ? null : key)}
+            className="w-full px-4 py-3 flex items-center justify-between hover:bg-card/50 transition-colors"
+          >
+            <div className="text-left">
+              <p className="text-sm text-foreground font-medium">{label}</p>
+              <p className="text-[10px] text-muted-foreground">{desc}</p>
+            </div>
+            <span className={`text-xs text-muted-foreground transition-transform ${expanded === key ? "rotate-180" : ""}`}>▼</span>
+          </button>
+
+          {expanded === key && (
+            <div className="px-4 pb-4 space-y-2">
+              <textarea
+                value={prompts[key] || ""}
+                onChange={e => setPrompts(prev => ({ ...prev, [key]: e.target.value }))}
+                rows={10}
+                placeholder="프롬프트를 입력하세요... (비워두면 코드 내 기본값 사용)"
+                className="w-full px-3 py-2.5 rounded-lg bg-card border border-border text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary font-mono leading-relaxed resize-y"
+              />
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] text-muted-foreground">{(prompts[key] || "").length}자</p>
+                <button onClick={() => savePrompt(key)} disabled={saving === key}
+                  className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50">
+                  {saving === key ? "저장 중..." : "저장"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

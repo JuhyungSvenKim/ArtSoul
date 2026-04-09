@@ -13,6 +13,7 @@ import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
 import CaseCodeArt from "@/components/CaseCodeArt";
 import { getRecommendedArtworks } from "@/data/sample-artworks";
 import { getCoinBalance, deductCoins, saveFortune, getLatestFortune } from "@/services/coins";
+import { supabase } from "@/lib/supabase";
 import { callGemini } from "@/lib/gemini";
 
 // ── 오행 색상 매핑 ──────────────────────────────────
@@ -322,32 +323,32 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function getFortuneTypes() {
   const p = getCoinPricing();
   return [
-  { key: 'today' as const, label: '오늘의 운세', cost: p.fortuneToday, icon: '☀️', promptExtra: `오늘 하루의 운세를 써주세요.
+  { key: 'today' as const, label: '오늘의 운세', cost: p.fortuneToday, icon: '☀️', settingsKey: 'fortune_today_prompt', promptExtra: `오늘 하루의 운세를 써줘.
 
-톤: 아침에 읽으면 기분 좋아지는 친한 언니/형 느낌. 가볍지만 찔리는 한마디가 있어야 함.
-구조: 오늘의 키워드 한 줄 → 전체 운세 (3~4줄) → 재물 한줄팁 → 연애 한줄팁 → 건강 한줄팁 → 오늘의 행동 조언 한 줄
-예시 첫줄: "오늘은 입을 한 번만 더 닫으면 좋은 일이 생기는 날입니다."
-비유를 쓰고, "~하세요"보다 "~할 거예요", "~인 날이에요" 체를 써서 부드럽게.` },
+톤: 아침에 카톡으로 받으면 기분 좋아지는 친구 느낌. 가볍지만 찔리는 한마디.
+구조: 오늘의 키워드 한 줄 → 전체 운세 (3~4줄) → 재물 한줄팁 → 연애 한줄팁 → 건강 한줄팁 → 오늘의 행동 조언
+예시: "오늘은 입을 한 번만 더 닫으면 좋은 일이 생기는 날 ㅋㅋ"
+반말+존댓말 믹스 OK. 재미있게. 근데 내용은 정확하게.` },
 
-  { key: 'week' as const, label: '금주의 운세', cost: 3, icon: '📅', promptExtra: `이번 주 운세를 써주세요.
+  { key: 'week' as const, label: '금주의 운세', cost: 3, icon: '📅', settingsKey: 'fortune_week_prompt', promptExtra: `이번 주 운세를 써줘.
 
-톤: 한 주를 미리 보는 전략 브리핑 느낌. 요일별로 한 줄씩, 핵심만 콕.
-구조: 이번 주 핵심 키워드 → 월~금 각 요일별 한줄 운세 (구체적 행동 포함) → 주말 운세 → 이번 주 총평 한 줄
-예시: "수요일, 돈 관련 제안이 오면 24시간만 묵혀두세요. 목요일에 답이 보입니다."
-각 요일이 소설의 한 장면처럼 느껴지게.` },
+톤: 한 주 미리보기 브리핑. 요일별 핵심만 콕.
+구조: 이번 주 핵심 키워드 → 월~금 각 요일별 한줄 (구체적 행동 포함) → 주말 운세 → 총평 한 줄
+예시: "수요일, 돈 관련 제안 오면 24시간만 묵혀. 목요일에 답 보임."
+각 요일이 드라마 예고편처럼 느껴지게.` },
 
-  { key: 'month' as const, label: '월간 운세', cost: 5, icon: '🗓️', promptExtra: `이번 달 운세를 써주세요.
+  { key: 'month' as const, label: '월간 운세', cost: 5, icon: '🗓️', settingsKey: 'fortune_month_prompt', promptExtra: `이번 달 운세를 써줘.
 
-톤: 월간 매거진 칼럼 느낌. 깊이 있되 술술 읽히게.
-구조: 이번 달 테마 한 줄 → 1주차/2주차/3주차/4주차 각 3~4줄 → 재물운 단락 → 연애운 단락 → 건강운 단락 → 이번 달 핵심 한 줄
-각 주차를 "1막, 2막" 느낌으로. 비유 적극 활용.
-예시: "2주차는 씨앗을 심는 시간입니다. 결과를 당장 보려 하지 마세요."` },
+톤: 월간 매거진 칼럼인데 친구가 써준 느낌.
+구조: 이번 달 테마 한 줄 → 1주차/2주차/3주차/4주차 각 3~4줄 → 재물운 → 연애운 → 건강운 → 핵심 한 줄
+각 주차를 시즌제 드라마 "1화, 2화" 느낌으로.
+예시: "2주차는 씨앗 심는 타임. 결과 당장 보려 하지 마."` },
 
-  { key: 'year' as const, label: '올해 운세', cost: 10, icon: '🎯', promptExtra: `올해 전체 운세를 써주세요.
+  { key: 'year' as const, label: '올해 운세', cost: 10, icon: '🎯', settingsKey: 'fortune_year_prompt', promptExtra: `올해 전체 운세를 써줘.
 
-톤: 한 편의 단편소설처럼. 올해가 내 인생에서 어떤 해인지 큰 그림을 그려주세요.
-구조: 올해의 한 줄 정의 → 대운과의 관계 → 1분기(1~3월)/2분기(4~6월)/3분기(7~9월)/4분기(10~12월) 각 한 단락 → 재물운 총평 → 연애운 총평 → 직업운 총평 → 건강 총평 → 올해를 관통하는 조언 한 문장
-예시 첫줄: "2026년은 당신에게 '선택의 해'입니다. 올해 고른 길이 향후 10년을 결정합니다."
+톤: 올해가 내 인생에서 어떤 시즌인지 큰 그림. 단편소설처럼.
+구조: 올해 한 줄 정의 → 대운과의 관계 → 1분기/2분기/3분기/4분기 각 한 단락 → 재물 총평 → 연애 총평 → 직업 총평 → 건강 → 올해를 관통하는 조언
+예시: "2026년은 선택의 해. 올해 고른 길이 향후 10년을 결정함."
 대운 흐름과 연결해서 왜 올해가 중요한지 설득력 있게.` },
   ];
 }
@@ -405,10 +406,18 @@ function FortuneSection({ prompt, userId }: { prompt: string; userId: string | n
 
       const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
+      // Supabase에서 커스텀 프롬프트 확인
+      let customPromptExtra = type.promptExtra;
+      try {
+        const { data } = await supabase.from("app_settings")
+          .select("value").eq("key", type.settingsKey).single();
+        if (data?.value) customPromptExtra = data.value;
+      } catch {}
+
       const fortunePrompt = `오늘 날짜는 ${today}입니다.
 
-아래 사주를 기반으로 ${type.label}를 작성해주세요.
-${type.promptExtra}
+아래 사주를 기반으로 ${type.label}를 작성해줘.
+${customPromptExtra}
 
 ${prompt}`;
 

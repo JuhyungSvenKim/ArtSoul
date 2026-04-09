@@ -150,28 +150,46 @@ const HomePage = () => {
             const yEl = analysis.enhancedYongsin.yongsin;
             const dayOh = analysis.result.ilju.ohaeng;
             const dayStrength = analysis.enhancedYongsin.dayStrength;
-            const strengthComment = dayStrength === "강"
-              ? `${dayOh}이(가) 강해서 ${yEl} 기운이 담긴 그림으로 균형을 잡아줄 수 있어요`
-              : dayStrength === "약"
-              ? `${dayOh}이(가) 약하니 ${yEl}의 힘을 빌려 기운을 보충해보세요`
-              : `${dayOh}이(가) 중화라 ${yEl}의 그림으로 살짝 포인트를 줘보세요`;
+
+            const ohNames: Record<string, string> = { 목: "나무", 화: "불", 토: "흙", 금: "쇠", 수: "물" };
+            const ohVibes: Record<string, string> = {
+              목: "성장, 창의력, 새로운 시작의 에너지",
+              화: "열정, 표현력, 빛나는 에너지",
+              토: "안정, 신뢰, 든든한 에너지",
+              금: "결단력, 집중, 날카로운 에너지",
+              수: "지혜, 유연함, 깊은 사고의 에너지",
+            };
+
+            let hookLine = "";
+            let explainLine = "";
+            if (dayStrength === "강") {
+              hookLine = `${nameKorean || "너"}의 ${ohNames[dayOh]} 에너지가 넘쳐흐르는 중이야`;
+              explainLine = `${ohNames[dayOh]}(${dayOh}) 기운이 강한 사주라, ${ohNames[yEl]}(${yEl}) 기운이 담긴 그림을 곁에 두면 밸런스가 딱 맞아. 쉽게 말하면 사주가 "이 그림 옆에 있고 싶다"고 하는 거야.`;
+            } else if (dayStrength === "약") {
+              hookLine = `${nameKorean || "너"}한테 ${ohNames[yEl]} 에너지가 좀 필요해`;
+              explainLine = `${ohNames[dayOh]}(${dayOh}) 기운이 약한 편이라, ${ohNames[yEl]}(${yEl}) 기운이 담긴 그림이 부족한 에너지를 채워줘. 보약 같은 그림이라고 생각하면 돼.`;
+            } else {
+              hookLine = `${nameKorean || "너"}의 사주는 균형이 좋은 편이야`;
+              explainLine = `밸런스가 잡혀 있는데, ${ohNames[yEl]}(${yEl}) 기운을 살짝 더하면 운이 한 단계 업. ${ohVibes[yEl]}를 그림으로 채워보는 거야.`;
+            }
 
             return (
             <div className="space-y-6 animate-fade-in">
               {/* 내 사주 + 추천 요약 */}
               <div className="bg-card border border-primary/20 rounded-2xl p-6 glow-mystical">
-                <p className="text-xs text-primary font-medium mb-2">{nameKorean || "나"}님의 사주가 고른 그림</p>
-                <p className="text-sm text-foreground leading-relaxed">
-                  일간 <span className={`font-semibold ${OHAENG_COLORS[dayOh]?.text}`}>{analysis.result.ilju.cheonganKor}({dayOh})</span>
-                  {" · "}{dayStrength}
-                  {" → "}용신 <span className={`font-semibold ${OHAENG_COLORS[yEl]?.text}`}>{yEl}</span>
-                </p>
-                <p className="text-xs text-foreground/70 mt-2">{strengthComment}</p>
+                <p className="text-xs text-primary font-medium mb-3">{nameKorean || "나"}님의 사주가 고른 그림</p>
+                <p className="text-base font-medium text-foreground leading-relaxed mb-2">{hookLine}</p>
+                <p className="text-sm text-foreground/80 leading-relaxed">{explainLine}</p>
+                <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
+                  <span>내 기운: <span className={`font-semibold ${OHAENG_COLORS[dayOh]?.text}`}>{ohNames[dayOh]}({dayOh})</span> {dayStrength}</span>
+                  <span>→</span>
+                  <span>필요한 기운: <span className={`font-semibold ${OHAENG_COLORS[yEl]?.text}`}>{ohNames[yEl]}({yEl})</span></span>
+                </div>
               </div>
 
               {/* 추천 작품 그리드 (웹 반응형) */}
               <div>
-                <SectionHeader title={`${yEl} 기운 보충 작품`} />
+                <SectionHeader title={`${ohNames[yEl]} 에너지가 담긴 작품`} />
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {(analysis.artworks || []).slice(0, 8).map((art) => {
                     const el = ELEMENT_MAP[art.element];
@@ -296,11 +314,46 @@ const HomePage = () => {
           })()}
 
           {/* ── 사주 분석 탭 ── */}
-          {subTab === "saju" && (
+          {subTab === "saju" && (() => {
+            const ohN: Record<string, string> = { 목: "나무", 화: "불", 토: "흙", 금: "쇠", 수: "물" };
+            const ohPersonality: Record<string, string> = {
+              목: "성장하려는 에너지가 강해. 새로운 걸 시작하는 걸 좋아하고, 정 많고 창의적인 편",
+              화: "열정적이고 활발해. 표현력이 좋고 사람들 앞에 서는 걸 자연스럽게 해",
+              토: "안정적이고 믿음직해. 사람들 사이에서 중심을 잡아주는 역할을 잘 해",
+              금: "결단력이 있고 칼 같은 성격. 한번 정하면 안 바꾸고, 의리가 강해",
+              수: "생각이 깊고 머리가 좋아. 상황 파악이 빠르고 적응력이 뛰어나",
+            };
+            const dOh = analysis.enhancedYongsin.dayOhaeng;
+            const yOh = analysis.enhancedYongsin.yongsin;
+            const hOh = analysis.enhancedYongsin.huisin;
+            const gOh = analysis.enhancedYongsin.gisin;
+            const dStr = analysis.enhancedYongsin.dayStrength;
+
+            // 오행 밸런스 해설
+            const bal = analysis.balance;
+            const dominant = (Object.entries(bal) as [string, number][]).filter(([, v]) => v >= 3).map(([k]) => k);
+            const lacking = (Object.entries(bal) as [string, number][]).filter(([, v]) => v === 0).map(([k]) => k);
+            const balVibes: Record<string, string> = {
+              목: "추진력과 성장 에너지",
+              화: "열정과 표현력",
+              토: "안정감과 현실 감각",
+              금: "결단력과 집중력",
+              수: "생각의 깊이와 감성",
+            };
+            let balanceComment = "";
+            if (dominant.length > 0) {
+              balanceComment += dominant.map(d => `${ohN[d]}(${d})이(가) 많아서 ${balVibes[d]}이 넘침`).join(". ") + ". ";
+            }
+            if (lacking.length > 0) {
+              balanceComment += lacking.map(l => `${ohN[l]}(${l})이(가) 없어서 ${balVibes[l]}을 의식적으로 채워야 함`).join(". ") + ".";
+            }
+            if (!balanceComment) balanceComment = "오행이 고르게 분포되어 있어서 밸런스가 좋은 편이야.";
+
+            return (
             <div className="space-y-4 animate-fade-in">
               {/* 사주팔자 */}
               <div className="bg-card border border-border rounded-2xl p-5">
-                <p className="text-xs text-muted-foreground mb-3">사주팔자 (四柱八字)</p>
+                <p className="text-xs text-muted-foreground mb-3">내 사주 네 기둥</p>
                 <div className="grid grid-cols-4 gap-2 text-center">
                   {(["시주", "일주", "월주", "연주"] as const).map((label, i) => {
                     const pillar = [analysis.result.siju, analysis.result.ilju, analysis.result.wolju, analysis.result.yeonju][i];
@@ -321,15 +374,19 @@ const HomePage = () => {
                     );
                   })}
                 </div>
+                {/* 사주 한줄 요약 */}
+                <p className="text-sm text-foreground/80 leading-relaxed mt-4">
+                  {ohN[dOh]}({dOh}) 기운의 사람이야. {ohPersonality[dOh]}. 사주 전체를 보면 {analysis.summary.split('\n')[0].split('—')[1]?.trim() || `${ohN[dOh]} 에너지가 중심인 구조`}
+                </p>
               </div>
 
               {/* 오행 밸런스 */}
               <div className="bg-card border border-border rounded-2xl p-5">
-                <p className="text-xs text-muted-foreground mb-3">오행 밸런스</p>
+                <p className="text-xs text-muted-foreground mb-3">오행 밸런스 — 뭐가 많고 뭐가 부족해?</p>
                 <div className="flex gap-2">
                   {(["목", "화", "토", "금", "수"] as const).map((oh) => {
-                    const count = analysis.balance[oh];
-                    const maxCount = Math.max(...Object.values(analysis.balance), 1);
+                    const count = bal[oh];
+                    const maxCount = Math.max(...Object.values(bal), 1);
                     const style = OHAENG_COLORS[oh];
                     return (
                       <div key={oh} className="flex-1 text-center">
@@ -343,22 +400,39 @@ const HomePage = () => {
                     );
                   })}
                 </div>
+                {/* 밸런스 해설 */}
+                <p className="text-sm text-foreground/80 leading-relaxed mt-3">{balanceComment}</p>
               </div>
 
-              {/* 용신 요약 */}
+              {/* 나한테 필요한 기운 */}
               <div className="bg-card border border-border rounded-2xl p-5">
-                <p className="text-xs text-muted-foreground mb-2">용신 분석 (用神)</p>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-lg font-bold ${OHAENG_COLORS[analysis.enhancedYongsin.dayOhaeng]?.text}`}>
-                    {analysis.enhancedYongsin.dayOhaeng}
-                  </span>
-                  <span className="text-sm text-foreground">일간 · {analysis.enhancedYongsin.dayStrength}</span>
+                <p className="text-xs text-muted-foreground mb-2">나한테 필요한 기운</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`text-lg font-bold ${OHAENG_COLORS[dOh]?.text}`}>{ohN[dOh]}({dOh})</span>
+                  <span className="text-sm text-foreground">{dStr === "강" ? "에너지 넘침" : dStr === "약" ? "에너지 부족" : "밸런스 좋음"}</span>
                 </div>
-                <div className="text-xs text-muted-foreground space-y-1 mb-2">
-                  <p>용신: <span className={`font-semibold ${OHAENG_COLORS[analysis.enhancedYongsin.yongsin]?.text}`}>{analysis.enhancedYongsin.yongsin}</span></p>
-                  <p>희신: {analysis.enhancedYongsin.huisin} · 기신: {analysis.enhancedYongsin.gisin}</p>
+                <p className="text-sm text-foreground/80 leading-relaxed mb-3">
+                  {dStr === "강"
+                    ? `${ohN[dOh]} 기운이 강해서 넘치는 에너지를 ${ohN[yOh]}(${yOh})로 분산시켜야 해. ${ohN[yOh]} 기운이 들어오면 과한 ${ohN[dOh]} 에너지가 자연스럽게 정리돼.`
+                    : dStr === "약"
+                    ? `${ohN[dOh]} 기운이 약한 편이라, ${ohN[yOh]}(${yOh}) 기운으로 힘을 보충해야 해. ${ohN[yOh]} 에너지가 부족한 ${ohN[dOh]}를 살려주는 구조야.`
+                    : `밸런스가 좋은 편인데, ${ohN[yOh]}(${yOh}) 기운을 살짝 더하면 운이 한 단계 업돼.`
+                  }
+                </p>
+                <div className="flex gap-3 text-xs">
+                  <div className="flex-1 bg-surface rounded-lg p-2.5">
+                    <p className="text-muted-foreground mb-0.5">채우면 좋은 기운</p>
+                    <p className={`font-semibold ${OHAENG_COLORS[yOh]?.text}`}>{ohN[yOh]}({yOh})</p>
+                  </div>
+                  <div className="flex-1 bg-surface rounded-lg p-2.5">
+                    <p className="text-muted-foreground mb-0.5">도와주는 기운</p>
+                    <p className="text-foreground">{ohN[hOh] || hOh}</p>
+                  </div>
+                  <div className="flex-1 bg-surface rounded-lg p-2.5">
+                    <p className="text-muted-foreground mb-0.5">조심할 기운</p>
+                    <p className="text-foreground">{ohN[gOh] || gOh}</p>
+                  </div>
                 </div>
-                <p className="text-xs text-foreground/70">{analysis.enhancedYongsin.summary}</p>
               </div>
 
               {/* 상세 사주 보기 */}
@@ -367,7 +441,8 @@ const HomePage = () => {
                 상세 사주 분석 보기 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-          )}
+          );
+          })()}
         </>
       )}
 

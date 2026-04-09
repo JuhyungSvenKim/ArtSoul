@@ -1,14 +1,13 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Sparkles, User } from "lucide-react";
+import { Sparkles, Search, User } from "lucide-react";
 
 interface TabBarProps {
-  activeTab?: "home" | "explore" | "saju" | "my";
+  activeTab?: "home" | "explore" | "my";
 }
 
 const tabs = [
-  { key: "home" as const, label: "홈", icon: Home, path: "/home" },
+  { key: "home" as const, label: "추천·사주", icon: Sparkles, path: "/home" },
   { key: "explore" as const, label: "탐색", icon: Search, path: "/explore" },
-  { key: "saju" as const, label: "사주", icon: Sparkles, path: "/saju" },
   { key: "my" as const, label: "MY", icon: User, path: "/my" },
 ];
 
@@ -28,7 +27,7 @@ const TabBar = ({ activeTab }: TabBarProps) => {
             <button
               key={tab.key}
               onClick={() => navigate(tab.path)}
-              className={`flex flex-col items-center gap-0.5 px-4 py-1.5 transition-colors ${
+              className={`flex flex-col items-center gap-0.5 px-6 py-1.5 transition-colors ${
                 isActive ? "text-primary" : "text-muted-foreground"
               }`}
             >

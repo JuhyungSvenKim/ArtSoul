@@ -1,17 +1,25 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import TabBar from "@/components/TabBar";
 import { ChevronRight } from "lucide-react";
 import { useOnboardingStore } from "@/stores/onboarding";
-import { getSaju } from "@/lib/saju";
-import { getYongsin, getOhaengBalance, getLuckyItems } from "@/lib/saju/analysis";
+import { getSaju, sajuToAIPrompt } from "@/lib/saju";
+import type { SajuResult } from "@/lib/saju";
+import { getOhaengBalance, getYongsin, getLuckyItems, getSajuSummary } from "@/lib/saju/analysis";
+import { analyzeYongsin } from "@/lib/saju/yongsin";
+import { matchSajuToCases } from "@/lib/case-code";
+import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
 
-const OHAENG_COLORS: Record<string, string> = {
-  목: "text-green-400", 화: "text-red-400", 토: "text-yellow-400", 금: "text-gray-300", 수: "text-blue-400",
+const OHAENG_COLORS: Record<string, { bg: string; text: string }> = {
+  목: { bg: "bg-green-500/20", text: "text-green-400" },
+  화: { bg: "bg-red-500/20", text: "text-red-400" },
+  토: { bg: "bg-yellow-500/20", text: "text-yellow-400" },
+  금: { bg: "bg-gray-400/20", text: "text-gray-300" },
+  수: { bg: "bg-blue-500/20", text: "text-blue-400" },
 };
 
-// 오행별 추천 작품 (데모 데이터 - 나중에 DB에서 가져옴)
+// 오행별 데모 추천 작품
 const OHAENG_ARTWORKS: Record<string, Array<{ id: string; title: string; artist: string; emoji: string; reason: string }>> = {
   목: [
     { id: "w1", title: "봄날의 숲", artist: "김수연", emoji: "🌿", reason: "목 기운 보충" },
@@ -38,33 +46,19 @@ const OHAENG_ARTWORKS: Record<string, Array<{ id: string; title: string; artist:
     { id: "m4", title: "금속 조각", artist: "김태리", emoji: "✨", reason: "정밀함" },
   ],
   수: [
-    { id: "wa1", title: "바다의 숨결", artist: "정은채", emoji: "🌊", reason: "수 기운 보충" },
-    { id: "wa2", title: "비 오는 거리", artist: "오현석", emoji: "🌧️", reason: "깊은 사유" },
-    { id: "wa3", title: "호수의 새벽", artist: "김수연", emoji: "🏞️", reason: "고요한 지혜" },
-    { id: "wa4", title: "수묵 산수", artist: "이도윤", emoji: "⛰️", reason: "유연한 흐름" },
+    { id: "a1", title: "바다의 숨결", artist: "정은채", emoji: "🌊", reason: "수 기운 보충" },
+    { id: "a2", title: "비 오는 거리", artist: "오현석", emoji: "🌧️", reason: "깊은 사유" },
+    { id: "a3", title: "호수의 새벽", artist: "김수연", emoji: "🏞️", reason: "고요한 지혜" },
+    { id: "a4", title: "수묵 산수", artist: "이도윤", emoji: "⛰️", reason: "유연한 흐름" },
   ],
 };
 
-const POPULAR_ARTWORKS = [
-  { id: "p1", title: "달빛 아래 소나무", artist: "박서연", emoji: "🌙" },
-  { id: "p2", title: "붉은 노을", artist: "이도윤", emoji: "🌅" },
-  { id: "p3", title: "정물 — 매화", artist: "최하늘", emoji: "🌸" },
-  { id: "p4", title: "바다의 숨결", artist: "정은채", emoji: "🌊" },
-];
-
-const NEW_ARTWORKS = [
-  { id: "n1", title: "추상 오행도", artist: "한지민", emoji: "✨" },
-  { id: "n2", title: "도시의 기운", artist: "오현석", emoji: "🏙️" },
-  { id: "n3", title: "수묵 산수", artist: "김태리", emoji: "⛰️" },
-  { id: "n4", title: "금빛 정원", artist: "유재석", emoji: "🌻" },
-];
-
 const HomePage = () => {
   const navigate = useNavigate();
-  const { nameKorean, birthDate, birthTime, gender, mbti } = useOnboardingStore();
+  const { nameKorean, birthDate, birthTime, gender } = useOnboardingStore();
+  const [subTab, setSubTab] = useState<"recommend" | "saju">("recommend");
 
-  // 사주 기반 추천 데이터 계산
-  const personalized = useMemo(() => {
+  const analysis = useMemo(() => {
     if (!birthDate || !gender) return null;
     try {
       const [y, m, d] = birthDate.split("-").map(Number);
@@ -73,121 +67,222 @@ const HomePage = () => {
       const balance = getOhaengBalance(result);
       const yongsin = getYongsin(balance, result.ilju.ohaeng);
       const lucky = getLuckyItems(yongsin.element);
-      return { result, yongsin, lucky, ilganOhaeng: result.ilju.ohaeng };
+      const summary = getSajuSummary(result);
+
+      const { yeonju, wolju, ilju, siju, sipsung } = result;
+      const enhancedYongsin = analyzeYongsin({ yeonju, wolju, ilju, siju }, sipsung);
+      const recommendation = matchSajuToCases({ sajuResult: result, yongsinResult: enhancedYongsin });
+      const topCases = recommendation.all.slice(0, 5);
+
+      return { result, yongsin, lucky, summary, enhancedYongsin, topCases, balance };
     } catch {
       return null;
     }
   }, [birthDate, birthTime, gender]);
 
-  const recommendedArtworks = personalized
-    ? OHAENG_ARTWORKS[personalized.yongsin.element] || OHAENG_ARTWORKS["목"]
+  const recommendedArtworks = analysis
+    ? OHAENG_ARTWORKS[analysis.yongsin.element] || OHAENG_ARTWORKS["목"]
     : [];
-
-  const matchReason = personalized
-    ? `${personalized.yongsin.element} 기운이 부족한 당신에게 ${personalized.yongsin.element}의 에너지를 채워줄 작품`
-    : "";
 
   return (
     <PageContainer className="pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-display text-gold-gradient font-semibold">ART.D.N.A.</h1>
-        <div className="w-8 h-8 rounded-full bg-surface border border-border flex items-center justify-center text-xs">🔔</div>
+        <button onClick={() => navigate("/coin-shop")}
+          className="text-xs px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 font-medium hover:bg-yellow-500/20 transition-colors">
+          🪙 충전
+        </button>
       </div>
 
-      {/* 개인화 추천 (사주 데이터 있을 때) */}
-      {personalized && recommendedArtworks.length > 0 && (
-        <>
-          <div className="bg-card border border-border rounded-2xl p-5 mb-5 glow-mystical animate-fade-in">
-            <div className="flex items-center gap-2 mb-2">
-              <p className="text-xs text-primary font-medium">
-                {nameKorean || "회원"}님을 위한 추천
-              </p>
-              {mbti && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{mbti}</span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">{matchReason}</p>
-            <div className="flex gap-4 items-center">
-              <div className="w-20 h-24 rounded-xl bg-surface border border-border flex items-center justify-center text-3xl shrink-0">
-                {recommendedArtworks[0].emoji}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base font-medium text-foreground truncate">{recommendedArtworks[0].title}</h3>
-                <p className="text-xs text-muted-foreground mb-1">{recommendedArtworks[0].artist}</p>
-                <span className={`text-xs ${OHAENG_COLORS[personalized.yongsin.element] || ""}`}>
-                  {recommendedArtworks[0].reason}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 용신 기반 추천 슬라이더 */}
-          <SectionHeader title={`${personalized.yongsin.element} 기운 보충 작품`} />
-          <div className="flex gap-3 overflow-x-auto pb-2 mb-6 -mx-1 px-1 scrollbar-hide">
-            {recommendedArtworks.map((art) => (
-              <div key={art.id} className="shrink-0 w-32">
-                <div className="w-32 h-40 rounded-xl bg-surface border border-border flex items-center justify-center text-4xl mb-2">
-                  {art.emoji}
-                </div>
-                <p className="text-xs font-medium text-foreground truncate">{art.title}</p>
-                <p className="text-[10px] text-muted-foreground">{art.artist}</p>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* 비로그인 시 기본 추천 */}
-      {!personalized && (
-        <div className="bg-card border border-border rounded-2xl p-5 mb-5 animate-fade-in">
-          <p className="text-xs text-primary font-medium mb-2">사주 기반 맞춤 추천</p>
-          <p className="text-sm text-muted-foreground mb-3">생년월일을 입력하면 나에게 맞는 그림을 추천해드려요</p>
-          <button
-            onClick={() => navigate("/birth-info")}
-            className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium"
-          >
-            사주 입력하고 추천받기
+      {/* 사주 미입력 시 */}
+      {!analysis && (
+        <div className="bg-card border border-border rounded-2xl p-6 mb-6 text-center animate-fade-in">
+          <span className="text-3xl mb-3 block">🎨</span>
+          <p className="text-sm font-medium text-foreground mb-2">사주 기반 맞춤 추천</p>
+          <p className="text-xs text-muted-foreground mb-4">생년월일을 입력하면 나에게 딱 맞는 그림을 추천해드려요</p>
+          <button onClick={() => navigate("/birth-info")}
+            className="w-full py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium glow-gold">
+            사주 입력하기
           </button>
         </div>
       )}
 
-      {/* 인기 작품 */}
-      <SectionHeader title="인기 작품" />
-      <div className="flex gap-3 overflow-x-auto pb-2 mb-6 -mx-1 px-1 scrollbar-hide">
-        {POPULAR_ARTWORKS.map((art) => (
-          <div key={art.id} className="shrink-0 w-32">
-            <div className="w-32 h-40 rounded-xl bg-surface border border-border flex items-center justify-center text-4xl mb-2">
-              {art.emoji}
-            </div>
-            <p className="text-xs font-medium text-foreground truncate">{art.title}</p>
-            <p className="text-[10px] text-muted-foreground">{art.artist}</p>
+      {/* 사주 입력 완료 시: 서브탭 */}
+      {analysis && (
+        <>
+          {/* 서브탭 헤더 */}
+          <div className="flex gap-1 mb-5 bg-surface rounded-xl p-1">
+            {([
+              { key: "recommend" as const, label: "추천 그림" },
+              { key: "saju" as const, label: "사주 분석" },
+            ]).map((tab) => (
+              <button key={tab.key} onClick={() => setSubTab(tab.key)}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  subTab === tab.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}>
+                {tab.label}
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* 새로운 작품 */}
-      <SectionHeader title="새로운 작품" />
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {NEW_ARTWORKS.map((art) => (
-          <div key={art.id} className="group">
-            <div className="aspect-[3/4] rounded-xl bg-surface border border-border flex items-center justify-center text-4xl mb-2 transition-all group-hover:border-primary/30">
-              {art.emoji}
+          {/* ── 추천 그림 탭 ── */}
+          {subTab === "recommend" && (
+            <div className="space-y-5 animate-fade-in">
+              {/* 내 ART DNA 요약 카드 */}
+              <div className="bg-card border border-border rounded-2xl p-5 glow-mystical">
+                <p className="text-[10px] text-muted-foreground mb-2">{nameKorean || "나"}의 ART DNA</p>
+                <div className="flex items-center gap-3 mb-3">
+                  {analysis.topCases[0] && (
+                    <span className="text-base font-mono font-bold px-3 py-1 rounded-lg"
+                      style={{
+                        backgroundColor: `${ELEMENT_MAP[analysis.topCases[0].element]?.color}20`,
+                        color: ELEMENT_MAP[analysis.topCases[0].element]?.color,
+                        border: `1px solid ${ELEMENT_MAP[analysis.topCases[0].element]?.color}40`,
+                      }}>
+                      {analysis.topCases[0].caseCode}
+                    </span>
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      용신 <span className={OHAENG_COLORS[analysis.yongsin.element]?.text}>{analysis.yongsin.element}</span>
+                      {" · "}일간 {analysis.result.ilju.cheonganKor}({analysis.result.ilju.ohaeng})
+                    </p>
+                    <p className="text-xs text-muted-foreground">{analysis.yongsin.reason}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 용신 기반 추천 */}
+              <div>
+                <SectionHeader title={`${analysis.yongsin.element} 기운 보충 작품`} />
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+                  {recommendedArtworks.map((art) => (
+                    <div key={art.id} className="shrink-0 w-32">
+                      <div className="w-32 h-40 rounded-xl bg-surface border border-border flex items-center justify-center text-4xl mb-2">
+                        {art.emoji}
+                      </div>
+                      <p className="text-xs font-medium text-foreground truncate">{art.title}</p>
+                      <p className="text-[10px] text-muted-foreground">{art.artist}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 125 케이스코드 Top 5 */}
+              <div>
+                <SectionHeader title="ART DNA 매칭 Top 5" />
+                <div className="space-y-2">
+                  {analysis.topCases.map((c, i) => {
+                    const el = ELEMENT_MAP[c.element];
+                    return (
+                      <div key={c.caseCode} className="bg-card border border-border rounded-xl px-4 py-3 flex items-center gap-3">
+                        <span className="text-xs font-mono font-bold w-6 text-center text-muted-foreground">{i + 1}</span>
+                        <span className="text-xs font-mono px-2 py-0.5 rounded" style={{
+                          backgroundColor: `${el?.color}20`, color: el?.color, border: `1px solid ${el?.color}40`
+                        }}>{c.caseCode}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-foreground truncate">{c.reason}</p>
+                        </div>
+                        <span className="text-sm font-bold text-primary">{c.totalScore}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 행운 색상 */}
+              <div className="bg-card border border-border rounded-2xl p-5">
+                <p className="text-xs text-muted-foreground mb-3">행운 컬러</p>
+                <div className="flex gap-3">
+                  {analysis.lucky.colorHexes.map((hex, i) => (
+                    <div key={i} className="flex flex-col items-center">
+                      <div className="w-10 h-10 rounded-full border border-border" style={{ backgroundColor: hex }} />
+                      <span className="text-[10px] text-muted-foreground mt-1">{analysis.lucky.colors[i]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <p className="text-xs font-medium text-foreground truncate">{art.title}</p>
-            <p className="text-[10px] text-muted-foreground">{art.artist}</p>
-          </div>
-        ))}
-      </div>
+          )}
 
-      {/* 이벤트 배너 */}
-      <div className="bg-gradient-to-r from-primary/20 to-primary/5 border border-primary/20 rounded-xl p-4 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-medium text-primary">🎨 봄맞이 이벤트</p>
-          <p className="text-xs text-muted-foreground mt-0.5">첫 렌탈 30% 할인</p>
-        </div>
-        <ChevronRight className="w-4 h-4 text-primary" />
-      </div>
+          {/* ── 사주 분석 탭 ── */}
+          {subTab === "saju" && (
+            <div className="space-y-4 animate-fade-in">
+              {/* 사주팔자 */}
+              <div className="bg-card border border-border rounded-2xl p-5">
+                <p className="text-xs text-muted-foreground mb-3">사주팔자 (四柱八字)</p>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  {(["시주", "일주", "월주", "연주"] as const).map((label, i) => {
+                    const pillar = [analysis.result.siju, analysis.result.ilju, analysis.result.wolju, analysis.result.yeonju][i];
+                    const cgStyle = OHAENG_COLORS[pillar.ohaeng] || { bg: "bg-surface", text: "text-foreground" };
+                    const jjStyle = OHAENG_COLORS[pillar.jijiOhaeng] || { bg: "bg-surface", text: "text-foreground" };
+                    return (
+                      <div key={label}>
+                        <p className="text-[10px] text-muted-foreground mb-1">{label}</p>
+                        <div className={`rounded-lg ${cgStyle.bg} p-2 mb-1`}>
+                          <p className={`text-xl font-bold ${cgStyle.text}`}>{pillar.cheongan}</p>
+                          <p className="text-[9px] text-muted-foreground">{pillar.cheonganKor}·{pillar.ohaeng}</p>
+                        </div>
+                        <div className={`rounded-lg ${jjStyle.bg} p-2`}>
+                          <p className={`text-xl font-bold ${jjStyle.text}`}>{pillar.jiji}</p>
+                          <p className="text-[9px] text-muted-foreground">{pillar.jijiKor}·{pillar.jijiOhaeng}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 오행 밸런스 */}
+              <div className="bg-card border border-border rounded-2xl p-5">
+                <p className="text-xs text-muted-foreground mb-3">오행 밸런스</p>
+                <div className="flex gap-2">
+                  {(["목", "화", "토", "금", "수"] as const).map((oh) => {
+                    const count = analysis.balance[oh];
+                    const maxCount = Math.max(...Object.values(analysis.balance), 1);
+                    const style = OHAENG_COLORS[oh];
+                    return (
+                      <div key={oh} className="flex-1 text-center">
+                        <div className="h-16 flex items-end justify-center mb-1">
+                          <div className={`w-full rounded-t-lg ${style.bg}`}
+                            style={{ height: `${Math.max((count / maxCount) * 100, 12)}%` }} />
+                        </div>
+                        <p className={`text-xs font-bold ${style.text}`}>{oh}</p>
+                        <p className="text-[10px] text-muted-foreground">{count}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 용신 요약 */}
+              <div className="bg-card border border-border rounded-2xl p-5">
+                <p className="text-xs text-muted-foreground mb-2">용신 분석 (用神)</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-lg font-bold ${OHAENG_COLORS[analysis.enhancedYongsin.dayOhaeng]?.text}`}>
+                    {analysis.enhancedYongsin.dayOhaeng}
+                  </span>
+                  <span className="text-sm text-foreground">일간 · {analysis.enhancedYongsin.dayStrength}</span>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-1 mb-2">
+                  <p>용신: <span className={`font-semibold ${OHAENG_COLORS[analysis.enhancedYongsin.yongsin]?.text}`}>{analysis.enhancedYongsin.yongsin}</span></p>
+                  <p>희신: {analysis.enhancedYongsin.huisin} · 기신: {analysis.enhancedYongsin.gisin}</p>
+                </div>
+                <p className="text-xs text-foreground/70">{analysis.enhancedYongsin.summary}</p>
+              </div>
+
+              {/* 상세 사주 보기 */}
+              <button onClick={() => navigate("/saju")}
+                className="w-full py-3 rounded-xl bg-surface border border-border text-sm text-muted-foreground hover:text-primary hover:border-primary/30 transition-all flex items-center justify-center gap-1">
+                상세 사주 분석 보기 <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
       <TabBar activeTab="home" />
     </PageContainer>

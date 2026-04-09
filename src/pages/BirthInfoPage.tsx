@@ -83,10 +83,8 @@ const BirthInfoPage = () => {
     ? hanjaDirectInput || null
     : [hanjaSurname, hanjaName1, hanjaName2].filter(Boolean).join(" ") || null;
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (!isValid || !gender) return;
-    setSaving(true);
-    setError(null);
 
     const data = {
       birthDate,
@@ -96,19 +94,17 @@ const BirthInfoPage = () => {
       gender,
     };
 
-    try {
-      const user = await createUser(data);
-      setBirthInfo(data);
-      setUserId(user.id);
-      // zustand persist 외에 직접 저장 (hydration 문제 우회)
-      localStorage.setItem("artsoul-saju-input", JSON.stringify(data));
-      navigate("/mbti");
-    } catch (e: any) {
-      console.error("Failed to save:", e);
-      setError(e.message || "저장에 실패했습니다. 다시 시도해주세요.");
-    } finally {
-      setSaving(false);
-    }
+    // 1. localStorage에 즉시 저장 (가장 확실한 방법)
+    localStorage.setItem("artsoul-saju-input", JSON.stringify(data));
+
+    // 2. zustand store 업데이트
+    setBirthInfo(data);
+
+    // 3. DB 저장은 백그라운드 (실패해도 무관)
+    createUser(data).then(user => setUserId(user.id)).catch(() => {});
+
+    // 4. 즉시 다음으로
+    navigate("/mbti");
   };
 
   return (
@@ -244,9 +240,9 @@ const BirthInfoPage = () => {
         </section>
       </form>
 
-      <button disabled={!isValid || saving} onClick={handleNext}
+      <button disabled={!isValid} onClick={handleNext}
         className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm mt-6 transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none glow-gold">
-        {saving ? "분석 중..." : "사주 분석하기"}
+        다음
       </button>
     </PageContainer>
   );

@@ -978,7 +978,16 @@ const SajuPage = () => {
         </div>
       </Section>
 
-      <Section title="사주팔자 (四柱八字)">
+      {/* AI 해석 + 운세 — 총평 바로 아래, 사주팔자 위 */}
+      <Section title="AI 해석">
+        <AIInterpretation prompt={aiPrompt} userId={userId} />
+      </Section>
+
+      <Section title="운세 보기">
+        <FortuneSection prompt={aiPrompt} userId={userId} />
+      </Section>
+
+      <Section title="내 사주 네 기둥">
         {/* 4주 카드 — 가로 배치 (반응형) */}
         <div className="grid grid-cols-4 gap-2 sm:gap-3">
           <PillarCard label="시주" ganji={siju} sipsungCg={sipsung.sijuCg} sipsungJj={sipsung.sijuJj} twelveJj={twelveStages.sijuJj} />
@@ -1013,7 +1022,7 @@ const SajuPage = () => {
       </Section>
 
       {/* 오행 밸런스 */}
-      <Section title="음양오행 밸런스">
+      <Section title="오행 밸런스 — 뭐가 많고 뭐가 부족해?">
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex justify-between mb-3">
             {(Object.entries(balance) as [string, number][]).map(([ohaeng, count]) => {
@@ -1047,28 +1056,28 @@ const SajuPage = () => {
       {/* 주별 해석은 위 사주팔자 섹션 안에 통합됨 */}
 
       {/* 격국 */}
-      <Section title="격국 (格局)">
+      <Section title="내 사주의 성격 유형">
         <div className="bg-card border border-border rounded-xl p-4 glow-mystical">
           <p className="text-base font-semibold text-gold-gradient mb-1">{gyeokguk.name}</p>
           <p className="text-sm text-foreground/80">{gyeokguk.description}</p>
-          <p className="text-xs text-muted-foreground mt-2">기본 십성: {gyeokguk.baseSipsung}</p>
+          <p className="text-xs text-muted-foreground mt-2">쉽게 말하면 "{gyeokguk.baseSipsung}" 에너지가 중심인 사주야</p>
         </div>
       </Section>
 
       {/* 용신 + 예술 추천 */}
-      <Section title="용신 · 추천 예술 (用神)">
+      <Section title="나한테 필요한 기운 + 추천 아트">
         <div className="bg-card border border-border rounded-xl p-4 space-y-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-medium text-foreground">용신</span>
+              <span className="text-sm font-medium text-foreground">필요한 기운(용신)</span>
               <span className={`text-sm font-bold ${getOhaengStyle(yongsin.element).text}`}>{yongsin.element}</span>
             </div>
-            <p className="text-xs text-foreground/80">{yongsin.reason}</p>
+            <p className="text-sm text-foreground/80">쉽게 말하면, {yongsin.element} 기운이 부족하니까 이걸 채워주면 운이 풀리는 구조야</p>
           </div>
 
           {/* 행운 색상 */}
           <div>
-            <p className="text-[10px] text-muted-foreground mb-1.5">나에게 맞는 색상</p>
+            <p className="text-xs text-muted-foreground mb-1.5">나한테 맞는 색상</p>
             <div className="flex gap-2">
               {lucky.colorHexes.map((hex, i) => (
                 <div key={i} className="flex flex-col items-center">
@@ -1081,7 +1090,7 @@ const SajuPage = () => {
 
           {/* 추천 화풍 */}
           <div>
-            <p className="text-[10px] text-muted-foreground mb-1.5">추천 화풍</p>
+            <p className="text-xs text-muted-foreground mb-1.5">이런 스타일의 그림이 맞아</p>
             <div className="flex flex-wrap gap-1.5">
               {lucky.artStyles.map((s, i) => (
                 <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">{s.emoji} {s.label}</span>
@@ -1091,7 +1100,7 @@ const SajuPage = () => {
 
           {/* 추천 작품 소재 */}
           <div>
-            <p className="text-[10px] text-muted-foreground mb-1.5">어울리는 작품 소재</p>
+            <p className="text-xs text-muted-foreground mb-1.5">이런 소재가 어울려</p>
             <div className="flex flex-wrap gap-1.5">
               {lucky.artSubjects.map((s, i) => (
                 <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-surface border border-border text-foreground">{s.emoji} {s.label}</span>
@@ -1101,7 +1110,7 @@ const SajuPage = () => {
 
           {/* 추천 분위기 */}
           <div>
-            <p className="text-[10px] text-muted-foreground mb-1.5">추천 분위기</p>
+            <p className="text-xs text-muted-foreground mb-1.5">이런 분위기가 딱이야</p>
             <div className="flex flex-wrap gap-1.5">
               {lucky.artMoods.map((s, i) => (
                 <span key={i} className={`text-xs px-2.5 py-1 rounded-full ${getOhaengStyle(yongsin.element).bg} ${getOhaengStyle(yongsin.element).text}`}>{s.emoji} {s.label}</span>
@@ -1119,7 +1128,7 @@ const SajuPage = () => {
       </Section>
 
       {/* 나의 운명과 맞는 ARTs */}
-      <Section title="나의 운명과 맞는 ARTs">
+      <Section title="내 사주에 딱 맞는 그림">
         <div className="space-y-5">
           {/* 추천 요약 — 재미있게 */}
           {(() => {
@@ -1217,7 +1226,7 @@ const SajuPage = () => {
       </Section>
 
       {/* 공망 */}
-      <Section title="공망 (空亡)">
+      <Section title="공망 — 비어있는 자리">
         <div className="flex gap-3">
           <div className="bg-surface border border-border rounded-lg px-4 py-2 text-center">
             <p className="text-lg font-bold text-foreground">{gongmang.jiji1}</p>
@@ -1231,30 +1240,21 @@ const SajuPage = () => {
       </Section>
 
       {/* 합충형파해 */}
-      <Section title="합충형파해 (合沖刑破害)">
+      <Section title="기운의 충돌과 조화">
         <RelationsList relations={relations} />
       </Section>
 
       {/* 신살 */}
-      <Section title="신살 (神殺)">
+      <Section title="내가 타고난 별 (신살)">
         <SinsalList sinsal={sinsal} yongsinOh={enhancedYongsin.yongsin} dayOh={ilju.ohaeng} />
       </Section>
 
       {/* 대운 */}
-      <Section title="대운 (大運)">
+      <Section title="인생 타임라인 (대운)">
         <DaeunTimeline daeun={daeun} startAge={daeunStartAge}
           birthYear={solarDate.year}
           dayOh={ilju.ohaeng} yongsinOh={enhancedYongsin.yongsin}
           dayStrength={enhancedYongsin.dayStrength} sinsal={sinsal} />
-      </Section>
-
-      {/* AI 해석 */}
-      <Section title="AI 해석">
-        <AIInterpretation prompt={aiPrompt} userId={userId} />
-      </Section>
-
-      <Section title="운세 보기">
-        <FortuneSection prompt={aiPrompt} userId={userId} />
       </Section>
 
       <TabBar activeTab="home" />

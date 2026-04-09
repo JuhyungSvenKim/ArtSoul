@@ -21,9 +21,22 @@ const CartPage = () => {
     setItems([]);
   };
 
+  const [showVerify, setShowVerify] = useState(false);
   const { purchaseTotal, rentalTotal, count } = getCartTotal(items);
   const purchaseItems = items.filter(i => i.type === "purchase");
   const rentalItems = items.filter(i => i.type === "rental");
+
+  const handleCheckout = () => {
+    const isVerified = localStorage.getItem("artsoul-identity-verified") === "true";
+    if (!isVerified) { setShowVerify(true); return; }
+    navigate(`/purchase?from=cart&total=${purchaseTotal + rentalTotal}`);
+  };
+
+  const handleVerifyComplete = () => {
+    localStorage.setItem("artsoul-identity-verified", "true");
+    setShowVerify(false);
+    navigate(`/purchase?from=cart&total=${purchaseTotal + rentalTotal}`);
+  };
 
   return (
     <PageContainer className="pt-20 pb-32">
@@ -84,10 +97,34 @@ const CartPage = () => {
                 {rentalTotal > 0 && <p className="text-xs text-primary">렌탈 월 <span className="font-semibold">₩{rentalTotal.toLocaleString()}</span></p>}
               </div>
             </div>
-            <button onClick={() => navigate(`/purchase?from=cart&total=${purchaseTotal + rentalTotal}`)}
+            <button onClick={handleCheckout}
               className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm transition-transform active:scale-[0.98]">
               결제하기
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 실명인증 모달 */}
+      {showVerify && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowVerify(false)} />
+          <div className="relative z-10 mx-6 w-full max-w-sm bg-card border border-border rounded-2xl p-6">
+            <h3 className="text-base font-semibold text-foreground mb-2">본인인증이 필요합니다</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              결제를 진행하려면 본인인증이 필요합니다.
+              한 번 인증하면 이후 결제에서는 다시 요구하지 않습니다.
+            </p>
+            <div className="space-y-2">
+              <button onClick={handleVerifyComplete}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm">
+                본인인증 하기
+              </button>
+              <button onClick={() => setShowVerify(false)}
+                className="w-full py-2.5 rounded-xl text-muted-foreground text-sm">
+                나중에
+              </button>
+            </div>
           </div>
         </div>
       )}

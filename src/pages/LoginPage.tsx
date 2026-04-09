@@ -8,16 +8,22 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreeMarketing, setAgreeMarketing] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = () => {
-    // 소셜 로그인 없이도 앱 사용 가능하도록
-    // 향후 Supabase Auth 연동 시 실제 인증 처리
-    if (mode === "signup" && !name) { setError("이름을 입력해주세요"); return; }
+    if (mode === "signup") {
+      if (!name) { setError("이름을 입력해주세요"); return; }
+      if (!phone) { setError("휴대폰 번호를 입력해주세요"); return; }
+      if (!agreeTerms) { setError("이용약관에 동의해주세요"); return; }
+    }
     if (!email || !password) { setError("이메일과 비밀번호를 입력해주세요"); return; }
+    if (mode === "signup" && password.length < 6) { setError("비밀번호는 6자 이상이어야 합니다"); return; }
 
-    // 임시: 로컬에 저장 후 다음으로
-    localStorage.setItem("artsoul-user", JSON.stringify({ email, name: name || email.split("@")[0] }));
+    // 로컬에 저장 후 다음으로
+    localStorage.setItem("artsoul-user", JSON.stringify({ email, name: name || email.split("@")[0], phone, agreeMarketing }));
     navigate("/birth-info");
   };
 
@@ -78,14 +84,40 @@ const LoginPage = () => {
 
         <div className="space-y-2.5">
           {mode === "signup" && (
-            <input type="text" placeholder="이름" value={name} onChange={e => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+            <>
+              <input type="text" placeholder="이름" value={name} onChange={e => setName(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+              <input type="tel" placeholder="휴대폰 번호 (01012345678)" value={phone}
+                onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
+                className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+            </>
           )}
           <input type="email" placeholder="이메일" value={email} onChange={e => setEmail(e.target.value)}
             className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
-          <input type="password" placeholder="비밀번호" value={password} onChange={e => setPassword(e.target.value)}
+          <input type="password" placeholder={mode === "signup" ? "비밀번호 (6자 이상)" : "비밀번호"} value={password} onChange={e => setPassword(e.target.value)}
             onKeyDown={e => e.key === "Enter" && handleSubmit()}
             className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+
+          {/* 약관 동의 (회원가입 시) */}
+          {mode === "signup" && (
+            <div className="space-y-2 pt-1">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 rounded border-border accent-primary shrink-0" />
+                <span className="text-xs text-foreground leading-relaxed">
+                  <span className="text-primary underline cursor-pointer">[필수] 이용약관</span> 및 <span className="text-primary underline cursor-pointer">개인정보처리방침</span>에 동의합니다
+                </span>
+              </label>
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" checked={agreeMarketing} onChange={e => setAgreeMarketing(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 rounded border-border accent-primary shrink-0" />
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  [선택] 마케팅 정보 수신에 동의합니다 (이벤트, 추천 작품 알림)
+                </span>
+              </label>
+            </div>
+          )}
+
           {error && <p className="text-xs text-red-400">{error}</p>}
           <button onClick={handleSubmit}
             className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm transition-transform active:scale-[0.98] glow-gold">

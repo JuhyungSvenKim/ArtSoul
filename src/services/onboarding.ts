@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase';
+import { getCurrentUserId } from '@/lib/current-user';
+import { dbWrite } from '@/lib/encrypted-storage';
 import type { Gender } from '@/types';
 
 interface CreateUserData {
@@ -10,72 +12,51 @@ interface CreateUserData {
 }
 
 export async function createUser(data: CreateUserData) {
-  try {
-    const { data: user, error } = await supabase
-      .from('users')
-      .insert({
-        nickname: data.nameKorean,
-        birth_date: data.birthDate,
-        birth_time: data.birthTime,
-        name_korean: data.nameKorean,
-        name_hanja: data.nameHanja,
-        gender: data.gender,
-        onboarding_step: 'mbti',
-      })
-      .select()
-      .single();
+  const existingId = getCurrentUserId();
 
+  if (existingId) {
+    // 기존 회원가입 유저 → user_profiles 업데이트
+    await dbWrite("user_profiles", "update", {
+      birth_date: data.birthDate,
+      birth_time: data.birthTime,
+      name_korean: data.nameKorean,
+      name_hanja: data.nameHanja,
+      gender: data.gender,
+      nickname: data.nameKorean,
+    }, { id: existingId });
+    return { id: existingId };
+  }
+
+  // 새 유저 생성
+  try {
+    const userId = `user_${Date.now()}`;
+    const { error } = await supabase.from('user_profiles').insert({
+      id: userId,
+      nickname: data.nameKorean,
+      name_korean: data.nameKorean,
+      name_hanja: data.nameHanja,
+      birth_date: data.birthDate,
+      birth_time: data.birthTime,
+      gender: data.gender,
+      role: 'consumer',
+      is_pass_verified: false,
+      created_at: new Date().toISOString(),
+    });
     if (error) throw error;
-    return user;
+    return { id: userId };
   } catch {
-    // DB 미연결 시 임시 유저 ID 반환
     return { id: `local_${Date.now()}` };
   }
 }
 
 export async function updateUserMbti(userId: string, mbti: string) {
-  try {
-    const { error } = await supabase
-      .from('users')
-      .update({ mbti, onboarding_step: 'taste' })
-      .eq('id', userId);
-    if (error) throw error;
-  } catch {
-    // DB 미연결 시 무시
-  }
+  await dbWrite("user_profiles", "update", { mbti }, { id: userId });
 }
 
 export async function saveTasteSelections(userId: string, selections: string[]) {
-  try {
-    const rows = selections.map((artworkId, index) => ({
-      user_id: userId,
-      round: index + 1,
-      selected_artwork_id: artworkId,
-      selected_ohaeng_tags: [],
-    }));
-
-    const { error } = await supabase
-      .from('art_taste_selections')
-      .insert(rows);
-    if (error) throw error;
-
-    await supabase
-      .from('users')
-      .update({ onboarding_step: 'dna_card' })
-      .eq('id', userId);
-  } catch {
-    // DB 미연결 시 무시
-  }
+  await dbWrite("user_profiles", "update", { taste_selections: selections }, { id: userId });
 }
 
 export async function completeOnboarding(userId: string) {
-  try {
-    const { error } = await supabase
-      .from('users')
-      .update({ onboarding_step: 'complete' })
-      .eq('id', userId);
-    if (error) throw error;
-  } catch {
-    // DB 미연결 시 무시
-  }
+  await dbWrite("user_profiles", "update", { onboarding_complete: true }, { id: userId });
 }

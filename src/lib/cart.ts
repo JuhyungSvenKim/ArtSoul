@@ -1,6 +1,8 @@
 /**
- * 장바구니 — localStorage 기반
+ * 장바구니 — 암호화 로컬 + Supabase 듀얼 라이트
  */
+import { getCurrentUserId } from "./current-user";
+import { dbWrite, encryptedSet } from "./encrypted-storage";
 
 export interface CartItem {
   artworkId: string;
@@ -20,17 +22,22 @@ const STORAGE_KEY = "artsoul-cart";
 export function getCart(): CartItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    try { return JSON.parse(raw); } catch { return []; }
   } catch { return []; }
 }
 
 function saveCart(items: CartItem[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  const userId = getCurrentUserId();
+  if (userId) {
+    encryptedSet(STORAGE_KEY, items, userId);
+    dbWrite("user_profiles", "update", { cart_data: items }, { id: userId });
+  }
 }
 
 export function addToCart(item: CartItem): CartItem[] {
   const cart = getCart();
-  // 중복 방지
   if (cart.some(c => c.artworkId === item.artworkId && c.type === item.type)) return cart;
   const updated = [...cart, { ...item, addedAt: new Date().toISOString() }];
   saveCart(updated);
@@ -48,6 +55,8 @@ export function removeFromCart(artworkId: string, type?: string): CartItem[] {
 
 export function clearCart(): void {
   localStorage.removeItem(STORAGE_KEY);
+  const userId = getCurrentUserId();
+  if (userId) dbWrite("user_profiles", "update", { cart_data: [] }, { id: userId });
 }
 
 export function getCartTotal(items: CartItem[]): { purchaseTotal: number; rentalTotal: number; count: number } {

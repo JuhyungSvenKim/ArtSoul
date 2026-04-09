@@ -1,12 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Heart, Share2, ChevronLeft, Palette, MapPin, Sparkles, ShoppingBag } from "lucide-react";
+import { Heart, Share2, ChevronLeft, Palette, MapPin, Sparkles, ShoppingBag, Loader2 } from "lucide-react";
 import CaseCodeArt from "@/components/CaseCodeArt";
 import { getSampleArtworks } from "@/data/sample-artworks";
 import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
 import { curate, calculateRentalPrice } from "@/lib/curation-engine";
 import { addToCart } from "@/lib/cart";
 import { isLiked as checkLiked, toggleLike } from "@/lib/likes";
+import { generateSajuCuratorNote, getCachedNote, setCachedNote } from "@/lib/curator";
 
 // localStorage에서 사주 데이터 읽기
 function loadUserSaju() {
@@ -53,6 +54,42 @@ const ArtworkDetailPage = () => {
       userDayStrength: userSaju?.dayStrength,
     });
   }, [artwork, userSaju]);
+
+  // 사주 맞춤 AI 큐레이터 노트
+  const [sajuNote, setSajuNote] = useState<string | null>(null);
+  const [sajuNoteLoading, setSajuNoteLoading] = useState(false);
+
+  useEffect(() => {
+    if (!artwork || !userSaju?.yongsin || !curation) return;
+
+    const el = ELEMENT_MAP[artwork.element];
+    const en = ENERGY_MAP[artwork.energy];
+    const st = STYLE_MAP[artwork.style];
+    const cacheKey = `saju-${artwork.id}-${userSaju.yongsin}-${userSaju.dayOh}`;
+
+    // 캐시 확인
+    const cached = getCachedNote(cacheKey);
+    if (cached) { setSajuNote(cached); return; }
+
+    // AI 호출
+    setSajuNoteLoading(true);
+    generateSajuCuratorNote({
+      artworkTitle: artwork.title,
+      artworkElement: el?.labelKor || artwork.element,
+      artworkEnergy: en?.labelKor || String(artwork.energy),
+      artworkStyle: st?.labelKor || artwork.style,
+      userDayOh: userSaju.dayOh,
+      userDayStrength: userSaju.dayStrength,
+      userYongsin: userSaju.yongsin,
+      matchScore: curation.matchScore,
+    }).then(note => {
+      setSajuNote(note);
+      setCachedNote(cacheKey, note);
+    }).catch(() => {
+      // AI 실패 시 기존 템플릿 유지
+      setSajuNote(curation.whyForMe);
+    }).finally(() => setSajuNoteLoading(false));
+  }, [artwork?.id, userSaju?.yongsin]);
 
   // 비슷한 작품
   const similar = useMemo(() => {
@@ -124,14 +161,23 @@ const ArtworkDetailPage = () => {
             <div className="text-sm text-foreground/80 leading-[1.85] whitespace-pre-line">{curation.curatorNote}</div>
           </div>
 
-          {/* 왜 내 사주에 좋은지 */}
+          {/* 왜 내 사주에 좋은지 — AI 사주 큐레이터 */}
           {userSaju && (
             <div className="bg-card border border-primary/20 rounded-2xl p-6 mb-6 glow-mystical">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-primary" />
                 <p className="text-sm font-semibold text-primary">왜 이 그림이 나에게 좋을까?</p>
               </div>
-              <p className="text-sm text-foreground/80 leading-relaxed">{curation.whyForMe}</p>
+              {sajuNoteLoading ? (
+                <div className="flex items-center gap-2 py-2">
+                  <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                  <p className="text-xs text-muted-foreground">사주 큐레이터가 분석 중...</p>
+                </div>
+              ) : (
+                <p className="text-sm text-foreground/80 leading-[1.85] whitespace-pre-line">
+                  {sajuNote || curation.whyForMe}
+                </p>
+              )}
             </div>
           )}
 

@@ -59,30 +59,194 @@ function PillarCard({ label, ganji, sipsungCg, sipsungJj, twelveJj }: {
   );
 }
 
-// ── 대운 타임라인 ───────────────────────────────────
-function DaeunTimeline({ daeun, startAge }: { daeun: DaeunItem[]; startAge: number }) {
+// ── 대운 타임라인 + 시기별 해석 ──────────────────────
+const OHAENG_RELATION: Record<string, Record<string, string>> = {
+  목: { 목: "비겁(동류)", 화: "식상(표현)", 토: "재성(재물)", 금: "관성(압력)", 수: "인성(지원)" },
+  화: { 화: "비겁(동류)", 토: "식상(표현)", 금: "재성(재물)", 수: "관성(압력)", 목: "인성(지원)" },
+  토: { 토: "비겁(동류)", 금: "식상(표현)", 수: "재성(재물)", 목: "관성(압력)", 화: "인성(지원)" },
+  금: { 금: "비겁(동류)", 수: "식상(표현)", 목: "재성(재물)", 화: "관성(압력)", 토: "인성(지원)" },
+  수: { 수: "비겁(동류)", 목: "식상(표현)", 화: "재성(재물)", 토: "관성(압력)", 금: "인성(지원)" },
+};
+
+const DAEUN_VIBES: Record<string, { good: string; warn: string }> = {
+  "비겁(동류)": { good: "자신감이 올라가고 독립심이 강해지는 시기", warn: "고집이 세질 수 있으니 유연함 필요" },
+  "식상(표현)": { good: "창의력, 표현력이 폭발하는 시기. 새로운 시도에 유리", warn: "말실수, 오버가 많아질 수 있으니 조절" },
+  "재성(재물)": { good: "돈이 보이기 시작하는 시기. 수입 루트 다양화 찬스", warn: "과소비, 투자 실패 주의. 계약서 꼼꼼히" },
+  "관성(압력)": { good: "사회적 인정, 승진, 책임감이 커지는 시기", warn: "스트레스, 건강, 법적 문제에 주의. 쉬는 것도 전략" },
+  "인성(지원)": { good: "공부, 자격증, 내면 성장에 최적인 시기", warn: "게을러지거나 의존적이 될 수 있으니 행동력 유지" },
+};
+
+function DaeunTimeline({ daeun, startAge, dayOh, yongsinOh, dayStrength, sinsal }: {
+  daeun: DaeunItem[]; startAge: number;
+  dayOh: string; yongsinOh: string; dayStrength: string; sinsal: SinsalItem[];
+}) {
+  // 현재 나이 계산
+  const birthYear = new Date().getFullYear() - Math.round(startAge); // 근사값
+  const currentAge = new Date().getFullYear() - birthYear;
+  const currentDaeunIdx = daeun.findIndex(d => currentAge >= d.startAge && currentAge <= d.endAge);
+
+  // 신살 이름 리스트
+  const majorSals = sinsal.filter(s => s.effect === 'negative').map(s => s.name);
+  const majorGuiins = sinsal.filter(s => s.effect === 'positive').map(s => s.name);
+
   return (
-    <div className="overflow-x-auto -mx-1 px-1 scrollbar-hide">
-      <div className="flex gap-2 pb-2" style={{ minWidth: daeun.length * 72 }}>
-        {daeun.map((d, i) => {
-          const style = getOhaengStyle(d.ganji.ohaeng);
-          return (
-            <div key={i} className="flex flex-col items-center shrink-0 w-16">
-              <div className={`w-full rounded-lg ${style.bg} ${style.border} border p-2 text-center`}>
-                <p className={`text-base font-bold ${style.text}`}>{d.ganji.cheongan}{d.ganji.jiji}</p>
-                <p className="text-[10px] text-muted-foreground">{d.ganji.cheonganKor}{d.ganji.jijiKor}</p>
+    <div className="space-y-5">
+      {/* 타임라인 카드 */}
+      <div className="overflow-x-auto -mx-1 px-1 scrollbar-hide">
+        <div className="flex gap-2 pb-2" style={{ minWidth: daeun.length * 72 }}>
+          {daeun.map((d, i) => {
+            const style = getOhaengStyle(d.ganji.ohaeng);
+            const isCurrent = i === currentDaeunIdx;
+            return (
+              <div key={i} className="flex flex-col items-center shrink-0 w-16">
+                <div className={`w-full rounded-lg ${style.bg} ${style.border} border p-2 text-center transition-all ${isCurrent ? "ring-2 ring-primary shadow-lg scale-105" : ""}`}>
+                  <p className={`text-base font-bold ${style.text}`}>{d.ganji.cheongan}{d.ganji.jiji}</p>
+                  <p className="text-[10px] text-muted-foreground">{d.ganji.cheonganKor}{d.ganji.jijiKor}</p>
+                </div>
+                <p className={`text-[10px] mt-1 ${isCurrent ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                  {d.startAge}~{d.endAge}세
+                </p>
+                {isCurrent && <span className="text-[9px] text-primary">지금</span>}
               </div>
-              <p className="text-[10px] text-muted-foreground mt-1">{d.startAge}~{d.endAge}세</p>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-1">대운 시작: {startAge.toFixed(1)}세</p>
       </div>
-      <p className="text-[10px] text-muted-foreground mt-1">대운 시작: {startAge.toFixed(1)}세</p>
+
+      {/* 현재 대운 강조 */}
+      {currentDaeunIdx >= 0 && (() => {
+        const curr = daeun[currentDaeunIdx];
+        const rel = OHAENG_RELATION[dayOh]?.[curr.ganji.ohaeng] || "기타";
+        const vibe = DAEUN_VIBES[rel];
+        const isYongsinMatch = curr.ganji.ohaeng === yongsinOh || curr.ganji.jijiOhaeng === yongsinOh;
+        return (
+          <div className="bg-card border border-primary/30 rounded-xl p-4 glow-mystical">
+            <p className="text-xs text-primary font-semibold mb-2">
+              지금 내 대운: {curr.ganji.cheonganKor}{curr.ganji.jijiKor} ({curr.startAge}~{curr.endAge}세)
+            </p>
+            <div className="space-y-2">
+              <p className="text-xs text-foreground/90 leading-relaxed">
+                {curr.ganji.ohaeng} 기운이 들어오는 시기야. {dayOh} 일간 입장에서 이건 <span className="text-primary font-medium">{rel}</span>의 에너지.
+                {isYongsinMatch
+                  ? ` 게다가 용신 ${yongsinOh}과 일치해서 지금이 꽤 좋은 타이밍이야. 이 시기를 잘 활용하면 큰 성과가 가능함.`
+                  : ` 용신 ${yongsinOh}과는 다른 에너지지만, 이걸 어떻게 쓰느냐에 따라 달라져.`
+                }
+              </p>
+              {vibe && (
+                <>
+                  <p className="text-xs text-green-400/90">{vibe.good}</p>
+                  <p className="text-xs text-red-400/80">{vibe.warn}</p>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 시기별 대운 해석 */}
+      <div className="bg-surface border border-border rounded-xl p-4">
+        <p className="text-xs text-foreground font-medium mb-3">대운 시기별 흐름</p>
+        <div className="space-y-4">
+          {daeun.map((d, i) => {
+            const rel = OHAENG_RELATION[dayOh]?.[d.ganji.ohaeng] || "기타";
+            const vibe = DAEUN_VIBES[rel];
+            const isCurrent = i === currentDaeunIdx;
+            const isYongsin = d.ganji.ohaeng === yongsinOh || d.ganji.jijiOhaeng === yongsinOh;
+            const style = getOhaengStyle(d.ganji.ohaeng);
+
+            // 강약에 따른 해석
+            let strengthNote = "";
+            if (dayStrength === "강" && (rel === "관성(압력)" || rel === "재성(재물)")) {
+              strengthNote = "일간이 강하니 이 시기의 압력을 오히려 성과로 전환 가능";
+            } else if (dayStrength === "약" && (rel === "인성(지원)" || rel === "비겁(동류)")) {
+              strengthNote = "일간이 약한 편이라 이 시기의 지원 에너지가 딱 맞아. 회복기";
+            } else if (dayStrength === "약" && rel === "관성(압력)") {
+              strengthNote = "일간이 약한데 압력이 오니 무리하지 말 것. 건강 관리 최우선";
+            }
+
+            return (
+              <div key={i} className={`flex gap-3 ${isCurrent ? "bg-primary/5 -mx-2 px-2 py-2 rounded-lg border border-primary/20" : ""}`}>
+                <div className="shrink-0 w-14 text-center">
+                  <span className={`text-sm font-bold ${style.text}`}>{d.ganji.cheonganKor}{d.ganji.jijiKor}</span>
+                  <p className={`text-[10px] ${isCurrent ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+                    {d.startAge}~{d.endAge}세
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[10px] text-muted-foreground">{d.ganji.ohaeng}→{dayOh}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${style.bg} ${style.text}`}>{rel}</span>
+                    {isYongsin && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">용신 시기</span>}
+                    {isCurrent && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">NOW</span>}
+                  </div>
+                  <p className="text-xs text-foreground/80 leading-relaxed">
+                    {vibe?.good || `${d.ganji.ohaeng}의 기운이 흘러들어오는 시기`}
+                  </p>
+                  {strengthNote && <p className="text-[10px] text-primary/80 mt-0.5">{strengthNote}</p>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 전체 대운 조화 (용신/신살 기준) */}
+      <div className="bg-card border border-primary/20 rounded-xl p-4">
+        <p className="text-xs text-primary font-medium mb-2">대운 전체 흐름 (용신 {yongsinOh} 기준)</p>
+        <p className="text-xs text-foreground/80 leading-[1.8]">
+          {(() => {
+            const yongsinDaeuns = daeun.filter(d => d.ganji.ohaeng === yongsinOh || d.ganji.jijiOhaeng === yongsinOh);
+            const pressureDaeuns = daeun.filter(d => {
+              const rel = OHAENG_RELATION[dayOh]?.[d.ganji.ohaeng];
+              return rel === "관성(압력)";
+            });
+
+            let note = `${dayOh} 일간(${dayStrength})의 대운을 보면, `;
+            if (yongsinDaeuns.length > 0) {
+              note += `용신 ${yongsinOh}이 들어오는 시기는 ${yongsinDaeuns.map(d => `${d.startAge}~${d.endAge}세`).join(', ')}이야. 이때가 인생의 황금기가 될 가능성이 높아. `;
+            } else {
+              note += `대운에서 용신 ${yongsinOh}이 직접 오는 시기는 없지만, 세운(매년의 운)에서 보충될 수 있어. `;
+            }
+            if (pressureDaeuns.length > 0) {
+              note += `${pressureDaeuns.map(d => `${d.startAge}~${d.endAge}세`).join(', ')}는 관성(압력)이 오는 시기라 도전과 성장이 동시에 찾아올 거야. `;
+            }
+            if (majorSals.length > 0) {
+              note += `신살 중 ${majorSals.slice(0, 3).join(', ')}이(가) 있어서 대운 전환기마다 에너지 변동이 클 수 있는데, `;
+            }
+            if (majorGuiins.length > 0) {
+              note += `${majorGuiins.slice(0, 2).join(', ')} 귀인이 있으니 위기 때마다 도움의 손길이 들어올 거야. `;
+            }
+            note += `핵심은 용신 ${yongsinOh}의 에너지를 의식적으로 살리면서, 각 대운의 흐름에 올라타는 것`;
+            return note;
+          })()}
+        </p>
+      </div>
     </div>
   );
 }
 
-// ── 신살 — 주별 배치 + 클릭 설명 + 종합 해석 ────────
+// ── 신살 — 개별 해설 + 주별 종합 + 용신 기반 조화 해석 ──
+const SINSAL_DETAIL: Record<string, { vibe: string; tip: string }> = {
+  '천을귀인': { vibe: '위기에 빠지면 어디선가 도움이 뚝 떨어지는 운. 사주계의 보험 같은 존재', tip: '큰 결정 앞에서 직감을 믿어도 되는 사람' },
+  '태극귀인': { vibe: '생각이 깊고 철학적인 뇌. 남들이 "왜?" 할 때 혼자 이미 답을 찾고 있음', tip: '명상, 독서, 혼자만의 시간이 에너지 충전 루틴' },
+  '문창귀인': { vibe: '글, 말, 시험, 문서에 강한 별. 펜 들면 뭔가 나오는 타입', tip: '블로그, 글쓰기, 기획서 — 문서로 승부하면 이김' },
+  '천희성': { vibe: '기쁜 일이 잘 따라다니는 별. 결혼, 출산, 좋은 소식의 시그널', tip: '좋은 소식이 올 타이밍엔 욕심내도 됨' },
+  '천덕귀인': { vibe: '하늘이 덕을 내려준 운. 큰 사고도 가볍게 넘어가는 보호막', tip: '남을 도우면 그 복이 배로 돌아옴' },
+  '월덕귀인': { vibe: '사회적으로 인정받기 쉬운 운. 직장, 사업에서 신뢰를 얻는 별', tip: '공적인 자리에서 능력 발휘하기 좋음' },
+  '괴강살': { vibe: '카리스마 폭발. 리더십 강하고 뒷끝 없는데, 주변이 좀 무서워할 수 있음', tip: '부드럽게 말하는 연습만 하면 최강 조합' },
+  '백호살': { vibe: '에너지가 셈. 사고, 수술, 격렬한 변화의 시그널이지만 돌파력도 여기서 나옴', tip: '위험한 스포츠나 무리한 야근은 자제' },
+  '효신살': { vibe: '내면의 의심과 경계심. 사람을 쉽게 안 믿는데, 그래서 사기를 안 당하기도 함', tip: '의심이 과하면 기회를 놓침. 70%만 믿고 시작해봐' },
+  '홍염살': { vibe: '이성에게 끌리는 매력이 있는 별. 본인은 모르는데 주변에서 느낌', tip: '매력을 자각하면 인간관계가 훨씬 수월해짐' },
+  '과숙살': { vibe: '내면이 조숙하고 고독한 별. 혼자 있는 시간이 필요한 영혼', tip: '외로움을 약점으로 보지 마. 깊이의 원천임' },
+  '현침살': { vibe: '말과 글이 바늘처럼 날카로운 별. 핵심을 콕 찌르는 재능', tip: '좋은 방향으로 쓰면 평론가, 작가, 컨설턴트 기질' },
+  '천라지망': { vibe: '한번 빠지면 빠져나오기 어려운 심리적 그물. 집착, 얽힘 주의', tip: '관계든 일이든 "이건 아니다" 싶으면 빨리 손절하는 연습' },
+  '도화살': { vibe: '매력, 인기, 예술성의 별. 사람을 끌어당기는 힘이 있음', tip: '이 에너지를 연애가 아닌 창작으로 쓰면 대박' },
+  '역마살': { vibe: '가만히 못 있는 별. 이동, 여행, 변화의 에너지가 강함', tip: '한 곳에 오래 있으면 답답. 환경 변화가 약임' },
+  '화개살': { vibe: '예술, 종교, 학문의 별. 남들과 다른 세계를 가진 사람', tip: '영적 감수성이 높아서 창작이나 상담 쪽에 재능' },
+  '양인살': { vibe: '결단력과 독립심이 강한 별. 칼 같은 판단력의 소유자', tip: '이 에너지가 너무 세면 주변이 힘들 수 있으니 조절 필요' },
+};
+
 function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsinOh: string; dayOh: string }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -103,35 +267,51 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
     '연주': '조상·어린시절·외부',
   };
 
-  // 종합 해석 생성
   const positives = sinsal.filter(s => s.effect === 'positive');
   const negatives = sinsal.filter(s => s.effect === 'negative');
 
-  const guiinNames = positives.map(s => s.name).join(', ');
-  const salNames = negatives.map(s => s.name).join(', ');
+  // ── 주별 종합 해석 생성 ──
+  const pillarNotes: Record<string, string> = {};
+  for (const [pos, items] of Object.entries(groups)) {
+    if (items.length === 0) continue;
+    const posLabel = positionMeaning[pos];
+    const names = items.map(s => s.name);
+    const posPositives = items.filter(s => s.effect === 'positive');
+    const posNegatives = items.filter(s => s.effect === 'negative');
 
-  let summary = '';
-  if (positives.length > negatives.length) {
-    summary = `귀인이 ${positives.length}개로 살(${negatives.length}개)보다 많아, 기본적으로 복이 있는 사주입니다. ${guiinNames}이(가) 위기 때 도움을 주고, 특히 ${dayOh} 일간에게 문서·학문·인연 복을 더합니다.`;
-  } else if (negatives.length > positives.length) {
-    summary = `살이 ${negatives.length}개로 강한 편이지만, 이건 나쁜 게 아니라 그만큼 에너지가 강하다는 뜻입니다. ${salNames}은(는) 잘 쓰면 추진력과 카리스마가 되고, 용신 ${yongsinOh}의 기운으로 중화하면 오히려 힘이 됩니다.`;
+    let note = '';
+    if (posPositives.length > 0 && posNegatives.length > 0) {
+      note = `${posLabel} 영역에 귀인(${posPositives.map(s => s.name).join(', ')})과 살(${posNegatives.map(s => s.name).join(', ')})이 공존. 기회와 시련이 같이 오는 구간이라 판단력이 중요`;
+    } else if (posPositives.length > 0) {
+      note = `${posLabel} 영역이 귀인(${names.join(', ')})으로 보호받는 구간. 이쪽에서 행운이 들어옴`;
+    } else if (posNegatives.length > 0) {
+      note = `${posLabel} 영역에 살(${names.join(', ')})이 집중. 에너지가 강한 구간이라 잘 다루면 오히려 무기가 됨`;
+    } else {
+      note = `${posLabel} 영역에 ${names.join(', ')}이(가) 위치. 이 방면에 독특한 감각이 있음`;
+    }
+    pillarNotes[pos] = note;
+  }
+
+  // ── 전체 조화 해석 (용신/음양 기준) ──
+  const yongsinPositives = positives.filter(s => {
+    const detail = SINSAL_DETAIL[s.name];
+    return detail !== undefined;
+  });
+  const totalCount = sinsal.length;
+  const posCount = positives.length;
+  const negCount = negatives.length;
+
+  let harmonyNote = '';
+  if (posCount > negCount) {
+    harmonyNote = `전체 ${totalCount}개 신살 중 귀인이 ${posCount}개로 우세. ${dayOh} 일간의 기본 복이 두텁고, 용신 ${yongsinOh}의 기운이 귀인들과 시너지를 만들어 위기마다 반등하는 힘이 있는 구조야. 특히 ${positives[0]?.name || '귀인'}이 용신을 도와주니까, 네가 ${yongsinOh}의 에너지를 의식적으로 살리면(${yongsinOh} 관련 색상, 방향, 활동) 운이 더 잘 풀림`;
+  } else if (negCount > posCount) {
+    harmonyNote = `살이 ${negCount}개로 에너지가 상당히 강한 사주. 근데 이건 "나쁘다"가 아니라 "세다"는 뜻이야. ${negatives.map(s => s.name).join(', ')}은(는) 용신 ${yongsinOh}의 기운으로 중화하면 오히려 추진력, 카리스마, 돌파력이 됨. ${dayOh} 일간이 ${yongsinOh}를 잘 활용하면 살의 날카로움이 무기로 바뀌는 구조. 단, 과로·과욕·과격한 판단은 살이 역으로 작용할 수 있으니 밸런스가 핵심`;
   } else {
-    summary = `귀인과 살이 균형을 이루고 있어, 기회와 시련이 함께 오는 구조입니다. ${guiinNames}이(가) 기본 복을 주고, ${salNames}은(는) 성장의 자극제 역할을 합니다.`;
-  }
-
-  // 위치별 종합
-  const ilSinsal = groups['일주'];
-  if (ilSinsal.length > 0) {
-    const ilNames = ilSinsal.map(s => s.name).join(', ');
-    summary += ` 일주에 ${ilNames}이(가) 있어 본인의 성격과 배우자 관계에 직접적 영향을 줍니다.`;
-  }
-  const wolSinsal = groups['월주'];
-  if (wolSinsal.some(s => s.effect === 'negative')) {
-    summary += ` 월주에 살이 있으니 직장·사회생활에서 마찰을 조심하세요.`;
+    harmonyNote = `귀인과 살이 ${posCount}:${negCount}으로 균형. 기회와 시련이 교대로 오는 리듬이 있는 사주야. ${dayOh} 일간이 용신 ${yongsinOh}를 중심에 두면, 귀인은 더 강해지고 살은 에너지원으로 전환됨. 특히 ${positives[0]?.name || '귀인'}과 ${negatives[0]?.name || '살'}의 조합은 "매력적이면서 강한 사람"의 전형적 패턴`;
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* 4주별 배치 — 클릭하면 설명 토글 */}
       <div className="grid grid-cols-4 gap-2">
         {['시주', '일주', '월주', '연주'].map(pos => (
@@ -166,10 +346,45 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
         ))}
       </div>
 
-      {/* 종합 해석 */}
+      {/* 주요 신살 개별 해설 */}
+      <div className="bg-surface border border-border rounded-xl p-4">
+        <p className="text-xs text-foreground font-medium mb-3">내가 가진 신살, 이런 뜻이야</p>
+        <div className="space-y-3">
+          {sinsal.filter(s => SINSAL_DETAIL[s.name]).map((s, i) => {
+            const detail = SINSAL_DETAIL[s.name];
+            return (
+              <div key={i} className="flex gap-3">
+                <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium self-start mt-0.5 border ${effectStyle(s.effect)}`}>{s.name}</span>
+                <div>
+                  <p className="text-xs text-foreground/90 leading-relaxed">{detail.vibe}</p>
+                  <p className="text-[10px] text-primary/80 mt-0.5">{detail.tip}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 주별 종합 판단 */}
+      <div className="bg-surface border border-border rounded-xl p-4">
+        <p className="text-xs text-foreground font-medium mb-3">주(柱)별로 보면</p>
+        <div className="space-y-2.5">
+          {['연주', '월주', '일주', '시주'].map(pos => {
+            if (!pillarNotes[pos]) return null;
+            return (
+              <div key={pos} className="flex gap-2">
+                <span className="shrink-0 text-[10px] text-muted-foreground w-8 pt-0.5">{pos}</span>
+                <p className="text-xs text-foreground/80 leading-relaxed">{pillarNotes[pos]}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 전체 신살 조화 — 용신/음양 기준 */}
       <div className="bg-card border border-primary/20 rounded-xl p-4">
-        <p className="text-xs text-primary font-medium mb-2">신살 종합 해석</p>
-        <p className="text-xs text-foreground/80 leading-relaxed">{summary}</p>
+        <p className="text-xs text-primary font-medium mb-2">신살 전체 조화 (용신 {yongsinOh} 기준)</p>
+        <p className="text-xs text-foreground/80 leading-[1.8]">{harmonyNote}</p>
       </div>
     </div>
   );
@@ -994,7 +1209,9 @@ const SajuPage = () => {
 
       {/* 대운 */}
       <Section title="대운 (大運)">
-        <DaeunTimeline daeun={daeun} startAge={daeunStartAge} />
+        <DaeunTimeline daeun={daeun} startAge={daeunStartAge}
+          dayOh={ilju.ohaeng} yongsinOh={enhancedYongsin.yongsin}
+          dayStrength={enhancedYongsin.dayStrength} sinsal={sinsal} />
       </Section>
 
       {/* AI 해석 */}

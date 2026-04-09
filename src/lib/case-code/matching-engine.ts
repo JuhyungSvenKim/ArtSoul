@@ -368,9 +368,9 @@ function calculateSpaceScore(
 // 사주 성향 키워드 추출
 // ════════════════════════════════════════════════════════
 
-function extractSajuKeywords(sajuResult: SajuResult): string[] {
+function extractSajuKeywords(sajuResult: SajuResult, yongsinOverride: YongsinResult): string[] {
   const keywords: string[] = []
-  const yongsin = sajuResult.yongsin
+  const yongsin = yongsinOverride
   const balance = yongsin.ohaengBalance
 
   // 일간 성향
@@ -435,7 +435,7 @@ export function matchSajuToCases(input: MatchingInput): RecommendationResult {
     gisin: yongsin.gisin,
     excessOhaeng: OHAENG_LIST.filter(o => balance[o as keyof OhaengBalance] >= 3),
     lackOhaeng: OHAENG_LIST.filter(o => balance[o as keyof OhaengBalance] === 0),
-    keywords: extractSajuKeywords(sajuResult),
+    keywords: extractSajuKeywords(sajuResult, yongsin),
     elementScores,
     energyScores,
   }

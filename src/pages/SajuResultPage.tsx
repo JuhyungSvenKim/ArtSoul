@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
-import { useOnboardingStore } from "@/stores/onboarding";
 import { getSaju } from "@/lib/saju";
 import { getOhaengBalance, getYongsin, getLuckyItems } from "@/lib/saju/analysis";
 import { analyzeYongsin } from "@/lib/saju/yongsin";
@@ -16,58 +15,39 @@ const OHAENG_COLORS: Record<string, { bg: string; text: string }> = {
   수: { bg: "bg-blue-500/20", text: "text-blue-400" },
 };
 
-// 사주 입력 데이터 읽기 (3중 fallback)
-function getSajuInput() {
-  // 1순위: BirthInfoPage에서 직접 저장한 값
+// URL hash 또는 localStorage에서 사주 데이터 읽기
+function loadSajuData(): { nameKorean: string; birthDate: string; birthTime: string | null; gender: string } | null {
+  // 1순위: URL hash (base64 인코딩)
   try {
-    const direct = localStorage.getItem("artsoul-saju-input");
-    if (direct) {
-      const d = JSON.parse(direct);
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      const json = decodeURIComponent(atob(hash));
+      const d = JSON.parse(json);
       if (d.birthDate && d.gender) return d;
     }
   } catch {}
-  // 2순위: zustand persist 저장소
+  // 2순위: localStorage 직접 저장
+  try {
+    const raw = localStorage.getItem("artsoul-saju-input");
+    if (raw) { const d = JSON.parse(raw); if (d.birthDate && d.gender) return d; }
+  } catch {}
+  // 3순위: zustand persist
   try {
     const raw = localStorage.getItem("artsoul-onboarding");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const s = parsed.state || parsed;
-      if (s.birthDate && s.gender) return s;
-    }
+    if (raw) { const p = JSON.parse(raw); const s = p.state || p; if (s.birthDate && s.gender) return s; }
   } catch {}
   return null;
 }
 
 const SajuResultPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const store = useOnboardingStore();
 
-  // 4중 fallback: URL params → localStorage(직접) → localStorage(zustand) → zustand store
-  const { nameKorean, birthDate, birthTime, gender } = useMemo(() => {
-    // 1순위: URL 파라미터 (가장 확실)
-    const urlBd = searchParams.get("bd");
-    const urlG = searchParams.get("g");
-    if (urlBd && urlG) {
-      return {
-        nameKorean: searchParams.get("name") || '',
-        birthDate: urlBd,
-        birthTime: searchParams.get("bt") || null,
-        gender: urlG as any,
-      };
-    }
-
-    // 2순위: localStorage 직접 저장
-    const ls = getSajuInput();
-    if (ls) return { nameKorean: ls.nameKorean || '', birthDate: ls.birthDate, birthTime: ls.birthTime, gender: ls.gender };
-
-    // 3순위: zustand store
-    if (store.birthDate && store.gender) {
-      return { nameKorean: store.nameKorean, birthDate: store.birthDate, birthTime: store.birthTime, gender: store.gender };
-    }
-
-    return { nameKorean: '', birthDate: '', birthTime: null, gender: null };
-  }, [searchParams, store.birthDate, store.gender]);
+  // 동기적으로 초기 렌더 시 데이터 로드 (hooks 의존 없음)
+  const [data] = useState(() => loadSajuData());
+  const nameKorean = data?.nameKorean || '';
+  const birthDate = data?.birthDate || '';
+  const birthTime = data?.birthTime || null;
+  const gender = data?.gender || null;
 
   const analysis = useMemo(() => {
     if (!birthDate || !gender) return null;

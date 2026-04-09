@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import ProgressBar from "@/components/ProgressBar";
 import { useOnboardingStore } from "@/stores/onboarding";
@@ -20,31 +20,29 @@ const PAIRS: ArtworkPair[] = [
 
 const ArtTastePage = () => {
   const navigate = useNavigate();
-  const { userId, addTasteSelection, birthDate, birthTime, gender, nameKorean } = useOnboardingStore();
-
-  // localStorage에서도 읽기 (zustand hydration 실패 대비)
-  const getSajuParams = () => {
-    let bd = birthDate, bt = birthTime, g = gender, name = nameKorean;
-    if (!bd || !g) {
-      try {
-        const raw = localStorage.getItem("artsoul-saju-input");
-        if (raw) { const d = JSON.parse(raw); bd = d.birthDate; bt = d.birthTime; g = d.gender; name = d.nameKorean; }
-      } catch {}
-    }
-    if (!bd || !g) {
-      try {
-        const raw = localStorage.getItem("artsoul-onboarding");
-        if (raw) { const p = JSON.parse(raw); const s = p.state || p; bd = s.birthDate; bt = s.birthTime; g = s.gender; name = s.nameKorean; }
-      } catch {}
-    }
-    return new URLSearchParams({ bd: bd || '', bt: bt || '', g: g || '', name: name || '' }).toString();
-  };
+  const location = useLocation();
+  const { userId, addTasteSelection } = useOnboardingStore();
   const [round, setRound] = useState(0);
   const [selections, setSelections] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
+  // 이전 페이지에서 전달받은 사주 데이터 hash
+  const sajuHash = location.hash.slice(1);
+
   const isLastRound = round >= PAIRS.length - 1;
   const currentPair = PAIRS[round];
+
+  const goToResult = () => {
+    // hash가 있으면 그대로 전달, 없으면 localStorage에서 읽어서 만들기
+    let hash = sajuHash;
+    if (!hash) {
+      try {
+        const raw = localStorage.getItem("artsoul-saju-input");
+        if (raw) hash = btoa(encodeURIComponent(raw));
+      } catch {}
+    }
+    navigate(`/result#${hash}`);
+  };
 
   const handleSelect = async (artworkId: string) => {
     const newSelections = [...selections, artworkId];
@@ -53,16 +51,9 @@ const ArtTastePage = () => {
 
     if (isLastRound) {
       setSaving(true);
-      try {
-        if (userId) {
-          await saveTasteSelections(userId, newSelections);
-        }
-      } catch (e) {
-        console.error("Failed to save taste selections:", e);
-      } finally {
-        setSaving(false);
-      }
-      setTimeout(() => navigate(`/result?${getSajuParams()}`), 400);
+      try { if (userId) await saveTasteSelections(userId, newSelections); } catch {}
+      setSaving(false);
+      setTimeout(goToResult, 400);
     } else {
       setTimeout(() => setRound(round + 1), 300);
     }
@@ -70,7 +61,7 @@ const ArtTastePage = () => {
 
   const handleSkip = () => {
     if (isLastRound) {
-      navigate(`/result?${getSajuParams()}`);
+      goToResult();
     } else {
       setRound(round + 1);
     }
@@ -96,16 +87,10 @@ const ArtTastePage = () => {
       {currentPair && (
         <div className="flex gap-3 animate-fade-in" key={round}>
           {[currentPair.a, currentPair.b].map((artwork) => (
-            <button
-              key={artwork.id}
-              onClick={() => handleSelect(artwork.id)}
-              disabled={saving}
-              className="flex-1 aspect-[3/4] rounded-xl bg-surface border border-border flex flex-col items-center justify-center gap-3 transition-all hover:border-primary/50 hover:glow-gold active:scale-[0.97] disabled:opacity-50"
-            >
+            <button key={artwork.id} onClick={() => handleSelect(artwork.id)} disabled={saving}
+              className="flex-1 aspect-[3/4] rounded-xl bg-surface border border-border flex flex-col items-center justify-center gap-3 transition-all hover:border-primary/50 hover:glow-gold active:scale-[0.97] disabled:opacity-50">
               <span className="text-5xl">{artwork.emoji}</span>
-              <span className="text-xs text-muted-foreground px-2 text-center leading-relaxed">
-                {artwork.title}
-              </span>
+              <span className="text-xs text-muted-foreground px-2 text-center leading-relaxed">{artwork.title}</span>
             </button>
           ))}
         </div>
@@ -113,12 +98,9 @@ const ArtTastePage = () => {
 
       <div className="flex-1" />
 
-      <button
-        onClick={handleSkip}
-        disabled={saving}
-        className="w-full py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors mt-6"
-      >
-        건너뛰기
+      <button onClick={handleSkip}
+        className="w-full py-2 text-xs text-muted-foreground hover:text-primary transition-colors mt-6">
+        {isLastRound ? "건너뛰고 결과 보기 →" : "건너뛰기 →"}
       </button>
     </PageContainer>
   );

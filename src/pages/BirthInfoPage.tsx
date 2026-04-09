@@ -94,17 +94,14 @@ const BirthInfoPage = () => {
       gender,
     };
 
-    // 1. localStorage에 즉시 저장 (가장 확실한 방법)
-    localStorage.setItem("artsoul-saju-input", JSON.stringify(data));
-
-    // 2. zustand store 업데이트
+    // 모든 곳에 저장 (3중 보장)
+    try { localStorage.setItem("artsoul-saju-input", JSON.stringify(data)); } catch {}
     setBirthInfo(data);
-
-    // 3. DB 저장은 백그라운드 (실패해도 무관)
     createUser(data).then(user => setUserId(user.id)).catch(() => {});
 
-    // 4. 즉시 다음으로
-    navigate("/mbti");
+    // URL hash로 데이터 인코딩해서 전달
+    const hash = btoa(encodeURIComponent(JSON.stringify(data)));
+    navigate(`/mbti#${hash}`);
   };
 
   return (

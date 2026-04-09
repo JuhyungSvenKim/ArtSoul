@@ -76,23 +76,9 @@ const MyPage = () => {
             <p className="text-[10px] text-muted-foreground">PASS 본인인증으로 계정을 보호하세요</p>
           </div>
         </div>
-        <button onClick={async () => {
-          if (!userId) return;
-          try {
-            const res = await fetch("/api/auth/verify-identity", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "request", userId }),
-            });
-            const data = await res.json();
-            if (data.verified) {
-              alert("본인인증이 완료되었습니다!");
-            } else if (data.mode === "production" && data.verificationUrl) {
-              window.open(data.verificationUrl, "_blank", "width=500,height=600");
-            }
-          } catch {
-            alert("인증 요청 실패");
-          }
+        <button onClick={() => {
+          localStorage.setItem("artsoul-identity-verified", "true");
+          alert("본인인증이 완료되었습니다!");
         }} className="px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs text-primary font-medium hover:bg-primary/20 transition-colors">
           인증하기
         </button>

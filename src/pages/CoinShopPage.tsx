@@ -23,23 +23,15 @@ const CoinShopPage = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // 패키지 로드
+  // 패키지 (정적 데이터)
   useEffect(() => {
-    fetch("/api/payments/packages")
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) setPackages(data.packages);
-      })
-      .catch(() => {
-        // 폴백 패키지
-        setPackages([
-          { id: 1, name: "스타터", coins: 10, price: 1900, bonus_coins: 0, description: "가볍게 시작" },
-          { id: 2, name: "베이직", coins: 30, price: 4900, bonus_coins: 3, description: "인기 패키지" },
-          { id: 3, name: "스탠다드", coins: 60, price: 8900, bonus_coins: 10, description: "가성비 최고" },
-          { id: 4, name: "프리미엄", coins: 120, price: 15900, bonus_coins: 30, description: "헤비유저 추천" },
-          { id: 5, name: "VIP", coins: 300, price: 33900, bonus_coins: 100, description: "최대 혜택" },
-        ]);
-      });
+    setPackages([
+      { id: 1, name: "스타터", coins: 10, price: 1900, bonus_coins: 0, description: "가볍게 시작" },
+      { id: 2, name: "베이직", coins: 30, price: 4900, bonus_coins: 3, description: "인기 패키지" },
+      { id: 3, name: "스탠다드", coins: 60, price: 8900, bonus_coins: 10, description: "가성비 최고" },
+      { id: 4, name: "프리미엄", coins: 120, price: 15900, bonus_coins: 30, description: "헤비유저 추천" },
+      { id: 5, name: "VIP", coins: 300, price: 33900, bonus_coins: 100, description: "최대 혜택" },
+    ]);
   }, []);
 
   // 잔액 로드
@@ -60,10 +52,10 @@ const CoinShopPage = () => {
 
   const confirmPayment = async (paymentKey: string, orderId: string, amount: number) => {
     try {
-      const res = await fetch("/api/payments/confirm", {
+      const res = await fetch("/api/payments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentKey, orderId, amount, userId }),
+        body: JSON.stringify({ action: "confirm", paymentKey, orderId, amount, userId }),
       });
       const data = await res.json();
       if (data.success) {
@@ -91,10 +83,10 @@ const CoinShopPage = () => {
 
     try {
       // 1. 주문 생성
-      const prepareRes = await fetch("/api/payments/prepare", {
+      const prepareRes = await fetch("/api/payments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, packageId: pkg.id }),
+        body: JSON.stringify({ action: "prepare", userId, packageId: pkg.id }),
       });
       const prepareData = await prepareRes.json();
 

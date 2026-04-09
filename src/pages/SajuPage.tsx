@@ -270,7 +270,7 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
   const positives = sinsal.filter(s => s.effect === 'positive');
   const negatives = sinsal.filter(s => s.effect === 'negative');
 
-  // ── 주별 종합 해석 생성 ──
+  // 주별 종합 해석
   const pillarNotes: Record<string, string> = {};
   for (const [pos, items] of Object.entries(groups)) {
     if (items.length === 0) continue;
@@ -279,40 +279,33 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
     const posPositives = items.filter(s => s.effect === 'positive');
     const posNegatives = items.filter(s => s.effect === 'negative');
 
-    let note = '';
     if (posPositives.length > 0 && posNegatives.length > 0) {
-      note = `${posLabel} 영역에 귀인(${posPositives.map(s => s.name).join(', ')})과 살(${posNegatives.map(s => s.name).join(', ')})이 공존. 기회와 시련이 같이 오는 구간이라 판단력이 중요`;
+      pillarNotes[pos] = `${posLabel} 영역에 귀인(${posPositives.map(s => s.name).join(', ')})과 살(${posNegatives.map(s => s.name).join(', ')})이 공존. 기회와 시련이 같이 오는 구간이라 판단력이 중요`;
     } else if (posPositives.length > 0) {
-      note = `${posLabel} 영역이 귀인(${names.join(', ')})으로 보호받는 구간. 이쪽에서 행운이 들어옴`;
+      pillarNotes[pos] = `${posLabel} 영역이 귀인(${names.join(', ')})으로 보호받는 구간. 이쪽에서 행운이 들어옴`;
     } else if (posNegatives.length > 0) {
-      note = `${posLabel} 영역에 살(${names.join(', ')})이 집중. 에너지가 강한 구간이라 잘 다루면 오히려 무기가 됨`;
+      pillarNotes[pos] = `${posLabel} 영역에 살(${names.join(', ')})이 집중. 에너지가 강한 구간이라 잘 다루면 오히려 무기가 됨`;
     } else {
-      note = `${posLabel} 영역에 ${names.join(', ')}이(가) 위치. 이 방면에 독특한 감각이 있음`;
+      pillarNotes[pos] = `${posLabel} 영역에 ${names.join(', ')}이(가) 위치. 이 방면에 독특한 감각이 있음`;
     }
-    pillarNotes[pos] = note;
   }
 
-  // ── 전체 조화 해석 (용신/음양 기준) ──
-  const yongsinPositives = positives.filter(s => {
-    const detail = SINSAL_DETAIL[s.name];
-    return detail !== undefined;
-  });
-  const totalCount = sinsal.length;
+  // 전체 조화 해석
   const posCount = positives.length;
   const negCount = negatives.length;
-
+  const totalCount = sinsal.length;
   let harmonyNote = '';
   if (posCount > negCount) {
-    harmonyNote = `전체 ${totalCount}개 신살 중 귀인이 ${posCount}개로 우세. ${dayOh} 일간의 기본 복이 두텁고, 용신 ${yongsinOh}의 기운이 귀인들과 시너지를 만들어 위기마다 반등하는 힘이 있는 구조야. 특히 ${positives[0]?.name || '귀인'}이 용신을 도와주니까, 네가 ${yongsinOh}의 에너지를 의식적으로 살리면(${yongsinOh} 관련 색상, 방향, 활동) 운이 더 잘 풀림`;
+    harmonyNote = `전체 ${totalCount}개 신살 중 귀인이 ${posCount}개로 우세. ${dayOh} 일간의 기본 복이 두텁고, 용신 ${yongsinOh}의 기운이 귀인들과 시너지를 만들어 위기마다 반등하는 힘이 있는 구조야. 네가 ${yongsinOh}의 에너지를 의식적으로 살리면 운이 더 잘 풀림`;
   } else if (negCount > posCount) {
     harmonyNote = `살이 ${negCount}개로 에너지가 상당히 강한 사주. 근데 이건 "나쁘다"가 아니라 "세다"는 뜻이야. ${negatives.map(s => s.name).join(', ')}은(는) 용신 ${yongsinOh}의 기운으로 중화하면 오히려 추진력, 카리스마, 돌파력이 됨. ${dayOh} 일간이 ${yongsinOh}를 잘 활용하면 살의 날카로움이 무기로 바뀌는 구조. 단, 과로·과욕·과격한 판단은 살이 역으로 작용할 수 있으니 밸런스가 핵심`;
   } else {
-    harmonyNote = `귀인과 살이 ${posCount}:${negCount}으로 균형. 기회와 시련이 교대로 오는 리듬이 있는 사주야. ${dayOh} 일간이 용신 ${yongsinOh}를 중심에 두면, 귀인은 더 강해지고 살은 에너지원으로 전환됨. 특히 ${positives[0]?.name || '귀인'}과 ${negatives[0]?.name || '살'}의 조합은 "매력적이면서 강한 사람"의 전형적 패턴`;
+    harmonyNote = `귀인과 살이 ${posCount}:${negCount}으로 균형. 기회와 시련이 교대로 오는 리듬이 있는 사주야. ${dayOh} 일간이 용신 ${yongsinOh}를 중심에 두면, 귀인은 더 강해지고 살은 에너지원으로 전환됨`;
   }
 
   return (
     <div className="space-y-5">
-      {/* 4주별 배치 — 클릭하면 설명 토글 */}
+      {/* 1) 4주별 배치 — 클릭하면 개별 해설 토글 */}
       <div className="grid grid-cols-4 gap-2">
         {['시주', '일주', '월주', '연주'].map(pos => (
           <div key={pos}>
@@ -322,42 +315,58 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
               {groups[pos].length === 0 ? (
                 <p className="text-[10px] text-muted-foreground/30 text-center py-2">—</p>
               ) : (
-                groups[pos].map((s, i) => {
-                  const key = `${pos}-${i}`;
-                  const isOpen = expanded === key;
-                  return (
-                    <div key={i}>
-                      <button onClick={() => setExpanded(isOpen ? null : key)}
-                        className={`w-full text-[10px] px-1.5 py-1 rounded text-center font-medium border transition-all ${effectStyle(s.effect)} ${isOpen ? "ring-1 ring-primary/30" : ""}`}>
-                        {s.name}
-                      </button>
-                      {isOpen && (
-                        <div className="mt-1 p-2 bg-card border border-border rounded-lg animate-fade-in">
-                          <p className="text-[10px] text-foreground/80 leading-relaxed">{s.description}</p>
-                          <p className="text-[9px] text-muted-foreground mt-1">{pos}에 위치 → {positionMeaning[pos]}에 영향</p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
+                groups[pos].map((s, i) => (
+                  <button key={i} onClick={() => setExpanded(expanded === s.name ? null : s.name)}
+                    className={`w-full text-[10px] px-1.5 py-1 rounded text-center font-medium border transition-all ${effectStyle(s.effect)} ${expanded === s.name ? "ring-1 ring-primary/30" : ""}`}>
+                    {s.name}
+                  </button>
+                ))
               )}
             </div>
           </div>
         ))}
       </div>
 
-      {/* 주요 신살 개별 해설 */}
+      {/* 2) 클릭한 신살 개별 해설 (하나씩) */}
+      {expanded && (() => {
+        const s = sinsal.find(x => x.name === expanded);
+        const detail = SINSAL_DETAIL[expanded];
+        if (!s) return null;
+        return (
+          <div className="bg-card border border-border rounded-xl p-4 animate-fade-in">
+            <div className="flex items-start gap-3">
+              <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium border ${effectStyle(s.effect)}`}>{s.name}</span>
+              <div className="flex-1">
+                {detail ? (
+                  <>
+                    <p className="text-xs text-foreground/90 leading-relaxed">{detail.vibe}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">{detail.tip}</p>
+                  </>
+                ) : (
+                  <p className="text-xs text-foreground/80 leading-relaxed">{s.description}</p>
+                )}
+                <p className="text-[9px] text-muted-foreground/60 mt-1.5">{s.position}에 위치 → {positionMeaning[s.position]}에 영향</p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 3) 전체 신살 해설 리스트 */}
       <div className="bg-surface border border-border rounded-xl p-4">
         <p className="text-xs text-foreground font-medium mb-3">내가 가진 신살, 이런 뜻이야</p>
         <div className="space-y-3">
-          {sinsal.filter(s => SINSAL_DETAIL[s.name]).map((s, i) => {
+          {sinsal.filter(s => SINSAL_DETAIL[s.name]).reduce<SinsalItem[]>((acc, s) => {
+            if (!acc.some(x => x.name === s.name)) acc.push(s);
+            return acc;
+          }, []).map((s, i) => {
             const detail = SINSAL_DETAIL[s.name];
             return (
               <div key={i} className="flex gap-3">
                 <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium self-start mt-0.5 border ${effectStyle(s.effect)}`}>{s.name}</span>
                 <div>
                   <p className="text-xs text-foreground/90 leading-relaxed">{detail.vibe}</p>
-                  <p className="text-[10px] text-primary/80 mt-0.5">{detail.tip}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{detail.tip}</p>
                 </div>
               </div>
             );
@@ -365,14 +374,14 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
         </div>
       </div>
 
-      {/* 주별 종합 판단 */}
+      {/* 4) 주별 종합 판단 */}
       <div className="bg-surface border border-border rounded-xl p-4">
         <p className="text-xs text-foreground font-medium mb-3">주(柱)별로 보면</p>
         <div className="space-y-2.5">
           {['연주', '월주', '일주', '시주'].map(pos => {
             if (!pillarNotes[pos]) return null;
             return (
-              <div key={pos} className="flex gap-2">
+              <div key={pos} className="flex gap-3">
                 <span className="shrink-0 text-[10px] text-muted-foreground w-8 pt-0.5">{pos}</span>
                 <p className="text-xs text-foreground/80 leading-relaxed">{pillarNotes[pos]}</p>
               </div>
@@ -381,9 +390,9 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
         </div>
       </div>
 
-      {/* 전체 신살 조화 — 용신/음양 기준 */}
+      {/* 5) 전체 신살 조화 — 용신/음양 기준 */}
       <div className="bg-card border border-primary/20 rounded-xl p-4">
-        <p className="text-xs text-primary font-medium mb-2">신살 전체 조화 (용신 {yongsinOh} 기준)</p>
+        <p className="text-xs text-primary font-medium mb-2">신살 종합 해석 (용신 {yongsinOh} 기준)</p>
         <p className="text-xs text-foreground/80 leading-[1.8]">{harmonyNote}</p>
       </div>
     </div>

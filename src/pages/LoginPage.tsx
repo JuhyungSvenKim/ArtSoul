@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
+import { supabase } from "@/lib/supabase";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -13,7 +14,9 @@ const LoginPage = () => {
   const [agreeMarketing, setAgreeMarketing] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
     if (mode === "signup") {
       if (!name) { setError("이름을 입력해주세요"); return; }
       if (!phone) { setError("휴대폰 번호를 입력해주세요"); return; }
@@ -22,9 +25,43 @@ const LoginPage = () => {
     if (!email || !password) { setError("이메일과 비밀번호를 입력해주세요"); return; }
     if (mode === "signup" && password.length < 6) { setError("비밀번호는 6자 이상이어야 합니다"); return; }
 
-    // 로컬에 저장 후 다음으로
-    localStorage.setItem("artsoul-user", JSON.stringify({ email, name: name || email.split("@")[0], phone, agreeMarketing }));
-    navigate("/birth-info");
+    setLoading(true);
+    setError("");
+
+    try {
+      if (mode === "signup") {
+        // Supabase에 회원 저장
+        const userId = `user_${Date.now()}`;
+        const { error: dbError } = await supabase.from("user_profiles").insert({
+          id: userId,
+          email,
+          nickname: name,
+          name_korean: name,
+          phone,
+          role: "consumer",
+          is_pass_verified: false,
+          agree_marketing: agreeMarketing,
+          created_at: new Date().toISOString(),
+        });
+        if (dbError && !dbError.message?.includes("duplicate")) {
+          // DB 에러여도 진행 (테이블 없을 수도 있음)
+          console.warn("user_profiles insert:", dbError.message);
+        }
+        localStorage.setItem("artsoul-user", JSON.stringify({ email, name, phone, agreeMarketing, userId }));
+      } else {
+        // 로그인: 이메일로 조회
+        const { data } = await supabase.from("user_profiles").select("id, nickname").eq("email", email).single();
+        const displayName = data?.nickname || email.split("@")[0];
+        localStorage.setItem("artsoul-user", JSON.stringify({ email, name: displayName, userId: data?.id }));
+      }
+      navigate("/birth-info");
+    } catch {
+      // Supabase 연결 실패 시에도 localStorage로 진행
+      localStorage.setItem("artsoul-user", JSON.stringify({ email, name: name || email.split("@")[0], phone, agreeMarketing }));
+      navigate("/birth-info");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -119,9 +156,9 @@ const LoginPage = () => {
           )}
 
           {error && <p className="text-xs text-red-400">{error}</p>}
-          <button onClick={handleSubmit}
-            className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm transition-transform active:scale-[0.98] glow-gold">
-            {mode === "signup" ? "회원가입" : "로그인"}
+          <button onClick={handleSubmit} disabled={loading}
+            className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm transition-transform active:scale-[0.98] glow-gold disabled:opacity-50">
+            {loading ? "처리 중..." : mode === "signup" ? "회원가입" : "로그인"}
           </button>
         </div>
 

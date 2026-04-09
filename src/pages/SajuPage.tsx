@@ -738,7 +738,7 @@ const SajuPage = () => {
             <p className="text-[10px] text-muted-foreground mb-1.5">추천 화풍</p>
             <div className="flex flex-wrap gap-1.5">
               {lucky.artStyles.map((s, i) => (
-                <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">{s}</span>
+                <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">{s.emoji} {s.label}</span>
               ))}
             </div>
           </div>
@@ -748,7 +748,7 @@ const SajuPage = () => {
             <p className="text-[10px] text-muted-foreground mb-1.5">어울리는 작품 소재</p>
             <div className="flex flex-wrap gap-1.5">
               {lucky.artSubjects.map((s, i) => (
-                <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-surface border border-border text-foreground">{s}</span>
+                <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-surface border border-border text-foreground">{s.emoji} {s.label}</span>
               ))}
             </div>
           </div>
@@ -758,7 +758,7 @@ const SajuPage = () => {
             <p className="text-[10px] text-muted-foreground mb-1.5">추천 분위기</p>
             <div className="flex flex-wrap gap-1.5">
               {lucky.artMoods.map((s, i) => (
-                <span key={i} className={`text-xs px-2.5 py-1 rounded-full ${getOhaengStyle(yongsin.element).bg} ${getOhaengStyle(yongsin.element).text}`}>{s}</span>
+                <span key={i} className={`text-xs px-2.5 py-1 rounded-full ${getOhaengStyle(yongsin.element).bg} ${getOhaengStyle(yongsin.element).text}`}>{s.emoji} {s.label}</span>
               ))}
             </div>
           </div>

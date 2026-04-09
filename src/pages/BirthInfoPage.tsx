@@ -34,9 +34,11 @@ const BirthInfoPage = () => {
   const [tzDetected, setTzDetected] = useState(false);
 
   const [name, setName] = useState("");
+  const [hanjaMode, setHanjaMode] = useState<"meaning" | "direct">("meaning");
   const [hanjaSurname, setHanjaSurname] = useState("");
   const [hanjaName1, setHanjaName1] = useState("");
   const [hanjaName2, setHanjaName2] = useState("");
+  const [hanjaDirectInput, setHanjaDirectInput] = useState("");
 
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [saving, setSaving] = useState(false);
@@ -77,7 +79,9 @@ const BirthInfoPage = () => {
     } catch {}
   }, []);
 
-  const hanjaName = [hanjaSurname, hanjaName1, hanjaName2].filter(Boolean).join(" ") || null;
+  const hanjaName = hanjaMode === "direct"
+    ? hanjaDirectInput || null
+    : [hanjaSurname, hanjaName1, hanjaName2].filter(Boolean).join(" ") || null;
 
   const handleNext = async () => {
     if (!isValid || !gender) return;
@@ -133,19 +137,52 @@ const BirthInfoPage = () => {
         {/* 한자 이름 */}
         <section className="space-y-2">
           <label className="text-sm font-medium text-foreground">한자 이름 <span className="text-muted-foreground font-normal">(선택)</span></label>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { value: hanjaSurname, set: setHanjaSurname, ph: "홍(弘)", label: "성" },
-              { value: hanjaName1, set: setHanjaName1, ph: "길(吉)", label: "이름 1" },
-              { value: hanjaName2, set: setHanjaName2, ph: "동(童)", label: "이름 2" },
-            ].map((f) => (
-              <div key={f.label}>
-                <input type="text" placeholder={f.ph} value={f.value} onChange={(e) => f.set(e.target.value)}
-                  className="w-full px-3 py-3 rounded-lg bg-surface border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors text-center" />
-                <p className="text-[10px] text-muted-foreground mt-1 text-center">{f.label}</p>
-              </div>
-            ))}
+
+          {/* 입력 방식 토글 */}
+          <div className="flex gap-1 bg-surface rounded-lg p-0.5">
+            <button type="button" onClick={() => setHanjaMode("meaning")}
+              className={`flex-1 py-2 rounded-md text-xs font-medium transition-all ${
+                hanjaMode === "meaning" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+              }`}>
+              뜻풀이 입력
+            </button>
+            <button type="button" onClick={() => setHanjaMode("direct")}
+              className={`flex-1 py-2 rounded-md text-xs font-medium transition-all ${
+                hanjaMode === "direct" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+              }`}>
+              한자 직접 입력
+            </button>
           </div>
+
+          {hanjaMode === "meaning" ? (
+            <>
+              <p className="text-[10px] text-muted-foreground">각 글자의 한자 뜻을 한글로 풀어서 입력하세요</p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: hanjaSurname, set: setHanjaSurname, ph: "김해김", label: "성" },
+                  { value: hanjaName1, set: setHanjaName1, ph: "기둥주", label: "이름 1" },
+                  { value: hanjaName2, set: setHanjaName2, ph: "형통할형", label: "이름 2" },
+                ].map((f) => (
+                  <div key={f.label}>
+                    <input type="text" placeholder={f.ph} value={f.value} onChange={(e) => f.set(e.target.value)}
+                      className="w-full px-3 py-3 rounded-lg bg-surface border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors text-center" />
+                    <p className="text-[10px] text-muted-foreground mt-1 text-center">{f.label}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-[10px] text-muted-foreground">한자를 직접 입력하세요 (PC에서 한자 변환 추천)</p>
+              <input type="text" placeholder="金柱亨" value={hanjaDirectInput}
+                onChange={(e) => setHanjaDirectInput(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors text-center" />
+            </>
+          )}
+
+          {hanjaName && (
+            <p className="text-xs text-primary">입력: {hanjaName}</p>
+          )}
         </section>
 
         {/* 생년월일 */}

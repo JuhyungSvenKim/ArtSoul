@@ -81,56 +81,94 @@ function DaeunTimeline({ daeun, startAge }: { daeun: DaeunItem[]; startAge: numb
   );
 }
 
-// ── 신살 주별 그룹핑 ────────────────────────────────
-function SinsalList({ sinsal }: { sinsal: SinsalItem[] }) {
+// ── 신살 — 주별 배치 + 클릭 설명 + 종합 해석 ────────
+function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsinOh: string; dayOh: string }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
   if (sinsal.length === 0) return <p className="text-sm text-muted-foreground">해당 신살 없음</p>;
 
   const groups: Record<string, SinsalItem[]> = { '시주': [], '일주': [], '월주': [], '연주': [] };
   sinsal.forEach(s => { if (groups[s.position]) groups[s.position].push(s); });
 
   const effectStyle = (e: string) =>
-    e === 'positive' ? 'bg-green-500/20 text-green-400'
-      : e === 'negative' ? 'bg-red-500/20 text-red-400'
-      : 'bg-yellow-500/20 text-yellow-400';
+    e === 'positive' ? 'bg-green-500/20 text-green-400 border-green-500/30'
+      : e === 'negative' ? 'bg-red-500/20 text-red-400 border-red-500/30'
+      : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
 
-  const effectLabel = (e: string) => e === 'positive' ? '길' : e === 'negative' ? '흉' : '중';
+  const positionMeaning: Record<string, string> = {
+    '시주': '말년·자녀·결과',
+    '일주': '본인·배우자·현재',
+    '월주': '사회·직업·중년',
+    '연주': '조상·어린시절·외부',
+  };
+
+  // 종합 해석 생성
+  const positives = sinsal.filter(s => s.effect === 'positive');
+  const negatives = sinsal.filter(s => s.effect === 'negative');
+
+  const guiinNames = positives.map(s => s.name).join(', ');
+  const salNames = negatives.map(s => s.name).join(', ');
+
+  let summary = '';
+  if (positives.length > negatives.length) {
+    summary = `귀인이 ${positives.length}개로 살(${negatives.length}개)보다 많아, 기본적으로 복이 있는 사주입니다. ${guiinNames}이(가) 위기 때 도움을 주고, 특히 ${dayOh} 일간에게 문서·학문·인연 복을 더합니다.`;
+  } else if (negatives.length > positives.length) {
+    summary = `살이 ${negatives.length}개로 강한 편이지만, 이건 나쁜 게 아니라 그만큼 에너지가 강하다는 뜻입니다. ${salNames}은(는) 잘 쓰면 추진력과 카리스마가 되고, 용신 ${yongsinOh}의 기운으로 중화하면 오히려 힘이 됩니다.`;
+  } else {
+    summary = `귀인과 살이 균형을 이루고 있어, 기회와 시련이 함께 오는 구조입니다. ${guiinNames}이(가) 기본 복을 주고, ${salNames}은(는) 성장의 자극제 역할을 합니다.`;
+  }
+
+  // 위치별 종합
+  const ilSinsal = groups['일주'];
+  if (ilSinsal.length > 0) {
+    const ilNames = ilSinsal.map(s => s.name).join(', ');
+    summary += ` 일주에 ${ilNames}이(가) 있어 본인의 성격과 배우자 관계에 직접적 영향을 줍니다.`;
+  }
+  const wolSinsal = groups['월주'];
+  if (wolSinsal.some(s => s.effect === 'negative')) {
+    summary += ` 월주에 살이 있으니 직장·사회생활에서 마찰을 조심하세요.`;
+  }
 
   return (
     <div className="space-y-4">
-      {/* 주별 테이블 */}
-      <div className="grid grid-cols-4 gap-1.5">
+      {/* 4주별 배치 — 클릭하면 설명 토글 */}
+      <div className="grid grid-cols-4 gap-2">
         {['시주', '일주', '월주', '연주'].map(pos => (
           <div key={pos}>
-            <p className="text-[10px] text-muted-foreground text-center mb-1.5">{pos}</p>
-            <div className="bg-surface border border-border rounded-lg p-1.5 min-h-[60px]">
+            <p className="text-[10px] text-muted-foreground text-center mb-1">{pos}</p>
+            <p className="text-[9px] text-muted-foreground/50 text-center mb-1.5">{positionMeaning[pos]}</p>
+            <div className="bg-surface border border-border rounded-lg p-1.5 min-h-[60px] space-y-1">
               {groups[pos].length === 0 ? (
                 <p className="text-[10px] text-muted-foreground/30 text-center py-2">—</p>
               ) : (
-                <div className="space-y-1">
-                  {groups[pos].map((s, i) => (
-                    <div key={i} className={`text-[10px] px-1.5 py-0.5 rounded text-center font-medium ${effectStyle(s.effect)}`}>
-                      {s.name}
+                groups[pos].map((s, i) => {
+                  const key = `${pos}-${i}`;
+                  const isOpen = expanded === key;
+                  return (
+                    <div key={i}>
+                      <button onClick={() => setExpanded(isOpen ? null : key)}
+                        className={`w-full text-[10px] px-1.5 py-1 rounded text-center font-medium border transition-all ${effectStyle(s.effect)} ${isOpen ? "ring-1 ring-primary/30" : ""}`}>
+                        {s.name}
+                      </button>
+                      {isOpen && (
+                        <div className="mt-1 p-2 bg-card border border-border rounded-lg animate-fade-in">
+                          <p className="text-[10px] text-foreground/80 leading-relaxed">{s.description}</p>
+                          <p className="text-[9px] text-muted-foreground mt-1">{pos}에 위치 → {positionMeaning[pos]}에 영향</p>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })
               )}
             </div>
           </div>
         ))}
       </div>
 
-      {/* 상세 목록 */}
-      <div className="space-y-2">
-        {sinsal.map((s, i) => (
-          <div key={i} className="bg-surface border border-border rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-medium text-foreground">{s.name}</span>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${effectStyle(s.effect)}`}>{effectLabel(s.effect)}</span>
-              <span className="text-[10px] text-muted-foreground">{s.position}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">{s.description}</p>
-          </div>
-        ))}
+      {/* 종합 해석 */}
+      <div className="bg-card border border-primary/20 rounded-xl p-4">
+        <p className="text-xs text-primary font-medium mb-2">신살 종합 해석</p>
+        <p className="text-xs text-foreground/80 leading-relaxed">{summary}</p>
       </div>
     </div>
   );
@@ -937,7 +975,7 @@ const SajuPage = () => {
 
       {/* 신살 */}
       <Section title="신살 (神殺)">
-        <SinsalList sinsal={sinsal} />
+        <SinsalList sinsal={sinsal} yongsinOh={enhancedYongsin.yongsin} dayOh={ilju.ohaeng} />
       </Section>
 
       {/* 대운 */}

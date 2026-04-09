@@ -195,14 +195,16 @@ const BirthInfoPage = () => {
             <label className="text-sm font-medium text-foreground">태어난 시간 *</label>
             <details className="relative">
               <summary className="text-[10px] text-primary cursor-pointer hover:underline">생시를 모르겠어요?</summary>
-              <div className="absolute right-0 top-6 z-10 w-72 bg-card border border-border rounded-xl p-4 shadow-xl text-left">
-                <p className="text-xs font-semibold text-foreground mb-2">생시 추정 방법</p>
-                <div className="text-[11px] text-muted-foreground space-y-2 leading-relaxed">
+              <div className="absolute right-0 top-6 z-10 w-80 sm:w-96 bg-card border border-border rounded-xl p-4 shadow-xl text-left max-h-[70vh] overflow-y-auto">
+                <p className="text-xs font-semibold text-foreground mb-3">생시 추정 방법</p>
+                <div className="text-[11px] text-muted-foreground space-y-3 leading-relaxed">
+
                   <p><span className="text-foreground font-medium">1. 부모님께 확인</span><br />출생신고서, 산모수첩, 아기수첩에 기록이 있을 수 있습니다.</p>
                   <p><span className="text-foreground font-medium">2. 병원 기록 조회</span><br />출생 병원에 문의하면 출생 시각을 확인할 수 있습니다.</p>
-                  <p><span className="text-foreground font-medium">3. 시간대 추정</span><br />대략적 시간대라도 알면 사주 정확도가 높아집니다.</p>
-                  <div className="bg-surface rounded-lg p-2.5 mt-2">
-                    <p className="text-[10px] text-foreground font-medium mb-1">12시진 기준 (2시간 단위)</p>
+
+                  {/* 12시진 표 */}
+                  <div className="bg-surface rounded-lg p-2.5">
+                    <p className="text-[10px] text-foreground font-medium mb-1.5">12시진 기준 (2시간 단위)</p>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
                       <span>子시 23:00~01:00</span><span>午시 11:00~13:00</span>
                       <span>丑시 01:00~03:00</span><span>未시 13:00~15:00</span>
@@ -212,7 +214,65 @@ const BirthInfoPage = () => {
                       <span>巳시 09:00~11:00</span><span>亥시 21:00~23:00</span>
                     </div>
                   </div>
-                  <p className="text-[10px] text-primary mt-1">정확한 시간을 모르면 아래 "모름" 체크 후 진행할 수 있습니다. (정오 12:00 기준 분석)</p>
+
+                  {/* 체형/습관 기반 추정 */}
+                  <div>
+                    <p className="text-foreground font-medium mb-1.5">3. 체형·습관으로 추정하기</p>
+                    <p className="text-[10px] mb-2">명리학에서는 체형, 성격, 잠자리 습관 등으로 생시를 추정합니다.</p>
+
+                    <div className="space-y-1.5">
+                      <div className="bg-surface rounded-lg p-2">
+                        <p className="text-[10px] text-foreground font-medium">🌅 寅·卯시 (03~07시) — 새벽형</p>
+                        <p className="text-[10px]">키가 크고 마른 편, 일찍 일어남, 아침에 컨디션 좋음, 활동적이고 성격 급함</p>
+                      </div>
+                      <div className="bg-surface rounded-lg p-2">
+                        <p className="text-[10px] text-foreground font-medium">☀️ 辰·巳시 (07~11시) — 오전형</p>
+                        <p className="text-[10px]">중간 체형, 사교적, 사람 만나는 걸 좋아함, 계획적이고 부지런함</p>
+                      </div>
+                      <div className="bg-surface rounded-lg p-2">
+                        <p className="text-[10px] text-foreground font-medium">🔆 午·未시 (11~15시) — 한낮형</p>
+                        <p className="text-[10px]">얼굴에 혈색이 좋음, 열정적, 남 앞에 서는 걸 좋아함, 더위를 잘 탐</p>
+                      </div>
+                      <div className="bg-surface rounded-lg p-2">
+                        <p className="text-[10px] text-foreground font-medium">🌇 申·酉시 (15~19시) — 오후형</p>
+                        <p className="text-[10px]">피부가 하얗거나 깨끗한 편, 꼼꼼하고 예민, 가을을 좋아함, 금속 액세서리 선호</p>
+                      </div>
+                      <div className="bg-surface rounded-lg p-2">
+                        <p className="text-[10px] text-foreground font-medium">🌙 戌·亥시 (19~23시) — 저녁형</p>
+                        <p className="text-[10px]">통통하거나 부드러운 체형, 밤에 활발, 생각이 많고 감성적, 물·비를 좋아함</p>
+                      </div>
+                      <div className="bg-surface rounded-lg p-2">
+                        <p className="text-[10px] text-foreground font-medium">🌌 子·丑시 (23~03시) — 심야형</p>
+                        <p className="text-[10px]">늦게 자고 늦게 일어남, 직감이 강함, 혼자 있는 시간을 좋아함, 겨울에 오히려 에너지 넘침</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 잠자리 습관 */}
+                  <div>
+                    <p className="text-foreground font-medium mb-1.5">4. 잠자리 습관 단서</p>
+                    <div className="bg-surface rounded-lg p-2.5 space-y-1 text-[10px]">
+                      <p>🛌 <span className="text-foreground">똑바로 자는 편</span> → 午·未시 (한낮)</p>
+                      <p>🛌 <span className="text-foreground">옆으로 웅크려 잠</span> → 子·丑시 (심야)</p>
+                      <p>🛌 <span className="text-foreground">엎드려 잠</span> → 寅·卯시 (새벽)</p>
+                      <p>🛌 <span className="text-foreground">자주 뒤척임</span> → 巳·午시 (화 기운 강)</p>
+                      <p>🛌 <span className="text-foreground">이불을 잘 걷어참</span> → 申·酉시 (금 기운, 열 발산)</p>
+                    </div>
+                  </div>
+
+                  {/* 첫인상 */}
+                  <div>
+                    <p className="text-foreground font-medium mb-1.5">5. 첫인상·외모 단서</p>
+                    <div className="bg-surface rounded-lg p-2.5 space-y-1 text-[10px]">
+                      <p>👤 <span className="text-foreground">날카롭고 강한 인상</span> → 寅·卯시 (목 기운)</p>
+                      <p>👤 <span className="text-foreground">밝고 화사한 인상</span> → 巳·午시 (화 기운)</p>
+                      <p>👤 <span className="text-foreground">후덕하고 편안한 인상</span> → 辰·未·戌·丑시 (토 기운)</p>
+                      <p>👤 <span className="text-foreground">차갑고 세련된 인상</span> → 申·酉시 (금 기운)</p>
+                      <p>👤 <span className="text-foreground">부드럽고 몽환적 인상</span> → 亥·子시 (수 기운)</p>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-primary mt-2">위 내용은 참고용입니다. 정확한 시간을 모르면 아래 "모름"을 체크하세요. (정오 12:00 기준 분석)</p>
                 </div>
               </div>
             </details>

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Heart, Share2, ChevronLeft, Palette, MapPin, Sparkles, ShoppingBag, Loader2 } from "lucide-react";
+import { Heart, Share2, ChevronLeft, Palette, MapPin, Sparkles, ShoppingBag, Loader2, Home } from "lucide-react";
 import CaseCodeArt from "@/components/CaseCodeArt";
 import { getSampleArtworks } from "@/data/sample-artworks";
 import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
@@ -124,10 +124,16 @@ const ArtworkDetailPage = () => {
       <div className="max-w-5xl mx-auto">
         {/* 상단 이미지 + 뒤로가기 */}
         <div className="relative">
-          <button onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 z-10 w-9 h-9 rounded-full bg-background/60 backdrop-blur-sm border border-border flex items-center justify-center">
-            <ChevronLeft className="w-5 h-5 text-foreground" />
-          </button>
+          <div className="absolute top-4 left-4 z-10 flex gap-2">
+            <button onClick={() => navigate(-1)}
+              className="w-9 h-9 rounded-full bg-background/60 backdrop-blur-sm border border-border flex items-center justify-center">
+              <ChevronLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <button onClick={() => navigate("/home")}
+              className="w-9 h-9 rounded-full bg-background/60 backdrop-blur-sm border border-border flex items-center justify-center">
+              <Home className="w-4 h-4 text-foreground" />
+            </button>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             {/* 작품 이미지 */}
@@ -224,7 +230,7 @@ const ArtworkDetailPage = () => {
               <p className="text-sm font-semibold text-foreground mb-3">비슷한 작품</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {similar.map(s => (
-                  <div key={s.id} className="group cursor-pointer" onClick={() => navigate(`/artwork/${s.id}`)}>
+                  <div key={s.id} className="group cursor-pointer" onClick={() => navigate(`/artwork/${s.id}`, { replace: true })}>
                     <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border mb-2 transition-all group-hover:border-primary/30">
                       <CaseCodeArt element={s.element} energy={s.energy} style={s.style} />
                     </div>

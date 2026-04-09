@@ -56,10 +56,18 @@ CREATE POLICY "profiles_update_own"
     USING (true);
 
 -- updated_at 자동 갱신
+CREATE OR REPLACE FUNCTION update_user_profiles_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER user_profiles_updated_at
     BEFORE UPDATE ON user_profiles
     FOR EACH ROW
-    EXECUTE FUNCTION update_artworks_updated_at();
+    EXECUTE FUNCTION update_user_profiles_updated_at();
 
 -- ════════════════════════════════════════════════════════
 -- 코인 충전 패키지

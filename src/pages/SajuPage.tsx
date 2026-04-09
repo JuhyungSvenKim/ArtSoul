@@ -538,22 +538,34 @@ function SajuInputForm({ onAnalyze }: { onAnalyze: (result: SajuResult) => void 
   );
 }
 
+// localStorage에서 사주 데이터 읽기
+function loadSajuInput() {
+  try { const r = localStorage.getItem("artsoul-saju-input"); if (r) { const d = JSON.parse(r); if (d.birthDate && d.gender) return d; } } catch {}
+  try { const r = localStorage.getItem("artsoul-onboarding"); if (r) { const p = JSON.parse(r); const s = p.state || p; if (s.birthDate && s.gender) return s; } } catch {}
+  return null;
+}
+
 // ── 메인 사주 페이지 ────────────────────────────────
 const SajuPage = () => {
   const navigate = useNavigate();
-  const { birthDate, birthTime, gender: onboardingGender, userId } = useOnboardingStore();
+  const store = useOnboardingStore();
+  const userId = store.userId;
   const [result, setResult] = useState<SajuResult | null>(null);
 
-  // 온보딩에서 입력한 생년월일이 있으면 자동 분석
+  // 온보딩 또는 localStorage에서 자동 분석
   useEffect(() => {
-    if (birthDate && onboardingGender) {
+    let bd = store.birthDate, bt = store.birthTime, g = store.gender;
+    if (!bd || !g) {
+      const ls = loadSajuInput();
+      if (ls) { bd = ls.birthDate; bt = ls.birthTime; g = ls.gender; }
+    }
+    if (bd && g) {
       try {
-        const [y, m, d] = birthDate.split("-").map(Number);
-        const hour = birthTime ? Number(birthTime.split(":")[0]) : 12;
+        const [y, m, d] = bd.split("-").map(Number);
+        const hour = bt ? Number(bt.split(":")[0]) : 12;
         const sajuResult = getSaju({
-          year: y, month: m, day: d,
-          hour,
-          gender: onboardingGender === "male" ? "남" : "여",
+          year: y, month: m, day: d, hour,
+          gender: g === "male" ? "남" : "여",
           calendarType: "양력",
         });
         setResult(sajuResult);
@@ -561,7 +573,7 @@ const SajuPage = () => {
         console.error("Auto saju calculation failed:", e);
       }
     }
-  }, [birthDate, onboardingGender]);
+  }, [store.birthDate, store.gender]);
 
   const aiPrompt = useMemo(() => result ? sajuToAIPrompt(result) : "", [result]);
 
@@ -571,7 +583,7 @@ const SajuPage = () => {
         <h1 className="text-2xl font-display text-gold-gradient font-semibold mb-2">사주팔자 분석</h1>
         <p className="text-sm text-muted-foreground mb-8">생년월일시를 입력하면 사주를 분석해드립니다</p>
         <SajuInputForm onAnalyze={setResult} />
-        <TabBar activeTab="saju" />
+        <TabBar activeTab="home" />
       </PageContainer>
     );
   }
@@ -874,7 +886,7 @@ const SajuPage = () => {
         <FortuneSection prompt={aiPrompt} userId={userId} />
       </Section>
 
-      <TabBar activeTab="saju" />
+      <TabBar activeTab="home" />
     </PageContainer>
   );
 };

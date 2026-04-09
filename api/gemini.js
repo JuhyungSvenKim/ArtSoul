@@ -22,7 +22,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5_4-mini',
+        model: 'gpt-5.4-mini-2026-03-17',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: prompt },

@@ -76,14 +76,13 @@ const DAEUN_VIBES: Record<string, { good: string; warn: string }> = {
   "인성(지원)": { good: "공부, 자격증, 내면 성장에 최적인 시기", warn: "게을러지거나 의존적이 될 수 있으니 행동력 유지" },
 };
 
-function DaeunTimeline({ daeun, startAge, dayOh, yongsinOh, dayStrength, sinsal }: {
-  daeun: DaeunItem[]; startAge: number;
+function DaeunTimeline({ daeun, startAge, birthYear, dayOh, yongsinOh, dayStrength, sinsal }: {
+  daeun: DaeunItem[]; startAge: number; birthYear: number;
   dayOh: string; yongsinOh: string; dayStrength: string; sinsal: SinsalItem[];
 }) {
-  // 현재 나이 계산
-  const birthYear = new Date().getFullYear() - Math.round(startAge); // 근사값
-  const currentAge = new Date().getFullYear() - birthYear;
-  const currentDaeunIdx = daeun.findIndex(d => currentAge >= d.startAge && currentAge <= d.endAge);
+  // 현재 나이 (한국 나이 = 현재연도 - 출생연도 + 1)
+  const koreanAge = new Date().getFullYear() - birthYear + 1;
+  const currentDaeunIdx = daeun.findIndex(d => koreanAge >= d.startAge && koreanAge <= d.endAge);
 
   // 신살 이름 리스트
   const majorSals = sinsal.filter(s => s.effect === 'negative').map(s => s.name);
@@ -99,14 +98,14 @@ function DaeunTimeline({ daeun, startAge, dayOh, yongsinOh, dayStrength, sinsal 
             const isCurrent = i === currentDaeunIdx;
             return (
               <div key={i} className="flex flex-col items-center shrink-0 w-16">
-                <div className={`w-full rounded-lg ${style.bg} ${style.border} border p-2 text-center transition-all ${isCurrent ? "ring-2 ring-primary shadow-lg scale-105" : ""}`}>
+                <div className={`w-full rounded-lg ${style.bg} ${style.border} border p-2 text-center transition-all ${isCurrent ? "ring-2 ring-primary shadow-lg" : ""}`}>
                   <p className={`text-base font-bold ${style.text}`}>{d.ganji.cheongan}{d.ganji.jiji}</p>
                   <p className="text-[10px] text-muted-foreground">{d.ganji.cheonganKor}{d.ganji.jijiKor}</p>
                 </div>
                 <p className={`text-[10px] mt-1 ${isCurrent ? "text-primary font-semibold" : "text-muted-foreground"}`}>
                   {d.startAge}~{d.endAge}세
                 </p>
-                {isCurrent && <span className="text-[9px] text-primary">지금</span>}
+                {isCurrent && <span className="text-[9px] text-primary">지금 {koreanAge}세</span>}
               </div>
             );
           })}
@@ -1244,6 +1243,7 @@ const SajuPage = () => {
       {/* 대운 */}
       <Section title="대운 (大運)">
         <DaeunTimeline daeun={daeun} startAge={daeunStartAge}
+          birthYear={solarDate.year}
           dayOh={ilju.ohaeng} yongsinOh={enhancedYongsin.yongsin}
           dayStrength={enhancedYongsin.dayStrength} sinsal={sinsal} />
       </Section>

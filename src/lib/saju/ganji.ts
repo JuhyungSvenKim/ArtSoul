@@ -78,7 +78,7 @@ export function getWolju(
  * 기준: 2000-01-01 = 갑진일(甲辰) → 천간0, 지지4 → 60갑자 idx=40
  */
 const BASE_DATE = new Date(Date.UTC(2000, 0, 1)) // 2000-01-01
-const BASE_60_IDX = 40 // 갑진(甲辰)
+const BASE_60_IDX = 54 // 무오(戊午) — 2000-01-01의 실제 60갑자 인덱스
 
 export function getIlju(year: number, month: number, day: number): Ganji {
   const target = new Date(Date.UTC(year, month - 1, day))

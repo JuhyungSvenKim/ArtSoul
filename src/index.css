@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 30% 8%;
+    --foreground: 36 40% 93%;
+
+    --card: 240 25% 12%;
+    --card-foreground: 36 40% 93%;
+
+    --popover: 240 25% 12%;
+    --popover-foreground: 36 40% 93%;
+
+    --primary: 40 45% 58%;
+    --primary-foreground: 240 30% 8%;
+
+    --secondary: 240 20% 18%;
+    --secondary-foreground: 36 30% 85%;
+
+    --muted: 240 15% 20%;
+    --muted-foreground: 240 10% 55%;
+
+    --accent: 40 45% 58%;
+    --accent-foreground: 240 30% 8%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 240 15% 22%;
+    --input: 240 15% 22%;
+    --ring: 40 45% 58%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens */
+    --gold: 40 45% 58%;
+    --gold-light: 40 50% 72%;
+    --gold-dark: 40 40% 42%;
+    --surface: 240 22% 14%;
+    --surface-elevated: 240 20% 18%;
+    --mystical-glow: 260 60% 65%;
+
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'Noto Sans KR', sans-serif;
+
+    --sidebar-background: 240 30% 8%;
+    --sidebar-foreground: 36 40% 93%;
+    --sidebar-primary: 40 45% 58%;
+    --sidebar-primary-foreground: 240 30% 8%;
+    --sidebar-accent: 240 20% 18%;
+    --sidebar-accent-foreground: 36 40% 93%;
+    --sidebar-border: 240 15% 22%;
+    --sidebar-ring: 40 45% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .text-gold-gradient {
+    background: linear-gradient(135deg, hsl(var(--gold-light)), hsl(var(--gold)), hsl(var(--gold-dark)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-surface {
+    background-color: hsl(var(--surface));
+  }
+
+  .bg-surface-elevated {
+    background-color: hsl(var(--surface-elevated));
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 20px hsl(var(--gold) / 0.15), 0 0 60px hsl(var(--gold) / 0.05);
+  }
+
+  .glow-mystical {
+    box-shadow: 0 0 30px hsl(var(--mystical-glow) / 0.1), 0 0 80px hsl(var(--gold) / 0.05);
+  }
+
+  .mobile-container {
+    @apply mx-auto w-full max-w-[430px] min-h-screen;
+  }
+}

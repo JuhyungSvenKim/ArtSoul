@@ -41,6 +41,6 @@ export function solarToLunar(
     year: lunar.year,
     month: lunar.month,
     day: lunar.day,
-    isLeapMonth: lunar.intercalation ?? false,
+    isLeapMonth: lunar.intercalation,
   }
 }

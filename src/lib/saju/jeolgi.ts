@@ -146,34 +146,53 @@ export function getJeolgiMonth(
   day: number,
   hour: number = 12,
 ): { sajuMonth: number; jeolgiName: string } {
-  // 올해 + 전년도 절기 데이터 필요
   const thisYear = getJeolgiDates(year)
-  const prevYear = getJeolgiDates(year - 1)
 
-  // 12절기 (월 경계)만 추출: 입춘(idx2), 경칩(4), 청명(6), 입하(8),
-  // 망종(10), 소서(12), 입추(14), 백로(16), 한로(18), 입동(20), 대설(22), 소한(0)
-  const jeolgiIndices = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 0]
-  const sajuMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  // 절기 경계를 달력 날짜순으로 정렬하여 검사
+  // 소한(0)=1월, 입춘(2)=2월, ..., 대설(22)=12월
+  const boundaries: { jeolgiIdx: number; sajuMonth: number; dateVal: number }[] = []
 
-  const dateVal = month * 10000 + day * 100 + hour
+  // 달력 날짜순: 소한(12월) → 입춘(1월) → ... → 대설(11월)
+  const calendarOrder = [
+    { jIdx: 0,  sajuMonth: 12 }, // 소한 → 축월(12)
+    { jIdx: 2,  sajuMonth: 1 },  // 입춘 → 인월(1)
+    { jIdx: 4,  sajuMonth: 2 },  // 경칩 → 묘월(2)
+    { jIdx: 6,  sajuMonth: 3 },  // 청명 → 진월(3)
+    { jIdx: 8,  sajuMonth: 4 },  // 입하 → 사월(4)
+    { jIdx: 10, sajuMonth: 5 },  // 망종 → 오월(5)
+    { jIdx: 12, sajuMonth: 6 },  // 소서 → 미월(6)
+    { jIdx: 14, sajuMonth: 7 },  // 입추 → 신월(7)
+    { jIdx: 16, sajuMonth: 8 },  // 백로 → 유월(8)
+    { jIdx: 18, sajuMonth: 9 },  // 한로 → 술월(9)
+    { jIdx: 20, sajuMonth: 10 }, // 입동 → 해월(10)
+    { jIdx: 22, sajuMonth: 11 }, // 대설 → 자월(11)
+  ]
 
-  // 뒤에서부터 검사 (가장 최근 절기)
-  for (let i = jeolgiIndices.length - 1; i >= 0; i--) {
-    const jIdx = jeolgiIndices[i]
-    const [jm, jd, jh] = jIdx === 0
-      ? thisYear[0]                    // 소한은 올해 1월
-      : thisYear[jIdx]
-    const jeolgiVal = jm * 10000 + jd * 100 + jh
+  for (const { jIdx, sajuMonth } of calendarOrder) {
+    const [jm, jd, jh] = thisYear[jIdx]
+    boundaries.push({
+      jeolgiIdx: jIdx,
+      sajuMonth,
+      dateVal: jm * 10000 + jd * 100 + jh,
+    })
+  }
 
-    if (dateVal >= jeolgiVal) {
+  // 날짜순 정렬 (이미 거의 정렬되어 있지만 확실하게)
+  boundaries.sort((a, b) => a.dateVal - b.dateVal)
+
+  const targetVal = month * 10000 + day * 100 + hour
+
+  // 뒤에서부터 찾아서 targetVal 이하인 첫 번째 경계 반환
+  for (let i = boundaries.length - 1; i >= 0; i--) {
+    if (targetVal >= boundaries[i].dateVal) {
       return {
-        sajuMonth: sajuMonths[i],
-        jeolgiName: JEOLGI_NAMES[jIdx],
+        sajuMonth: boundaries[i].sajuMonth,
+        jeolgiName: JEOLGI_NAMES[boundaries[i].jeolgiIdx],
       }
     }
   }
 
-  // 소한 이전이면 전년도 12월(축월)
+  // 소한 이전이면 전년도 대설(11월=자월)이지만, 사주 관례상 12월(축월)
   return { sajuMonth: 12, jeolgiName: '대설' }
 }
 

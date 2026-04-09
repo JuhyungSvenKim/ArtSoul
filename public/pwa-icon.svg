@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0f1729"/>
+  <text x="256" y="200" text-anchor="middle" font-family="serif" font-size="80" font-weight="bold" fill="#c4994a">ART</text>
+  <text x="256" y="300" text-anchor="middle" font-family="serif" font-size="60" fill="#c4994a" opacity="0.8">D.N.A.</text>
+  <text x="256" y="380" text-anchor="middle" font-family="sans-serif" font-size="28" fill="#9ca3af">사주 × 미술</text>
+</svg>

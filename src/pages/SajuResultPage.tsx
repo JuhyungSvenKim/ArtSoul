@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import { useOnboardingStore } from "@/stores/onboarding";
@@ -16,24 +16,43 @@ const OHAENG_COLORS: Record<string, { bg: string; text: string }> = {
   수: { bg: "bg-blue-500/20", text: "text-blue-400" },
 };
 
+// localStorage에서 직접 onboarding 데이터 읽기 (zustand hydration 무관)
+function readOnboardingData() {
+  try {
+    const raw = localStorage.getItem("artsoul-onboarding");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const s = parsed.state || parsed;
+    if (s.birthDate && s.gender) return s;
+  } catch {}
+  return null;
+}
+
 const SajuResultPage = () => {
   const navigate = useNavigate();
   const store = useOnboardingStore();
+  const [hydrated, setHydrated] = useState(false);
 
-  // store에서 읽기 + localStorage 직접 fallback
-  const { nameKorean, birthDate, birthTime, gender } = useMemo(() => {
-    if (store.birthDate && store.gender) return store;
-    // zustand persist가 아직 hydrate 안 됐을 수 있음 → localStorage 직접 읽기
-    try {
-      const raw = localStorage.getItem("artsoul-onboarding");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const s = parsed.state || parsed;
-        if (s.birthDate && s.gender) return s;
-      }
-    } catch {}
-    return store;
-  }, [store]);
+  // zustand hydration 완료 대기 + localStorage 직접 읽기
+  useEffect(() => {
+    // 즉시 한번, 100ms 후 한번 더 체크 (hydration 타이밍 보장)
+    setHydrated(true);
+    const timer = setTimeout(() => setHydrated((v) => !v || true), 150);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const data = useMemo(() => {
+    // 1순위: zustand store
+    if (store.birthDate && store.gender) {
+      return { nameKorean: store.nameKorean, birthDate: store.birthDate, birthTime: store.birthTime, gender: store.gender };
+    }
+    // 2순위: localStorage 직접
+    const ls = readOnboardingData();
+    if (ls) return { nameKorean: ls.nameKorean || '', birthDate: ls.birthDate, birthTime: ls.birthTime, gender: ls.gender };
+    return null;
+  }, [store.birthDate, store.gender, store.nameKorean, store.birthTime, hydrated]);
+
+  const { nameKorean, birthDate, birthTime, gender } = data || { nameKorean: '', birthDate: '', birthTime: null, gender: null };
 
   const analysis = useMemo(() => {
     if (!birthDate || !gender) return null;

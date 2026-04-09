@@ -159,9 +159,9 @@ const BirthInfoPage = () => {
               <p className="text-[10px] text-muted-foreground">각 글자의 한자 뜻을 한글로 풀어서 입력하세요</p>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { value: hanjaSurname, set: setHanjaSurname, ph: "김해김", label: "성" },
-                  { value: hanjaName1, set: setHanjaName1, ph: "기둥주", label: "이름 1" },
-                  { value: hanjaName2, set: setHanjaName2, ph: "형통할형", label: "이름 2" },
+                  { value: hanjaSurname, set: setHanjaSurname, ph: "넓을홍", label: "성" },
+                  { value: hanjaName1, set: setHanjaName1, ph: "길길", label: "이름 1" },
+                  { value: hanjaName2, set: setHanjaName2, ph: "아이동", label: "이름 2" },
                 ].map((f) => (
                   <div key={f.label}>
                     <input type="text" placeholder={f.ph} value={f.value} onChange={(e) => f.set(e.target.value)}
@@ -174,7 +174,7 @@ const BirthInfoPage = () => {
           ) : (
             <>
               <p className="text-[10px] text-muted-foreground">한자를 직접 입력하세요 (PC에서 한자 변환 추천)</p>
-              <input type="text" placeholder="金柱亨" value={hanjaDirectInput}
+              <input type="text" placeholder="洪吉童" value={hanjaDirectInput}
                 onChange={(e) => setHanjaDirectInput(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-colors text-center" />
             </>

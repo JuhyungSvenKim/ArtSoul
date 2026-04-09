@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import TabBar from "@/components/TabBar";
@@ -53,10 +53,33 @@ const OHAENG_ARTWORKS: Record<string, Array<{ id: string; title: string; artist:
   ],
 };
 
+// localStorage에서 직접 onboarding 데이터 읽기
+function readOnboardingData() {
+  try {
+    const raw = localStorage.getItem("artsoul-onboarding");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const s = parsed.state || parsed;
+    if (s.birthDate && s.gender) return s;
+  } catch {}
+  return null;
+}
+
 const HomePage = () => {
   const navigate = useNavigate();
-  const { nameKorean, birthDate, birthTime, gender } = useOnboardingStore();
+  const store = useOnboardingStore();
   const [subTab, setSubTab] = useState<"recommend" | "saju">("recommend");
+  const [, setTick] = useState(0);
+
+  // hydration 대기
+  useEffect(() => { const t = setTimeout(() => setTick(1), 150); return () => clearTimeout(t); }, []);
+
+  const { nameKorean, birthDate, birthTime, gender } = useMemo(() => {
+    if (store.birthDate && store.gender) return store;
+    const ls = readOnboardingData();
+    if (ls) return ls;
+    return store;
+  }, [store.birthDate, store.gender, store.nameKorean, store.birthTime]);
 
   const analysis = useMemo(() => {
     if (!birthDate || !gender) return null;

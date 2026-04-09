@@ -27,9 +27,9 @@ const LoginPage = () => {
   };
 
   return (
-    <PageContainer className="justify-between items-center text-center">
+    <PageContainer className="items-center text-center min-h-screen justify-center">
       {/* Hero */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-5 animate-fade-in">
+      <div className="flex flex-col items-center gap-5 animate-fade-in mb-10">
         <div className="relative w-28 h-28">
           <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-spin" style={{ animationDuration: "20s" }} />
           <div className="absolute inset-2 rounded-full border border-primary/10 animate-spin" style={{ animationDuration: "15s", animationDirection: "reverse" }} />
@@ -64,7 +64,7 @@ const LoginPage = () => {
       </div>
 
       {/* 로그인/회원가입 토글 */}
-      <div className="w-full mb-4">
+      <div className="w-full max-w-sm mb-4">
         <div className="flex gap-1 bg-surface rounded-xl p-1 mb-4">
           <button onClick={() => { setMode("login"); setError(""); }}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "login" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>

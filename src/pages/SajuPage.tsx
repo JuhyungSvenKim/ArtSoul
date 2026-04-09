@@ -550,30 +550,23 @@ const SajuPage = () => {
   const navigate = useNavigate();
   const store = useOnboardingStore();
   const userId = store.userId;
-  const [result, setResult] = useState<SajuResult | null>(null);
 
-  // 온보딩 또는 localStorage에서 자동 분석
-  useEffect(() => {
-    let bd = store.birthDate, bt = store.birthTime, g = store.gender;
-    if (!bd || !g) {
-      const ls = loadSajuInput();
-      if (ls) { bd = ls.birthDate; bt = ls.birthTime; g = ls.gender; }
-    }
-    if (bd && g) {
-      try {
-        const [y, m, d] = bd.split("-").map(Number);
-        const hour = bt ? Number(bt.split(":")[0]) : 12;
-        const sajuResult = getSaju({
-          year: y, month: m, day: d, hour,
-          gender: g === "male" ? "남" : "여",
-          calendarType: "양력",
-        });
-        setResult(sajuResult);
-      } catch (e) {
-        console.error("Auto saju calculation failed:", e);
-      }
-    }
-  }, [store.birthDate, store.gender]);
+  // 동기적으로 초기 렌더 시 사주 계산 (블랙 화면 방지)
+  const [result, setResult] = useState<SajuResult | null>(() => {
+    let bd = '', bt: string | null = null, g = '';
+    // 1순위: localStorage 직접
+    const ls = loadSajuInput();
+    if (ls) { bd = ls.birthDate; bt = ls.birthTime; g = ls.gender; }
+    // 2순위: zustand (이미 hydrate 됐을 수도)
+    if (!bd && store.birthDate) { bd = store.birthDate; bt = store.birthTime; g = store.gender || ''; }
+
+    if (!bd || !g) return null;
+    try {
+      const [y, m, d] = bd.split("-").map(Number);
+      const hour = bt ? Number(bt.split(":")[0]) : 12;
+      return getSaju({ year: y, month: m, day: d, hour, gender: g === "male" ? "남" : "여", calendarType: "양력" });
+    } catch { return null; }
+  });
 
   const aiPrompt = useMemo(() => result ? sajuToAIPrompt(result) : "", [result]);
 

@@ -16,7 +16,7 @@ const OHAENG_TEXT: Record<string, string> = {
   목: "text-green-400", 화: "text-red-400", 토: "text-yellow-400", 금: "text-gray-300", 수: "text-blue-400",
 };
 
-type ViewMode = "list" | "create" | "artists" | "settings";
+type ViewMode = "list" | "create" | "artists" | "users" | "settings";
 
 interface ArtistApplication {
   portfolio: string;
@@ -162,15 +162,16 @@ const AdminPage = () => {
       </div>
 
       {/* 탭 */}
-      <div className="flex gap-1 mb-5 bg-surface rounded-xl p-1">
+      <div className="flex gap-1 mb-5 bg-surface rounded-xl p-1 overflow-x-auto">
         {([
-          { key: "list" as ViewMode, label: "작품 목록" },
-          { key: "create" as ViewMode, label: "작품 등록" },
-          { key: "artists" as ViewMode, label: "작가 승인" },
+          { key: "list" as ViewMode, label: "작품" },
+          { key: "create" as ViewMode, label: "등록" },
+          { key: "artists" as ViewMode, label: "작가" },
+          { key: "users" as ViewMode, label: "회원" },
           { key: "settings" as ViewMode, label: "설정" },
         ]).map((tab) => (
           <button key={tab.key} onClick={() => setMode(tab.key)}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
               mode === tab.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
             }`}>{tab.label}</button>
         ))}
@@ -328,6 +329,9 @@ const AdminPage = () => {
         </div>
       )}
 
+      {/* ── 회원 관리 ──────────────────────────────── */}
+      {mode === "users" && <UserManagement onMessage={(msg) => { setSuccess(msg); setTimeout(() => setSuccess(null), 2000); }} />}
+
       {/* ── 설정 (코인 비용) ──────────────────────────── */}
       {mode === "settings" && <CoinPricingSettings onSave={() => { setSuccess("설정이 저장되었습니다"); setTimeout(() => setSuccess(null), 2000); }} />}
     </PageContainer>
@@ -385,6 +389,185 @@ function CoinPricingSettings({ onSave }: { onSave: () => void }) {
         className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm">
         설정 저장
       </button>
+    </div>
+  );
+}
+
+// ── 회원 관리 컴포넌트 ────────────────────────────
+interface ManagedUser {
+  id: string;
+  email: string | null;
+  nickname: string;
+  name_korean: string;
+  role: string;
+  is_pass_verified: boolean;
+  created_at: string;
+  phone?: string;
+}
+
+function UserManagement({ onMessage }: { onMessage: (msg: string) => void }) {
+  const [users, setUsers] = useState<ManagedUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [editingUser, setEditingUser] = useState<ManagedUser | null>(null);
+  const [editRole, setEditRole] = useState("");
+  const [editVerified, setEditVerified] = useState(false);
+
+  const loadUsers = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("id, email, nickname, name_korean, role, is_pass_verified, created_at, phone")
+      .order("created_at", { ascending: false });
+    setUsers(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { loadUsers(); }, []);
+
+  const filtered = users.filter(u => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (u.nickname?.toLowerCase().includes(q)) ||
+      (u.email?.toLowerCase().includes(q)) ||
+      (u.name_korean?.toLowerCase().includes(q));
+  });
+
+  const openEdit = (user: ManagedUser) => {
+    setEditingUser(user);
+    setEditRole(user.role || "consumer");
+    setEditVerified(user.is_pass_verified || false);
+  };
+
+  const saveEdit = async () => {
+    if (!editingUser) return;
+    await supabase.from("user_profiles").update({
+      role: editRole,
+      is_pass_verified: editVerified,
+    }).eq("id", editingUser.id);
+    setEditingUser(null);
+    onMessage("회원 정보가 수정되었습니다");
+    loadUsers();
+  };
+
+  const deleteUser = async (user: ManagedUser) => {
+    if (!confirm(`${user.nickname || user.email || "이 회원"}을(를) 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+    await supabase.from("user_profiles").delete().eq("id", user.id);
+    onMessage("회원이 삭제되었습니다");
+    loadUsers();
+  };
+
+  const roleLabel = (role: string) => {
+    switch (role) {
+      case "artist": return "작가";
+      case "both": return "작가+소비자";
+      default: return "소비자";
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* 검색 & 요약 */}
+      <div className="flex items-center gap-2">
+        <input type="text" placeholder="이름, 이메일로 검색..." value={search} onChange={e => setSearch(e.target.value)}
+          className="flex-1 px-3 py-2.5 rounded-lg bg-surface border border-border text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+        <button onClick={loadUsers} className="px-3 py-2.5 rounded-lg bg-surface border border-border text-xs text-muted-foreground hover:text-foreground">
+          새로고침
+        </button>
+      </div>
+
+      <p className="text-xs text-muted-foreground">전체 회원: {users.length}명 {search && `· 검색 결과: ${filtered.length}명`}</p>
+
+      {loading && <p className="text-sm text-muted-foreground text-center py-8">불러오는 중...</p>}
+
+      {/* 회원 목록 */}
+      {!loading && filtered.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-8">
+          {search ? "검색 결과가 없습니다" : "등록된 회원이 없습니다"}
+        </p>
+      )}
+
+      {!loading && filtered.map((user) => (
+        <div key={user.id} className="bg-surface border border-border rounded-xl p-4">
+          <div className="flex items-start justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {user.name_korean || user.nickname || "—"}
+                </p>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ${
+                  user.role === "artist" || user.role === "both"
+                    ? "bg-primary/10 text-primary"
+                    : "bg-surface text-muted-foreground"
+                }`}>{roleLabel(user.role)}</span>
+                {user.is_pass_verified && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-400 shrink-0">인증완료</span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground truncate">{user.email || "이메일 없음"}</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-1">
+                가입일: {new Date(user.created_at).toLocaleDateString("ko-KR")}
+              </p>
+            </div>
+            <div className="flex gap-1.5 shrink-0 ml-3">
+              <button onClick={() => openEdit(user)}
+                className="px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[11px] font-medium hover:bg-primary/20">
+                수정
+              </button>
+              <button onClick={() => deleteUser(user)}
+                className="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-medium hover:bg-red-500/20">
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {/* 수정 모달 */}
+      {editingUser && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setEditingUser(null)} />
+          <div className="relative z-10 mx-6 w-full max-w-sm bg-card border border-border rounded-2xl p-6">
+            <h3 className="text-base font-semibold text-foreground mb-1">회원 정보 수정</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              {editingUser.name_korean || editingUser.nickname} ({editingUser.email})
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">역할</label>
+                <div className="flex gap-1.5">
+                  {(["consumer", "artist", "both"] as const).map(role => (
+                    <button key={role} onClick={() => setEditRole(role)}
+                      className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-all ${
+                        editRole === role
+                          ? "bg-primary/10 border-primary/30 text-primary"
+                          : "border-border text-muted-foreground hover:border-primary/20"
+                      }`}>{roleLabel(role)}</button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" checked={editVerified} onChange={e => setEditVerified(e.target.checked)}
+                  className="w-4 h-4 rounded border-border accent-primary" />
+                <span className="text-sm text-foreground">본인인증 완료</span>
+              </label>
+            </div>
+
+            <div className="flex gap-2 mt-5">
+              <button onClick={() => setEditingUser(null)}
+                className="flex-1 py-2.5 rounded-xl border border-border text-muted-foreground text-sm">
+                취소
+              </button>
+              <button onClick={saveEdit}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm">
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

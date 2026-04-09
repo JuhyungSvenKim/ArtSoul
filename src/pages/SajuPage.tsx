@@ -184,13 +184,19 @@ function AIInterpretation({ prompt, userId }: { prompt: string; userId: string |
     setLoading(true);
     setError(null);
     try {
-      // 코인 차감
       await deductCoins(userId, AI_INTERPRETATION_COST);
 
-      const fullPrompt = `아래 사주팔자를 분석하여 상세하게 해석해주세요.
+      const fullPrompt = `아래 사주팔자를 깊이 있게 해석해주세요. 소설가처럼 술술 읽히게, 하지만 전문성은 확실하게 써주세요.
 
-다음 내용을 포함해주세요:
-일간(나) 성향 분석, 오행 밸런스 해석, 격국의 의미, 신살 해석, 재물운, 직업운, 연애운, 건강 주의사항, 대운 흐름 요약, 종합 조언
+첫 문장부터 이 사람의 본질을 꿰뚫는 한 줄로 시작하세요.
+예시: "이 사주는 겉으로 보면 차분한데, 속은 용광로입니다."
+
+각 단락의 첫 문장이 소제목 역할을 하게 쓰세요.
+비유를 적극 활용하고, 읽는 사람이 '어, 이거 나인데?' 하게 만드세요.
+단점도 위로와 함께 쓰되 솔직하게, 대운은 이야기처럼 써주세요.
+
+다음 내용을 빠짐없이, 이 순서대로:
+일간 성격 (3~4단락), 오행 밸런스, 격국과 십성, 신살 해석, 공망, 합충형파해, 재물운, 직업운 (구체 직종 5개+), 연애운, 건강, 대운 흐름 (각 대운별 이야기체), 종합 조언 (힘나는 한 문장으로 마무리)
 
 ${prompt}`;
 
@@ -207,35 +213,50 @@ ${prompt}`;
     }
   };
 
+  const handleReset = () => {
+    if (!confirm("AI 해석을 초기화하시겠습니까?\n다시 받으려면 코인이 필요합니다.")) return;
+    setInterpretation(null);
+    setExpiresAt(null);
+    // 캐시 삭제
+    try { localStorage.removeItem('artsoul-cache-ai_interpretation'); } catch {}
+  };
+
   return (
     <div>
       {!interpretation && !loading && (
         <div className="space-y-2">
-          <button onClick={fetchInterpretation} className="w-full py-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-medium hover:bg-primary/20 transition-all">
+          <button onClick={fetchInterpretation} className="w-full py-3.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-medium hover:bg-primary/20 transition-all">
             🔮 AI 사주 해석 받기 ({AI_INTERPRETATION_COST} 코인)
           </button>
-          <p className="text-[10px] text-muted-foreground text-center">해석 결과는 1달간 유지됩니다</p>
+          <p className="text-[10px] text-muted-foreground text-center">웹소설처럼 술술 읽히는 깊이 있는 사주 해석</p>
         </div>
       )}
       {loading && (
-        <div className="flex items-center justify-center gap-2 py-8">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span className="text-sm text-muted-foreground">AI가 사주를 해석하고 있습니다...</span>
+        <div className="flex flex-col items-center justify-center gap-3 py-10">
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">당신의 사주를 깊이 읽고 있습니다...</p>
+          <p className="text-[10px] text-muted-foreground/60">30초~1분 정도 소요됩니다</p>
         </div>
       )}
       {error && <div className="rounded-lg bg-red-500/20 text-red-400 px-3 py-2 text-xs font-medium">{error}</div>}
       {interpretation && (
-        <div className="bg-surface border border-border rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
+        <div className="bg-surface border border-border rounded-xl p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm">🔮</span>
-              <p className="text-sm font-medium text-primary">AI 사주 해석</p>
+              <span className="text-base">🔮</span>
+              <p className="text-sm font-semibold text-primary">AI 사주 해석</p>
             </div>
-            {expiresAt && (
-              <span className="text-[10px] text-muted-foreground">{getRemainingText(expiresAt)}</span>
-            )}
+            <div className="flex items-center gap-2">
+              {expiresAt && (
+                <span className="text-[10px] text-muted-foreground">{getRemainingText(expiresAt)}</span>
+              )}
+              <button onClick={handleReset}
+                className="text-[10px] text-muted-foreground hover:text-red-400 transition-colors px-2 py-1 rounded border border-transparent hover:border-red-400/20">
+                초기화
+              </button>
+            </div>
           </div>
-          <div className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{interpretation}</div>
+          <div className="text-sm text-foreground/85 leading-[1.85] whitespace-pre-wrap">{interpretation}</div>
         </div>
       )}
     </div>
@@ -257,10 +278,33 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 // ── 운세 타입 정의 ──────────────────────────────────
 const FORTUNE_TYPES = [
-  { key: 'today' as const, label: '오늘의 운세', cost: 1, icon: '☀️', promptExtra: '오늘 하루의 운세를 알려주세요. 구체적인 행동 조언을 포함해주세요.' },
-  { key: 'week' as const, label: '금주의 운세', cost: 3, icon: '📅', promptExtra: '이번 주 월~일 운세를 요일별로 간략히 알려주세요.' },
-  { key: 'month' as const, label: '월간 운세', cost: 5, icon: '🗓️', promptExtra: '이번 달 운세를 주간별로 나눠서 알려주세요. 재물운, 연애운, 건강운 포함.' },
-  { key: 'year' as const, label: '올해 운세', cost: 10, icon: '🎯', promptExtra: '올해 전체 운세를 분기별로 알려주세요. 대운의 영향도 포함해서 분석해주세요.' },
+  { key: 'today' as const, label: '오늘의 운세', cost: 1, icon: '☀️', promptExtra: `오늘 하루의 운세를 써주세요.
+
+톤: 아침에 읽으면 기분 좋아지는 친한 언니/형 느낌. 가볍지만 찔리는 한마디가 있어야 함.
+구조: 오늘의 키워드 한 줄 → 전체 운세 (3~4줄) → 재물 한줄팁 → 연애 한줄팁 → 건강 한줄팁 → 오늘의 행동 조언 한 줄
+예시 첫줄: "오늘은 입을 한 번만 더 닫으면 좋은 일이 생기는 날입니다."
+비유를 쓰고, "~하세요"보다 "~할 거예요", "~인 날이에요" 체를 써서 부드럽게.` },
+
+  { key: 'week' as const, label: '금주의 운세', cost: 3, icon: '📅', promptExtra: `이번 주 운세를 써주세요.
+
+톤: 한 주를 미리 보는 전략 브리핑 느낌. 요일별로 한 줄씩, 핵심만 콕.
+구조: 이번 주 핵심 키워드 → 월~금 각 요일별 한줄 운세 (구체적 행동 포함) → 주말 운세 → 이번 주 총평 한 줄
+예시: "수요일, 돈 관련 제안이 오면 24시간만 묵혀두세요. 목요일에 답이 보입니다."
+각 요일이 소설의 한 장면처럼 느껴지게.` },
+
+  { key: 'month' as const, label: '월간 운세', cost: 5, icon: '🗓️', promptExtra: `이번 달 운세를 써주세요.
+
+톤: 월간 매거진 칼럼 느낌. 깊이 있되 술술 읽히게.
+구조: 이번 달 테마 한 줄 → 1주차/2주차/3주차/4주차 각 3~4줄 → 재물운 단락 → 연애운 단락 → 건강운 단락 → 이번 달 핵심 한 줄
+각 주차를 "1막, 2막" 느낌으로. 비유 적극 활용.
+예시: "2주차는 씨앗을 심는 시간입니다. 결과를 당장 보려 하지 마세요."` },
+
+  { key: 'year' as const, label: '올해 운세', cost: 10, icon: '🎯', promptExtra: `올해 전체 운세를 써주세요.
+
+톤: 한 편의 단편소설처럼. 올해가 내 인생에서 어떤 해인지 큰 그림을 그려주세요.
+구조: 올해의 한 줄 정의 → 대운과의 관계 → 1분기(1~3월)/2분기(4~6월)/3분기(7~9월)/4분기(10~12월) 각 한 단락 → 재물운 총평 → 연애운 총평 → 직업운 총평 → 건강 총평 → 올해를 관통하는 조언 한 문장
+예시 첫줄: "2026년은 당신에게 '선택의 해'입니다. 올해 고른 길이 향후 10년을 결정합니다."
+대운 흐름과 연결해서 왜 올해가 중요한지 설득력 있게.` },
 ] as const;
 
 // ── 운세 섹션 (캐싱 지원) ───────────────────────────

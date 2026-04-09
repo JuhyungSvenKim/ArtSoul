@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ImagePlus, X, Sparkles, ToggleLeft, ToggleRight } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { generateCuratorDescription } from "@/lib/curator";
+import {
+  MEDIUM_OPTIONS, SUBJECT_OPTIONS, STYLE_OPTIONS, COLOR_OPTIONS, ENERGY_OPTIONS,
+  calculateOhaengScores, getPrimaryOhaeng, getAutoEumYang, getAutoEnergyLevel,
+  type ArtworkAxes,
+} from "@/lib/artwork-ohaeng";
 
 const GENRES = ["수묵담채", "유화", "수채화", "아크릴", "판화", "디지털아트", "혼합매체", "사진", "조각"];
 
@@ -42,14 +49,86 @@ const ArtworkUploadPage = () => {
     if (!form.price) setForm({ ...form, price: rounded.toString() });
   };
 
+  const [submitStatus, setSubmitStatus] = useState("");
   const canSubmit = images.length > 0 && form.title && form.genre && form.width && form.height && form.price;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    setSubmitStatus("큐레이터가 작품 설명을 작성 중...");
+
+    try {
+      // 장르를 기반으로 5축 매핑 (가장 가까운 매체 자동 선택)
+      const genreToMedium: Record<string, string> = {
+        "수묵담채": "수묵화", "유화": "유화", "수채화": "유화", "아크릴": "아크릴",
+        "판화": "판화", "디지털아트": "디지털", "혼합매체": "믹스드", "사진": "디지털", "조각": "믹스드",
+      };
+      const autoMedium = genreToMedium[form.genre] || "유화";
+      const axes: ArtworkAxes = {
+        medium: autoMedium, subject: "자연풍경", style: "사실주의",
+        color: "뉴트럴", energy: "균형",
+      };
+      const ohaengScores = calculateOhaengScores(axes);
+      const { primary, secondary } = getPrimaryOhaeng(ohaengScores);
+      const eumYang = getAutoEumYang(axes);
+      const energyLevel = getAutoEnergyLevel(ohaengScores);
+
+      // 큐레이터 AI 설명 생성
+      let curatedDescription = form.description || "";
+      try {
+        curatedDescription = await generateCuratorDescription({
+          title: form.title,
+          genre: form.genre,
+          primaryOhaeng: primary,
+          secondaryOhaeng: secondary,
+          eumYang,
+          sizeCmW: Number(form.width),
+          sizeCmH: Number(form.height),
+          userDescription: form.description || undefined,
+        });
+      } catch {
+        if (!curatedDescription) curatedDescription = `${form.title} — ${form.genre} 작품`;
+      }
+
+      setSubmitStatus("작품을 저장하고 있습니다...");
+
+      // DB 저장
+      const { error: dbError } = await supabase.from("artworks").insert({
+        title: form.title,
+        artist_name: "작가",
+        artist_id: "00000000-0000-0000-0000-000000000000",
+        genre: form.genre,
+        description: curatedDescription,
+        image_url: null,
+        image_urls: [],
+        thumbnail_url: "",
+        price: Number(form.price) || 0,
+        rental_price: form.rentalAllowed ? Math.round((Number(form.price) || 0) * 0.05) : null,
+        size_cm_w: Number(form.width) || 30,
+        size_cm_h: Number(form.height) || 40,
+        ohaeng_scores: ohaengScores,
+        primary_ohaeng: primary,
+        secondary_ohaeng: secondary,
+        eum_yang: eumYang,
+        energy_level: energyLevel,
+        style_tags: [form.genre],
+        mood_tags: [],
+        ohaeng_tags: [primary, secondary],
+        color_palette: [],
+        recommended_space: [],
+        related_sinsal: [],
+        recommended_effects: [],
+        is_admin_uploaded: false,
+        is_demo: false,
+        status: "available",
+      });
+
+      if (dbError) throw dbError;
       setDone(true);
-    }, 1200);
+    } catch (e: any) {
+      setSubmitStatus(`등록 실패: ${e.message || "알 수 없는 오류"}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (done) {
@@ -233,12 +312,18 @@ const ArtworkUploadPage = () => {
 
         {/* Bottom Button */}
         <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-card/90 backdrop-blur-xl border-t border-border px-5 py-3 pb-[env(safe-area-inset-bottom,12px)] z-50">
+          {submitStatus && submitting && (
+            <p className="text-xs text-primary text-center mb-2 animate-pulse">{submitStatus}</p>
+          )}
+          {submitStatus && !submitting && submitStatus.startsWith("등록 실패") && (
+            <p className="text-xs text-red-400 text-center mb-2">{submitStatus}</p>
+          )}
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || submitting}
             className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 transition-transform active:scale-[0.98]"
           >
-            {submitting ? "등록 중..." : "작품 등록하기"}
+            {submitting ? "큐레이터 AI 작업 중..." : "작품 등록하기"}
           </button>
         </div>
       </div>

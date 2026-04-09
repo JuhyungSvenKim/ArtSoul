@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import { supabase } from "@/lib/supabase";
 import { getCoinPricing, setCoinPricing, type CoinPricing } from "@/lib/coin-pricing";
+import { generateCuratorDescription } from "@/lib/curator";
 import {
   MEDIUM_OPTIONS, SUBJECT_OPTIONS, STYLE_OPTIONS, COLOR_OPTIONS, ENERGY_OPTIONS,
   calculateOhaengScores, getPrimaryOhaeng, getAutoEumYang, getAutoEnergyLevel,
@@ -75,10 +76,26 @@ const AdminPage = () => {
     setSaving(true); setError(null); setSuccess(null);
 
     try {
+      // 큐레이터 엔진으로 작품 설명 자동 생성
+      setSuccess("큐레이터가 작품 설명을 작성하고 있습니다...");
+      let curatedDescription = description || "";
+      try {
+        curatedDescription = await generateCuratorDescription({
+          title, artistName, genre: medium,
+          subject, style, color, energy,
+          primaryOhaeng: primary, secondaryOhaeng: secondary, eumYang,
+          sizeCmW: Number(sizeCmW) || 30, sizeCmH: Number(sizeCmH) || 40,
+          userDescription: description || undefined,
+        });
+      } catch {
+        // AI 실패 시 원본 설명 유지
+        if (!curatedDescription) curatedDescription = `${title} — ${artistName}의 ${medium} 작품`;
+      }
+
       const { error: dbError } = await supabase.from("artworks").insert({
         title, artist_name: artistName,
         artist_id: "00000000-0000-0000-0000-000000000000",
-        genre: medium, description: description || null,
+        genre: medium, description: curatedDescription,
         image_url: imageUrl || null,
         image_urls: imageUrl ? [imageUrl] : [],
         thumbnail_url: imageUrl || "",

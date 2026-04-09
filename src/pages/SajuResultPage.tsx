@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { getSaju } from "@/lib/saju";
@@ -40,20 +40,34 @@ function getSajuInput() {
 
 const SajuResultPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const store = useOnboardingStore();
-  const [directData, setDirectData] = useState<any>(null);
 
-  // mount 시 localStorage에서 직접 읽기
-  useEffect(() => {
-    const d = getSajuInput();
-    if (d) setDirectData(d);
-  }, []);
+  // 4중 fallback: URL params → localStorage(직접) → localStorage(zustand) → zustand store
+  const { nameKorean, birthDate, birthTime, gender } = useMemo(() => {
+    // 1순위: URL 파라미터 (가장 확실)
+    const urlBd = searchParams.get("bd");
+    const urlG = searchParams.get("g");
+    if (urlBd && urlG) {
+      return {
+        nameKorean: searchParams.get("name") || '',
+        birthDate: urlBd,
+        birthTime: searchParams.get("bt") || null,
+        gender: urlG as any,
+      };
+    }
 
-  // store 또는 직접 읽은 데이터
-  const nameKorean = store.nameKorean || directData?.nameKorean || '';
-  const birthDate = store.birthDate || directData?.birthDate || '';
-  const birthTime = store.birthTime || directData?.birthTime || null;
-  const gender = store.gender || directData?.gender || null;
+    // 2순위: localStorage 직접 저장
+    const ls = getSajuInput();
+    if (ls) return { nameKorean: ls.nameKorean || '', birthDate: ls.birthDate, birthTime: ls.birthTime, gender: ls.gender };
+
+    // 3순위: zustand store
+    if (store.birthDate && store.gender) {
+      return { nameKorean: store.nameKorean, birthDate: store.birthDate, birthTime: store.birthTime, gender: store.gender };
+    }
+
+    return { nameKorean: '', birthDate: '', birthTime: null, gender: null };
+  }, [searchParams, store.birthDate, store.gender]);
 
   const analysis = useMemo(() => {
     if (!birthDate || !gender) return null;

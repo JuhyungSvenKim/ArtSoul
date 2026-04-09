@@ -20,7 +20,25 @@ const PAIRS: ArtworkPair[] = [
 
 const ArtTastePage = () => {
   const navigate = useNavigate();
-  const { userId, addTasteSelection } = useOnboardingStore();
+  const { userId, addTasteSelection, birthDate, birthTime, gender, nameKorean } = useOnboardingStore();
+
+  // localStorage에서도 읽기 (zustand hydration 실패 대비)
+  const getSajuParams = () => {
+    let bd = birthDate, bt = birthTime, g = gender, name = nameKorean;
+    if (!bd || !g) {
+      try {
+        const raw = localStorage.getItem("artsoul-saju-input");
+        if (raw) { const d = JSON.parse(raw); bd = d.birthDate; bt = d.birthTime; g = d.gender; name = d.nameKorean; }
+      } catch {}
+    }
+    if (!bd || !g) {
+      try {
+        const raw = localStorage.getItem("artsoul-onboarding");
+        if (raw) { const p = JSON.parse(raw); const s = p.state || p; bd = s.birthDate; bt = s.birthTime; g = s.gender; name = s.nameKorean; }
+      } catch {}
+    }
+    return new URLSearchParams({ bd: bd || '', bt: bt || '', g: g || '', name: name || '' }).toString();
+  };
   const [round, setRound] = useState(0);
   const [selections, setSelections] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -44,7 +62,7 @@ const ArtTastePage = () => {
       } finally {
         setSaving(false);
       }
-      setTimeout(() => navigate("/result"), 400);
+      setTimeout(() => navigate(`/result?${getSajuParams()}`), 400);
     } else {
       setTimeout(() => setRound(round + 1), 300);
     }
@@ -52,7 +70,7 @@ const ArtTastePage = () => {
 
   const handleSkip = () => {
     if (isLastRound) {
-      navigate("/result");
+      navigate(`/result?${getSajuParams()}`);
     } else {
       setRound(round + 1);
     }

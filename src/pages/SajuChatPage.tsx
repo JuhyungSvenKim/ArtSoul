@@ -63,7 +63,7 @@ const SajuChatPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex justify-center">
-      <div className="mobile-container flex flex-col h-screen">
+      <div className="max-w-5xl mx-auto w-full flex flex-col px-6 pt-20 lg:px-12 min-h-screen">
         {/* Header */}
         <div className="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-border shrink-0">
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center">

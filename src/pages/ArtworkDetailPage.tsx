@@ -34,7 +34,7 @@ const ArtworkDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex justify-center">
-      <div className="mobile-container flex flex-col pb-24">
+      <div className="max-w-5xl mx-auto w-full flex flex-col px-6 py-8 pt-20 lg:px-12">
         {/* Image Viewer */}
         <div className="relative aspect-[3/4] bg-surface">
           {/* Back button */}

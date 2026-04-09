@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import TabBar from "@/components/TabBar";
 import { ChevronRight } from "lucide-react";
+import CaseCodeArt from "@/components/CaseCodeArt";
+import { getRecommendedArtworks, getSampleArtworks } from "@/data/sample-artworks";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { getSaju, sajuToAIPrompt } from "@/lib/saju";
 import type { SajuResult } from "@/lib/saju";
@@ -95,7 +97,8 @@ const HomePage = () => {
       const recommendation = matchSajuToCases({ sajuResult: result, yongsinResult: enhancedYongsin });
       const topCases = recommendation.all.slice(0, 5);
 
-      return { result, yongsin, lucky, summary, enhancedYongsin, topCases, balance };
+      const artworks = getRecommendedArtworks(topCases.map(c => c.caseCode), 8);
+      return { result, yongsin, lucky, summary, enhancedYongsin, topCases, balance, artworks };
     } catch {
       return null;
     }
@@ -176,16 +179,16 @@ const HomePage = () => {
                 </div>
               </div>
 
-              {/* 용신 기반 추천 */}
+              {/* 추천 작품 슬라이더 */}
               <div>
                 <SectionHeader title={`${analysis.yongsin.element} 기운 보충 작품`} />
                 <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-                  {recommendedArtworks.map((art) => (
+                  {(analysis.artworks || []).slice(0, 6).map((art) => (
                     <div key={art.id} className="shrink-0 w-32">
-                      <div className="w-32 h-40 rounded-xl bg-surface border border-border flex items-center justify-center text-4xl mb-2">
-                        {art.emoji}
+                      <div className="w-32 h-40 rounded-xl overflow-hidden border border-border mb-2">
+                        <CaseCodeArt element={art.element} energy={art.energy} style={art.style} />
                       </div>
-                      <p className="text-xs font-medium text-foreground truncate">{art.title}</p>
+                      <p className="text-xs font-medium text-foreground truncate">{art.title.split("—")[0].trim()}</p>
                       <p className="text-[10px] text-muted-foreground">{art.artist}</p>
                     </div>
                   ))}

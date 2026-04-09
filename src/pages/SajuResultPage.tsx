@@ -7,6 +7,9 @@ import { getOhaengBalance, getYongsin, getLuckyItems, getPillarMeanings } from "
 import { analyzeYongsin } from "@/lib/saju/yongsin";
 import { matchSajuToCases } from "@/lib/case-code";
 import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
+import CaseCodeArt from "@/components/CaseCodeArt";
+import { getRecommendedArtworks } from "@/data/sample-artworks";
+import type { SampleArtwork } from "@/data/sample-artworks";
 
 const OH_COLORS: Record<string, { bg: string; text: string; hex: string }> = {
   목: { bg: "bg-green-500/20", text: "text-green-400", hex: "#4a9e6e" },
@@ -77,8 +80,10 @@ const SajuResultPage = () => {
       const { yeonju, wolju, ilju, siju, sipsung } = result;
       const enhancedYongsin = analyzeYongsin({ yeonju, wolju, ilju, siju }, sipsung);
       const recommendation = matchSajuToCases({ sajuResult: result, yongsinResult: enhancedYongsin });
-      const topCase = recommendation.all[0];
-      return { result, yongsin, lucky, enhancedYongsin, topCase, balance };
+      const topCases = recommendation.all.slice(0, 5);
+      const topCase = topCases[0];
+      const recommendedArtworks = getRecommendedArtworks(topCases.map(c => c.caseCode), 5);
+      return { result, yongsin, lucky, enhancedYongsin, topCase, topCases, recommendedArtworks, balance };
     } catch (e: any) {
       return null;
     }
@@ -93,7 +98,7 @@ const SajuResultPage = () => {
     );
   }
 
-  const { result, yongsin, lucky, enhancedYongsin, topCase, balance } = analysis;
+  const { result, yongsin, lucky, enhancedYongsin, topCase, topCases, recommendedArtworks, balance } = analysis;
   const pillars: { label: string; ganji: Ganji }[] = [
     { label: "시주", ganji: result.siju },
     { label: "일주", ganji: result.ilju },
@@ -227,7 +232,7 @@ const SajuResultPage = () => {
         <p className="text-xs text-primary/70 mt-3 italic">더 깊은 해석은 메인 화면에서 AI 사주 해석으로 확인하세요!</p>
       </section>
 
-      {/* ── 5. 추천 ART DNA ── */}
+      {/* ── 5. 추천 작품 ── */}
       {topCase && (() => {
         const el = ELEMENT_MAP[topCase.element];
         const en = ENERGY_MAP[topCase.energy];
@@ -235,25 +240,51 @@ const SajuResultPage = () => {
         return (
           <section className="bg-card border border-border rounded-2xl p-5 mb-4">
             <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <div className="w-1 h-4 bg-primary rounded-full" />당신에게 어울리는 그림
+              <div className="w-1 h-4 bg-primary rounded-full" />당신의 사주가 부르는 그림
             </h2>
-            <div className="flex items-start gap-3 mb-3">
-              <span className="text-base font-mono font-bold px-3 py-2 rounded-lg shrink-0" style={{
-                backgroundColor: `${el?.color}20`, color: el?.color, border: `1px solid ${el?.color}40`
-              }}>{topCase.caseCode}</span>
-              <div>
-                <p className="text-sm font-medium text-foreground">{el?.labelKor} × {en?.labelKor} × {st?.labelKor}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  용신({enhancedYongsin.yongsin}) 오행으로 사주 균형 보완. {en?.labelKor} 에너지로 {en?.description?.slice(0, 15)}
-                </p>
+            <p className="text-xs text-foreground/70 mb-3">
+              {enhancedYongsin.yongsin} 기운이 부족한 당신에게, {el?.labelKor}의 색감과 {en?.labelKor} 에너지가 사주의 균형을 잡아줄 거예요.
+            </p>
+
+            {/* 대표 작품 */}
+            <div className="rounded-xl overflow-hidden border border-border mb-3">
+              <div className="aspect-[4/3]">
+                <CaseCodeArt element={topCase.element} energy={topCase.energy} style={topCase.style} />
+              </div>
+              <div className="p-3 bg-surface">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{
+                    backgroundColor: `${el?.color}20`, color: el?.color, border: `1px solid ${el?.color}40`
+                  }}>{topCase.caseCode}</span>
+                  <span className="text-[10px] text-primary">{topCase.totalScore}점 매칭</span>
+                </div>
+                <p className="text-sm font-medium text-foreground">{recommendedArtworks[0]?.title || "추천 작품"}</p>
+                <p className="text-[10px] text-muted-foreground">{recommendedArtworks[0]?.artist || ""}</p>
               </div>
             </div>
-            <div className="bg-surface rounded-xl p-3.5 space-y-2">
+
+            {/* 추가 추천 3개 */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
+              {recommendedArtworks.slice(1, 4).map((art) => (
+                <div key={art.id} className="shrink-0 w-28">
+                  <div className="aspect-square rounded-lg overflow-hidden border border-border mb-1">
+                    <CaseCodeArt element={art.element} energy={art.energy} style={art.style} />
+                  </div>
+                  <p className="text-[10px] font-medium text-foreground truncate">{art.title.split("—")[0].trim()}</p>
+                  <p className="text-[9px] text-muted-foreground">{art.artist}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-surface rounded-xl p-3.5 mt-3 space-y-1.5">
               <p className="text-xs text-foreground">
-                <span className="text-primary font-medium">이런 그림을 두면 좋아요</span> — {lucky.artStyles.slice(0, 2).join(', ')} 계열의 {lucky.artSubjects[0]} 작품
+                <span className="text-primary font-medium">이런 그림을 두면 좋아요</span>
               </p>
               <p className="text-xs text-foreground/70">
-                {lucky.artMoods.join(' · ')}의 분위기가 당신의 공간에 균형을 가져다줍니다.
+                {lucky.artStyles.slice(0, 2).join(', ')} 계열 · {lucky.artSubjects[0]} · {lucky.artMoods.join(' · ')}의 분위기
+              </p>
+              <p className="text-xs text-foreground/70">
+                {lucky.direction}에 두면 기운이 더 강해지고, {lucky.season}에 특히 효과적이에요.
               </p>
             </div>
           </section>

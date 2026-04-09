@@ -97,8 +97,9 @@ const HomePage = () => {
       const recommendation = matchSajuToCases({ sajuResult: result, yongsinResult: enhancedYongsin });
       const topCases = recommendation.all.slice(0, 5);
 
-      const artworks = getRecommendedArtworks(topCases.map(c => c.caseCode), 8);
-      return { result, yongsin, lucky, summary, enhancedYongsin, topCases, balance, artworks };
+      const allCases = recommendation.all.slice(0, 20);
+      const artworks = getRecommendedArtworks(allCases.map(c => c.caseCode), 20);
+      return { result, yongsin, lucky, summary, enhancedYongsin, topCases, allCases, balance, artworks };
     } catch {
       return null;
     }
@@ -191,7 +192,7 @@ const HomePage = () => {
 
               {/* 매칭 Top 5 — 섬네일 + 점수 + 설명 */}
               <div>
-                <SectionHeader title="당신의 사주가 선택한 그림 Top 5" />
+                <SectionHeader title="당신의 사주가 선택한 그림 Top 5" onMore={() => navigate("/top-picks")} />
                 <div className="space-y-3">
                   {analysis.topCases.map((c, i) => {
                     const el = ELEMENT_MAP[c.element];
@@ -203,7 +204,9 @@ const HomePage = () => {
                       ? `부족한 ${el?.labelKor} 기운을 ${en?.labelKor} 에너지의 ${st?.labelKor} 작품으로 채워보세요`
                       : `강한 ${el?.labelKor}을 더 살려줄 ${en?.labelKor} 에너지 — ${st?.labelKor} 스타일이 딱이에요`;
                     return (
-                      <div key={c.caseCode} className={`bg-card border rounded-xl p-4 flex gap-4 items-center transition-all hover:border-primary/30 ${i === 0 ? "border-primary/30 glow-mystical" : "border-border"}`}>
+                      <div key={c.caseCode}
+                        onClick={() => matchArt && navigate(`/artwork/${matchArt.id}`)}
+                        className={`bg-card border rounded-xl p-4 flex gap-4 items-center transition-all cursor-pointer hover:border-primary/30 ${i === 0 ? "border-primary/30 glow-mystical" : "border-border"}`}>
                         {/* 섬네일 */}
                         <div className="shrink-0 w-16 h-20 rounded-lg overflow-hidden border border-border">
                           <CaseCodeArt element={c.element} energy={c.energy} style={c.style} />
@@ -371,12 +374,14 @@ const HomePage = () => {
   );
 };
 
-const SectionHeader = ({ title }: { title: string }) => (
+const SectionHeader = ({ title, onMore }: { title: string; onMore?: () => void }) => (
   <div className="flex items-center justify-between mb-3">
     <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-    <button className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5">
-      더보기 <ChevronRight className="w-3 h-3" />
-    </button>
+    {onMore && (
+      <button onClick={onMore} className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5">
+        더보기 <ChevronRight className="w-3 h-3" />
+      </button>
+    )}
   </div>
 );
 

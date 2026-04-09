@@ -6,6 +6,7 @@ import { getSampleArtworks } from "@/data/sample-artworks";
 import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
 import { curate, calculateRentalPrice } from "@/lib/curation-engine";
 import { addToCart } from "@/lib/cart";
+import { isLiked as checkLiked, toggleLike } from "@/lib/likes";
 
 // localStorage에서 사주 데이터 읽기
 function loadUserSaju() {
@@ -17,10 +18,9 @@ function loadUserSaju() {
 const ArtworkDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [isLiked, setIsLiked] = useState(false);
-
   // 작품 찾기
   const allArtworks = useMemo(() => getSampleArtworks(), []);
+  const [isLiked, setIsLiked] = useState(() => id ? checkLiked(id) : false);
   const artwork = allArtworks.find(a => a.id === id);
 
   // 사주 기반 큐레이팅
@@ -194,7 +194,13 @@ const ArtworkDetailPage = () => {
         {/* 하단 고정 바 */}
         <div className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-t border-border z-50">
           <div className="max-w-5xl mx-auto px-6 py-3 flex items-center gap-2">
-            <button onClick={() => setIsLiked(!isLiked)}
+            <button onClick={() => {
+              const liked = toggleLike({
+                id: artwork.id, title: artwork.title, artist: artwork.artist,
+                element: artwork.element, energy: artwork.energy, style: artwork.style,
+              });
+              setIsLiked(liked);
+            }}
               className={`w-11 h-11 rounded-xl border flex items-center justify-center transition-all ${
                 isLiked ? "border-red-500/50 bg-red-500/10 text-red-400" : "border-border text-muted-foreground"
               }`}>

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import { ChevronLeft, Check, MapPin, CreditCard, Package } from "lucide-react";
+import { addOrder } from "@/lib/orders";
+import { getCart, clearCart } from "@/lib/cart";
 
 const STEPS = ["배송지 입력", "결제", "완료"];
 
@@ -25,7 +27,40 @@ const PurchaseFlowPage = () => {
     ? newAddress.name && newAddress.phone && newAddress.address
     : selectedAddress;
 
+  const [orderId, setOrderId] = useState("");
+
   const handleNext = () => {
+    if (step === 1) {
+      // 결제 완료 → 주문 저장
+      const from = searchParams.get("from");
+      if (from === "cart") {
+        // 장바구니에서 온 경우: 장바구니 아이템들 주문 저장
+        const cartItems = getCart();
+        cartItems.forEach(item => {
+          addOrder({
+            artworkId: item.artworkId,
+            title: item.title,
+            artist: item.artist,
+            type: item.type,
+            amount: item.type === "purchase" ? item.purchasePrice : item.rentalPrice,
+            status: item.type === "rental" ? "렌탈중" : "결제완료",
+          });
+        });
+        clearCart();
+        setOrderId(`ART-${Date.now()}`);
+      } else {
+        // 단일 작품 구매
+        const order = addOrder({
+          artworkId: "direct",
+          title: artworkTitle,
+          artist: "",
+          type: "purchase",
+          amount: price,
+          status: "결제완료",
+        });
+        setOrderId(order.id);
+      }
+    }
     if (step < 2) setStep(step + 1);
   };
 
@@ -177,7 +212,7 @@ const PurchaseFlowPage = () => {
               </div>
               <div>
                 <h2 className="text-lg font-display font-semibold text-foreground">주문이 완료되었습니다</h2>
-                <p className="text-xs text-muted-foreground mt-1">주문번호 #ART-20250406-001</p>
+                <p className="text-xs text-muted-foreground mt-1">주문번호 #{orderId}</p>
               </div>
               <div className="bg-card border border-border rounded-xl p-4 w-full max-w-xs space-y-2 text-left">
                 <div className="flex justify-between text-xs">

@@ -29,6 +29,7 @@ import ArtistProfilePage from "./pages/ArtistProfilePage";
 import ArtistRegisterPage from "./pages/ArtistRegisterPage";
 import ArtworkUploadPage from "./pages/ArtworkUploadPage";
 import ArtistDashboardPage from "./pages/ArtistDashboardPage";
+import TopPicksPage from "./pages/TopPicksPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ const App = () => (
           <Route path="/artist-register" element={<ArtistRegisterPage />} />
           <Route path="/artwork-upload" element={<ArtworkUploadPage />} />
           <Route path="/artist-dashboard" element={<ArtistDashboardPage />} />
+          <Route path="/top-picks" element={<TopPicksPage />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

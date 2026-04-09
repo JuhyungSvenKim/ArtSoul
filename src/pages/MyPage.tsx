@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import TabBar from "@/components/TabBar";
+import CaseCodeArt from "@/components/CaseCodeArt";
 import { Settings, ChevronRight, ShieldCheck, Palette, Clock, CheckCircle } from "lucide-react";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { getCoinBalance } from "@/services/coins";
+import { getLikes, type LikedArtwork } from "@/lib/likes";
+import { getOrders, getRentals, type Order, type Rental } from "@/lib/orders";
 
 const MOCK_USER = {
   nickname: "홍길동",
@@ -13,27 +16,19 @@ const MOCK_USER = {
   avatar: "🧑‍🎨",
 };
 
-const MOCK_LIKED = [
-  { id: "1", title: "청산유수", artist: "김민수", emoji: "🏔️" },
-  { id: "2", title: "봄의 서곡", artist: "박서연", emoji: "🌷" },
-  { id: "3", title: "해조음", artist: "최하늘", emoji: "🌊" },
-  { id: "4", title: "묵란도", artist: "한지민", emoji: "🎋" },
-];
-
-const MOCK_ORDERS = [
-  { id: "o1", title: "달빛 아래 소나무", date: "2026.03.28", status: "배송완료", amount: 180000 },
-  { id: "o2", title: "봄의 서곡", date: "2026.04.01", status: "렌탈중", amount: 25000 },
-];
-
 const MyPage = () => {
   const navigate = useNavigate();
   const { nameKorean, mbti, userId } = useOnboardingStore();
   const [coins, setCoins] = useState<number | null>(null);
+  const [likes, setLikes] = useState<LikedArtwork[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [rentals, setRentals] = useState<Rental[]>([]);
 
   useEffect(() => {
-    if (userId) {
-      getCoinBalance(userId).then(setCoins).catch(() => {});
-    }
+    if (userId) { getCoinBalance(userId).then(setCoins).catch(() => {}); }
+    setLikes(getLikes());
+    setOrders(getOrders());
+    setRentals(getRentals());
   }, [userId]);
 
   const displayName = nameKorean || MOCK_USER.nickname;
@@ -107,56 +102,89 @@ const MyPage = () => {
       <ArtistSection navigate={navigate} />
 
       {/* Liked Artworks */}
-      <SectionHeader title="좋아한 작품" count={MOCK_LIKED.length} />
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {MOCK_LIKED.map((art) => (
-          <div key={art.id} className="group">
-            <div className="aspect-[3/4] rounded-xl bg-surface border border-border flex items-center justify-center text-4xl mb-2 transition-all group-hover:border-primary/30">
-              {art.emoji}
+      <SectionHeader title="좋아한 작품" count={likes.length} />
+      {likes.length === 0 ? (
+        <div className="text-center py-8 mb-6">
+          <p className="text-sm text-muted-foreground">좋아한 작품이 없습니다</p>
+          <button onClick={() => navigate("/explore")} className="text-xs text-primary mt-1">작품 둘러보기</button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {likes.map((art) => (
+            <div key={art.id} className="group cursor-pointer" onClick={() => navigate(`/artwork/${art.id}`)}>
+              <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border mb-2 transition-all group-hover:border-primary/30">
+                <CaseCodeArt element={art.element} energy={art.energy} style={art.style} />
+              </div>
+              <p className="text-xs font-medium text-foreground truncate">{art.title.split("—")[0].trim()}</p>
+              <p className="text-[10px] text-muted-foreground">{art.artist}</p>
             </div>
-            <p className="text-xs font-medium text-foreground truncate">{art.title}</p>
-            <p className="text-[10px] text-muted-foreground">{art.artist}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Orders */}
-      <SectionHeader title="주문 내역" count={MOCK_ORDERS.length} />
-      <div className="space-y-2 mb-6">
-        {MOCK_ORDERS.map((order) => (
-          <div key={order.id} className="bg-surface border border-border rounded-xl p-4 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-card border border-border flex items-center justify-center text-lg shrink-0">
-              🖼️
+      <SectionHeader title="주문 내역" count={orders.length} />
+      {orders.length === 0 ? (
+        <div className="text-center py-8 mb-6">
+          <p className="text-sm text-muted-foreground">주문 내역이 없습니다</p>
+        </div>
+      ) : (
+        <div className="space-y-2 mb-6">
+          {orders.map((order) => (
+            <div key={order.id} className="bg-surface border border-border rounded-xl p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-lg bg-card border border-border flex items-center justify-center text-lg shrink-0">
+                {order.type === "rental" ? "🔄" : "🖼️"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-foreground truncate">{order.title}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {new Date(order.date).toLocaleDateString("ko-KR")}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className={`text-[10px] font-medium ${order.status === "렌탈중" ? "text-primary" : "text-muted-foreground"}`}>
+                  {order.status}
+                </p>
+                <p className="text-xs text-foreground">₩{order.amount.toLocaleString()}</p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground truncate">{order.title}</p>
-              <p className="text-[10px] text-muted-foreground">{order.date}</p>
-            </div>
-            <div className="text-right shrink-0">
-              <p className={`text-[10px] font-medium ${order.status === "렌탈중" ? "text-primary" : "text-muted-foreground"}`}>
-                {order.status}
-              </p>
-              <p className="text-xs text-foreground">{order.amount.toLocaleString()}원</p>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Rental */}
-      <SectionHeader title="렌탈 현황" />
-      <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
-        <div className="w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center text-3xl shrink-0">
-          🌷
+      <SectionHeader title="렌탈 현황" count={rentals.length} />
+      {rentals.length === 0 ? (
+        <div className="text-center py-8 mb-6">
+          <p className="text-sm text-muted-foreground">이용중인 렌탈이 없습니다</p>
+          <button onClick={() => navigate("/explore")} className="text-xs text-primary mt-1">렌탈 가능 작품 보기</button>
         </div>
-        <div className="flex-1">
-          <p className="text-xs font-medium text-foreground">봄의 서곡</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">다음 교체일: 2026.05.01</p>
-          <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary font-medium">
-            이용중
-          </span>
+      ) : (
+        <div className="space-y-3 mb-6">
+          {rentals.map((rental) => (
+            <div key={rental.id} className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
+              <div className="w-16 h-16 rounded-xl bg-surface border border-border flex items-center justify-center text-3xl shrink-0">
+                🔄
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-medium text-foreground">{rental.title}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  다음 교체일: {new Date(rental.nextExchangeDate).toLocaleDateString("ko-KR")}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="px-2 py-0.5 rounded-full bg-primary/10 text-[10px] text-primary font-medium">
+                    {rental.status === "active" ? "이용중" : rental.status === "exchange_pending" ? "교체대기" : "반납완료"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    월 ₩{rental.monthlyPrice.toLocaleString()} · {rental.cycle === "3m" ? "3개월" : "6개월"}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </div>
+          ))}
         </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground" />
-      </div>
+      )}
 
       <TabBar activeTab="my" />
     </PageContainer>

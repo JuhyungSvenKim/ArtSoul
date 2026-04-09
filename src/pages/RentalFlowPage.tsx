@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, Check, MapPin, CreditCard, CalendarClock, RotateCcw } from "lucide-react";
+import { addRental } from "@/lib/orders";
 
 const STEPS = ["렌탈 옵션", "배송지 입력", "결제", "완료"];
 
@@ -20,7 +21,28 @@ const RentalFlowPage = () => {
 
   const cycle = CYCLES.find((c) => c.id === selectedCycle)!;
 
+  const [nextDate, setNextDate] = useState("");
+
   const handleNext = () => {
+    if (step === 2) {
+      // 결제 완료 → 렌탈 저장
+      const months = selectedCycle === "3m" ? 3 : 6;
+      const start = new Date();
+      const next = new Date(start);
+      next.setMonth(next.getMonth() + months);
+      setNextDate(next.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" }));
+
+      addRental({
+        artworkId: "rental-direct",
+        title: artworkTitle,
+        artist: "",
+        cycle: selectedCycle,
+        monthlyPrice: cycle.price,
+        startDate: start.toISOString(),
+        nextExchangeDate: next.toISOString(),
+        status: "active",
+      });
+    }
     if (step < 3) setStep(step + 1);
   };
 
@@ -154,7 +176,7 @@ const RentalFlowPage = () => {
                   <span className="text-muted-foreground">다음 교체일</span>
                   <span className="text-foreground flex items-center gap-1">
                     <CalendarClock className="w-3 h-3" />
-                    {cycle.id === "3m" ? "2025년 7월 6일" : "2025년 10월 6일"}
+                    {nextDate}
                   </span>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import OpenAI from 'openai'
 import { getSaju, sajuToAIPrompt } from '@/lib/saju'
 import type { SajuInput } from '@/lib/saju'
 
@@ -98,12 +98,14 @@ export async function POST(req: Request) {
     const type = fortuneType as FortuneType
     const cost = FORTUNE_COSTS[type]
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { success: false, error: 'GEMINI_API_KEY not configured' },
+        { success: false, error: 'OPENAI_API_KEY not configured' },
         { status: 500, headers: corsHeaders },
       )
     }
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
     // 사주 계산
     const input: SajuInput = {
@@ -118,14 +120,19 @@ export async function POST(req: Request) {
     const now = new Date()
     const dateContext = `현재 날짜: ${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`
 
-    const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const model = genai.getGenerativeModel({ model: 'gemini-2.0-flash' })
-
     const systemPrompt = getFortunePrompt(type)
     const userMessage = `${dateContext}\n\n${aiPrompt}`
 
-    const result = await model.generateContent(systemPrompt + '\n\n' + userMessage)
-    let text = result.response.text()
+    const result = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      temperature: 0.8,
+      max_tokens: 3000,
+    })
+    let text = result.choices[0]?.message?.content || ''
 
     // JSON 파싱 시도 (마크다운 코드블록 제거)
     text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()

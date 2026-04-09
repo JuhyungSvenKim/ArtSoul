@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import OpenAI from 'openai'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -108,15 +108,14 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { prompt, mode, fortuneType } = body
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { success: false, error: 'GEMINI_API_KEY not configured' },
+        { success: false, error: 'OPENAI_API_KEY not configured' },
         { status: 500, headers: corsHeaders },
       )
     }
 
-    const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const model = genai.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
     let userPrompt: string
     let systemPrompt = SYSTEM_PROMPT
@@ -133,8 +132,16 @@ export async function POST(req: Request) {
 ${prompt}`
     }
 
-    const result = await model.generateContent(systemPrompt + '\n\n' + userPrompt)
-    const text = result.response.text()
+    const result = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.8,
+      max_tokens: 4000,
+    })
+    const text = result.choices[0]?.message?.content || ''
 
     return NextResponse.json(
       { success: true, interpretation: text, cost: 2 },

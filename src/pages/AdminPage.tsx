@@ -15,7 +15,13 @@ const OHAENG_TEXT: Record<string, string> = {
   목: "text-green-400", 화: "text-red-400", 토: "text-yellow-400", 금: "text-gray-300", 수: "text-blue-400",
 };
 
-type ViewMode = "list" | "create";
+type ViewMode = "list" | "create" | "artists";
+
+interface ArtistApplication {
+  portfolio: string;
+  intro: string;
+  appliedAt: string;
+}
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -101,15 +107,71 @@ const AdminPage = () => {
     loadArtworks();
   };
 
+  // ── 작가 승인 관련 ────────────────────────────
+  const [applications, setApplications] = useState<Array<{ key: string; data: ArtistApplication }>>([]);
+
+  useEffect(() => {
+    if (mode === "artists") {
+      // 실제로는 DB에서 조회. 지금은 데모용 localStorage 기반.
+      const apps: Array<{ key: string; data: ArtistApplication }> = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith("artsoul-artist-application")) {
+          try {
+            apps.push({ key, data: JSON.parse(localStorage.getItem(key) || "{}") });
+          } catch {}
+        }
+      }
+      setApplications(apps);
+    }
+  }, [mode]);
+
+  const approveArtist = (key: string) => {
+    localStorage.setItem("artsoul-artist-status", "artist");
+    setApplications(prev => prev.filter(a => a.key !== key));
+    setSuccess("작가 승인 완료!");
+    setTimeout(() => setSuccess(null), 2000);
+  };
+
+  const rejectArtist = (key: string) => {
+    localStorage.removeItem(key);
+    localStorage.setItem("artsoul-artist-status", "none");
+    setApplications(prev => prev.filter(a => a.key !== key));
+  };
+
+  // ── 작품 삭제 ────────────────────────────────
+  const deleteArtwork = async (id: string) => {
+    if (!confirm("이 작품을 삭제하시겠습니까?")) return;
+    try {
+      await supabase.from("artworks").delete().eq("id", id);
+      setArtworks(prev => prev.filter(a => a.id !== id));
+      setSuccess("작품이 삭제되었습니다");
+      setTimeout(() => setSuccess(null), 2000);
+    } catch {
+      setError("삭제 실패");
+    }
+  };
+
   return (
-    <PageContainer>
-      <div className="flex items-center justify-between mb-6">
+    <PageContainer className="pt-20">
+      <div className="flex items-center justify-between mb-4">
         <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground">← 뒤로</button>
-        <h1 className="text-lg font-display text-gold-gradient font-semibold">어드민 — 작품 관리</h1>
-        <button onClick={() => setMode(mode === "list" ? "create" : "list")}
-          className="text-xs px-3 py-1 rounded-lg bg-primary text-primary-foreground">
-          {mode === "list" ? "+ 등록" : "목록"}
-        </button>
+        <h1 className="text-lg font-display text-gold-gradient font-semibold">어드민</h1>
+        <div className="w-10" />
+      </div>
+
+      {/* 탭 */}
+      <div className="flex gap-1 mb-5 bg-surface rounded-xl p-1">
+        {([
+          { key: "list" as ViewMode, label: "작품 목록" },
+          { key: "create" as ViewMode, label: "작품 등록" },
+          { key: "artists" as ViewMode, label: "작가 승인" },
+        ]).map((tab) => (
+          <button key={tab.key} onClick={() => setMode(tab.key)}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              mode === tab.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}>{tab.label}</button>
+        ))}
       </div>
 
       {error && <div className="rounded-lg bg-red-500/20 text-red-400 px-3 py-2 text-xs mb-4">{error}</div>}
@@ -210,6 +272,57 @@ const AdminPage = () => {
             className="w-full py-3.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm transition-all active:scale-[0.98] disabled:opacity-40">
             {saving ? "등록 중..." : "작품 등록"}
           </button>
+        </div>
+      )}
+
+      {/* ── 작가 승인 ──────────────────────────────── */}
+      {mode === "artists" && (
+        <div className="space-y-4">
+          <p className="text-xs text-muted-foreground">대기 중인 작가 신청: {applications.length}건</p>
+
+          {applications.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-sm">대기 중인 신청이 없습니다</p>
+            </div>
+          )}
+
+          {applications.map((app) => (
+            <div key={app.key} className="bg-surface border border-border rounded-xl p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">작가 신청</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    신청일: {app.data.appliedAt ? new Date(app.data.appliedAt).toLocaleDateString("ko-KR") : "—"}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => approveArtist(app.key)}
+                    className="px-4 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium hover:bg-green-500/20">
+                    승인
+                  </button>
+                  <button onClick={() => rejectArtist(app.key)}
+                    className="px-4 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/20">
+                    거절
+                  </button>
+                </div>
+              </div>
+
+              {app.data.portfolio && (
+                <div className="mb-2">
+                  <p className="text-[10px] text-muted-foreground mb-0.5">포트폴리오</p>
+                  <a href={app.data.portfolio} target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline break-all">{app.data.portfolio}</a>
+                </div>
+              )}
+
+              {app.data.intro && (
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-0.5">작가 소개</p>
+                  <p className="text-xs text-foreground/80 leading-relaxed">{app.data.intro}</p>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </PageContainer>

@@ -160,13 +160,26 @@ const ArtTastePage = () => {
     }
   };
 
+  const handleBack = () => {
+    if (round > 0) {
+      setSelectedId(null);
+      setSelections(selections.slice(0, -1));
+      setRound(round - 1);
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <PageContainer className="pb-8">
       <ProgressBar current={3} total={3} />
 
-      <h1 className="text-xl font-display text-gold-gradient font-semibold mb-1">
-        미술 취향 테스트
-      </h1>
+      <div className="flex items-center gap-3 mb-1">
+        <button onClick={handleBack} className="text-muted-foreground hover:text-foreground text-sm">
+          ← {round > 0 ? "이전 질문" : "뒤로"}
+        </button>
+        <h1 className="text-xl font-display text-gold-gradient font-semibold">미술 취향 테스트</h1>
+      </div>
       <p className="text-xs text-muted-foreground mb-6">
         {round + 1}/{QUESTIONS.length}
       </p>

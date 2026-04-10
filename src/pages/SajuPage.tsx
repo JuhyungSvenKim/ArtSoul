@@ -68,12 +68,37 @@ const OHAENG_RELATION: Record<string, Record<string, string>> = {
   수: { 수: "비겁(동류)", 목: "식상(표현)", 화: "재성(재물)", 토: "관성(압력)", 금: "인성(지원)" },
 };
 
-const DAEUN_VIBES: Record<string, { good: string; warn: string }> = {
-  "비겁(동류)": { good: "자신감이 올라가고 독립심이 강해지는 시기", warn: "고집이 세질 수 있으니 유연함 필요" },
-  "식상(표현)": { good: "창의력, 표현력이 폭발하는 시기. 새로운 시도에 유리", warn: "말실수, 오버가 많아질 수 있으니 조절" },
-  "재성(재물)": { good: "돈이 보이기 시작하는 시기. 수입 루트 다양화 찬스", warn: "과소비, 투자 실패 주의. 계약서 꼼꼼히" },
-  "관성(압력)": { good: "사회적 인정, 승진, 책임감이 커지는 시기", warn: "스트레스, 건강, 법적 문제에 주의. 쉬는 것도 전략" },
-  "인성(지원)": { good: "공부, 자격증, 내면 성장에 최적인 시기", warn: "게을러지거나 의존적이 될 수 있으니 행동력 유지" },
+const DAEUN_VIBES: Record<string, { good: string; detail: string; warn: string; action: string }> = {
+  "비겁(동류)": {
+    good: "자신감이 올라가고 독립심이 강해지는 시기",
+    detail: "내 안의 에너지가 충전되는 느낌. 혼자서도 뭔가 해낼 수 있다는 확신이 생기고, 남 눈치를 덜 보게 돼. 독립, 창업, 새출발에 유리한 타이밍",
+    warn: "고집이 세지고 주변과 부딪힐 수 있어. 내 방식만 고집하면 관계가 틀어질 수 있음",
+    action: "협업보다 독자적 프로젝트가 잘 맞는 시기. 단, 조언은 열어두기",
+  },
+  "식상(표현)": {
+    good: "창의력, 표현력이 폭발하는 시기. 새로운 시도에 유리",
+    detail: "머릿속 아이디어가 쏟아지고, 말과 글이 잘 나오는 타이밍. 콘텐츠 제작, 발표, 기획, 예술 활동에 최적. 숨겨뒀던 재능이 빛을 볼 수 있어",
+    warn: "입이 가벼워지기 쉬움. 솔직한 건 좋은데 TMI나 독설은 주의. 에너지가 분산될 수 있어서 한 가지에 집중이 중요",
+    action: "블로그, 유튜브, 사이드 프로젝트 시작하기 좋은 시기",
+  },
+  "재성(재물)": {
+    good: "돈이 보이기 시작하는 시기. 수입 루트 다양화 찬스",
+    detail: "재물 운이 열리면서 투자, 사업, 부업 기회가 들어옴. 현실 감각이 좋아지고 돈의 흐름이 읽히기 시작해. 인간관계도 넓어지는 시기",
+    warn: "돈이 보인다고 과욕 부리면 다 날릴 수 있음. 충동구매, 무리한 투자, 보증 절대 금지. 계약서는 세 번 읽기",
+    action: "저축 습관 만들고, 소규모 투자부터 시작. 큰돈은 이 시기 후반에",
+  },
+  "관성(압력)": {
+    good: "사회적 인정, 승진, 책임감이 커지는 시기",
+    detail: "직장에서 자리가 올라가거나, 사회적으로 인정받기 시작해. 근데 그만큼 책임과 압박도 같이 와. 시험, 자격증, 승진에도 유리하지만 체력 관리가 핵심",
+    warn: "스트레스가 몸으로 옴. 두통, 소화불량, 수면 장애 주의. 법적 분쟁이나 갈등도 생기기 쉬운 시기라 말조심",
+    action: "무리하지 말고 적당히 쉬면서 가기. 건강검진 챙기고, 갈등은 피할 수 있으면 피하기",
+  },
+  "인성(지원)": {
+    good: "공부, 자격증, 내면 성장에 최적인 시기",
+    detail: "배움의 운이 열려서 뭘 해도 잘 흡수되는 타이밍. 자격증, 학위, 새로운 스킬 습득에 최적. 멘토나 귀인이 나타날 수 있고, 어머니나 윗사람의 도움도 기대할 수 있어",
+    warn: "편안함에 빠져서 게을러질 수 있음. 생각만 하고 행동은 안 하는 패턴 주의. 남에게 의존하는 습관도 조심",
+    action: "이 시기에 배운 것이 다음 대운의 무기가 됨. 아낌없이 자기투자할 것",
+  },
 };
 
 function DaeunTimeline({ daeun, startAge, birthYear, dayOh, yongsinOh, dayStrength, sinsal }: {
@@ -173,16 +198,19 @@ function DaeunTimeline({ daeun, startAge, birthYear, dayOh, yongsinOh, dayStreng
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-1">
+                  <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
                     <span className="text-[10px] text-muted-foreground">{d.ganji.ohaeng}→{dayOh}</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${style.bg} ${style.text}`}>{rel}</span>
                     {isYongsin && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">용신 시기</span>}
                     {isCurrent && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">NOW</span>}
                   </div>
-                  <p className="text-xs text-foreground/80 leading-relaxed">
+                  <p className="text-sm text-foreground/90 leading-relaxed font-medium mb-1">
                     {vibe?.good || `${d.ganji.ohaeng}의 기운이 흘러들어오는 시기`}
                   </p>
-                  {strengthNote && <p className="text-[10px] text-primary/80 mt-0.5">{strengthNote}</p>}
+                  {vibe?.detail && <p className="text-xs text-foreground/70 leading-relaxed mb-1">{vibe.detail}</p>}
+                  {vibe?.warn && <p className="text-xs text-red-400/80 leading-relaxed mb-1">{vibe.warn}</p>}
+                  {vibe?.action && <p className="text-xs text-primary/80 leading-relaxed">{vibe.action}</p>}
+                  {strengthNote && <p className="text-xs text-primary/70 mt-1">{strengthNote}</p>}
                 </div>
               </div>
             );

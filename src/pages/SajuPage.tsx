@@ -389,54 +389,53 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
         <p className="text-sm text-foreground/80 leading-[1.8]">{harmonyNote}</p>
       </div>
 
-      {/* 2) 4주별 배치 — 클릭하면 그 자리에서 vibe + 위치의미 */}
+      {/* 2) 4주별 배치 + 각 주 아래 해석 — 4열 그리드 */}
       <div className="grid grid-cols-4 gap-2">
-        {['시주', '일주', '월주', '연주'].map(pos => (
-          <div key={pos}>
-            <p className="text-[10px] text-muted-foreground text-center mb-1">{pos}</p>
-            <p className="text-[9px] text-muted-foreground/50 text-center mb-1.5">{positionMeaning[pos]}</p>
-            <div className="bg-surface border border-border rounded-lg p-1.5 min-h-[60px] space-y-1">
-              {groups[pos].length === 0 ? (
-                <p className="text-[10px] text-muted-foreground/30 text-center py-2">—</p>
-              ) : (
-                groups[pos].map((s, i) => {
-                  const key = `${pos}-${s.name}`;
-                  const isOpen = expanded === key;
-                  const detail = SINSAL_DETAIL[s.name];
-                  const { contextNote } = getSinsalInContext(s);
-                  return (
-                    <div key={i}>
-                      <button onClick={() => setExpanded(isOpen ? null : key)}
-                        className={`w-full text-[10px] px-1.5 py-1 rounded text-center font-medium border transition-all ${effectStyle(s.effect)} ${isOpen ? "ring-1 ring-primary/30" : ""}`}>
-                        {s.name}
-                      </button>
-                      {isOpen && (
-                        <div className="mt-1.5 p-2.5 bg-card border border-border rounded-lg animate-fade-in text-left space-y-1">
-                          <p className="text-[11px] text-foreground/90 leading-relaxed">{detail?.vibe || s.description}</p>
-                          <p className="text-[10px] text-muted-foreground leading-relaxed">{contextNote}</p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* 3) 주별 신살 해석 (시→연 순서) */}
-      <div className="space-y-3">
         {['시주', '일주', '월주', '연주'].map(pos => {
-          const item = pillarComplement.find(p => p.pos === pos);
-          if (!item) return null;
+          const pillarNote = pillarComplement.find(p => p.pos === pos);
           return (
-            <div key={pos} className="bg-surface border border-border rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-semibold text-foreground">{pos}</span>
-                <span className="text-xs text-muted-foreground">{positionMeaning[pos]}</span>
+            <div key={pos} className="flex flex-col gap-2">
+              {/* 주 이름 + 관계 */}
+              <div>
+                <p className="text-[10px] text-muted-foreground text-center mb-1">{pos}</p>
+                <p className="text-[9px] text-muted-foreground/50 text-center mb-1.5">{positionMeaning[pos]}</p>
               </div>
-              <p className="text-sm text-foreground/80 leading-[1.8]">{item.note}</p>
+
+              {/* 신살 배치 카드 */}
+              <div className="bg-surface border border-border rounded-lg p-1.5 min-h-[60px] space-y-1">
+                {groups[pos].length === 0 ? (
+                  <p className="text-[10px] text-muted-foreground/30 text-center py-2">—</p>
+                ) : (
+                  groups[pos].map((s, i) => {
+                    const key = `${pos}-${s.name}`;
+                    const isOpen = expanded === key;
+                    const detail = SINSAL_DETAIL[s.name];
+                    const { contextNote } = getSinsalInContext(s);
+                    return (
+                      <div key={i}>
+                        <button onClick={() => setExpanded(isOpen ? null : key)}
+                          className={`w-full text-[10px] px-1.5 py-1 rounded text-center font-medium border transition-all ${effectStyle(s.effect)} ${isOpen ? "ring-1 ring-primary/30" : ""}`}>
+                          {s.name}
+                        </button>
+                        {isOpen && (
+                          <div className="mt-1.5 p-2 bg-card border border-border rounded-lg animate-fade-in text-left space-y-1">
+                            <p className="text-[10px] text-foreground/90 leading-relaxed">{detail?.vibe || s.description}</p>
+                            <p className="text-[9px] text-muted-foreground leading-relaxed">{contextNote}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* 주별 신살 해석 — 바로 아래 */}
+              {pillarNote && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-2.5 flex-1">
+                  <p className="text-[10px] text-primary font-medium mb-1">{pos} 해석</p>
+                  <p className="text-[10px] text-foreground/80 leading-[1.7]">{pillarNote.note}</p>
+                </div>
+              )}
             </div>
           );
         })}

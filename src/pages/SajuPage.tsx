@@ -1268,16 +1268,52 @@ const SajuPage = () => {
 
       {/* 공망 */}
       <Section title="공망 — 비어있는 자리" collapsed hint="집착을 내려놓아야 하는 곳이 어딘지 알려줘">
-        <div className="flex gap-3">
-          <div className="bg-surface border border-border rounded-lg px-4 py-2 text-center">
-            <p className="text-lg font-bold text-foreground">{gongmang.jiji1}</p>
-            <p className="text-xs text-muted-foreground">{gongmang.jiji1Kor}</p>
-          </div>
-          <div className="bg-surface border border-border rounded-lg px-4 py-2 text-center">
-            <p className="text-lg font-bold text-foreground">{gongmang.jiji2}</p>
-            <p className="text-xs text-muted-foreground">{gongmang.jiji2Kor}</p>
-          </div>
-        </div>
+        {(() => {
+          const jijiInfo: Record<string, { animal: string; ohaeng: string; meaning: string }> = {
+            자: { animal: "쥐", ohaeng: "수", meaning: "지혜, 새로운 시작, 밤의 에너지" },
+            축: { animal: "소", ohaeng: "토", meaning: "근면, 재물 축적, 묵직한 안정감" },
+            인: { animal: "호랑이", ohaeng: "목", meaning: "추진력, 리더십, 새벽의 기운" },
+            묘: { animal: "토끼", ohaeng: "목", meaning: "부드러움, 인기, 예술적 감각" },
+            진: { animal: "용", ohaeng: "토", meaning: "변화, 권위, 비범한 에너지" },
+            사: { animal: "뱀", ohaeng: "화", meaning: "직감, 비밀, 날카로운 지혜" },
+            오: { animal: "말", ohaeng: "화", meaning: "열정, 활동, 인기와 표현력" },
+            미: { animal: "양", ohaeng: "토", meaning: "온화함, 예술, 섬세한 감성" },
+            신: { animal: "원숭이", ohaeng: "금", meaning: "재치, 변통, 실용적 능력" },
+            유: { animal: "닭", ohaeng: "금", meaning: "결단력, 정밀함, 예리한 판단" },
+            술: { animal: "개", ohaeng: "토", meaning: "의리, 신뢰, 수호자 기질" },
+            해: { animal: "돼지", ohaeng: "수", meaning: "복, 여유, 풍요로움" },
+          };
+          const g1 = jijiInfo[gongmang.jiji1Kor] || { animal: "", ohaeng: "", meaning: "" };
+          const g2 = jijiInfo[gongmang.jiji2Kor] || { animal: "", ohaeng: "", meaning: "" };
+
+          return (
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <div className="flex-1 bg-surface border border-border rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold text-foreground mb-1">{gongmang.jiji1}</p>
+                  <p className="text-sm text-muted-foreground">{gongmang.jiji1Kor} · {g1.animal} · {g1.ohaeng}</p>
+                  <p className="text-xs text-foreground/70 mt-2">{g1.meaning}</p>
+                </div>
+                <div className="flex-1 bg-surface border border-border rounded-xl p-4 text-center">
+                  <p className="text-2xl font-bold text-foreground mb-1">{gongmang.jiji2}</p>
+                  <p className="text-sm text-muted-foreground">{gongmang.jiji2Kor} · {g2.animal} · {g2.ohaeng}</p>
+                  <p className="text-xs text-foreground/70 mt-2">{g2.meaning}</p>
+                </div>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-4">
+                <p className="text-sm text-foreground/80 leading-[1.8]">
+                  공망은 "비어있는 자리"야. {gongmang.jiji1Kor}({g1.animal})과 {gongmang.jiji2Kor}({g2.animal})이 공망이라는 건,
+                  {g1.ohaeng === g2.ohaeng
+                    ? ` ${g1.ohaeng} 기운 쪽에서 기대만큼 결과가 안 올 수 있다는 뜻이야.`
+                    : ` ${g1.ohaeng}과 ${g2.ohaeng} 기운 쪽에서 뭔가 허전함을 느낄 수 있어.`
+                  }
+                  {" "}쉽게 말하면 이 방면에 너무 집착하면 오히려 빗나가고, 힘을 빼면 자연스럽게 채워지는 자리야.
+                  "없다"가 아니라 "내려놓으면 된다"로 읽으면 돼.
+                </p>
+              </div>
+            </div>
+          );
+        })()}
       </Section>
 
       {/* 합충형파해 */}

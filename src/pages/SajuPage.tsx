@@ -1070,37 +1070,37 @@ const SajuPage = () => {
       </Section>
 
       <Section title="내 사주 네 기둥" collapsible defaultOpen={false} hint="시주·일주·월주·연주가 말해주는 인생의 네 장면">
-        {/* 4주 카드 — 가로 배치 (반응형) */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-3">
-          <PillarCard label="시주" ganji={siju} sipsungCg={sipsung.sijuCg} sipsungJj={sipsung.sijuJj} twelveJj={twelveStages.sijuJj} />
-          <PillarCard label="일주 (나)" ganji={ilju} sipsungJj={sipsung.iljuJj} twelveJj={twelveStages.iljuJj} />
-          <PillarCard label="월주" ganji={wolju} sipsungCg={sipsung.woljuCg} sipsungJj={sipsung.woljuJj} twelveJj={twelveStages.woljuJj} />
-          <PillarCard label="연주" ganji={yeonju} sipsungCg={sipsung.yeonjuCg} sipsungJj={sipsung.yeonjuJj} twelveJj={twelveStages.yeonjuJj} />
-        </div>
-
-        {/* 주별 해석 — 세로 리스트, 가독성 높게 */}
-        <div className="space-y-3 mt-5">
-          {[
-            { pmKey: "연주 (年柱)", label: "연주" },
-            { pmKey: "월주 (月柱)", label: "월주" },
-            { pmKey: "일주 (日柱)", label: "일주" },
-            { pmKey: "시주 (時柱)", label: "시주" },
-          ].map(({ pmKey, label }) => {
-            const pm = pillarMeanings.find(m => m.label === pmKey);
-            if (!pm) return null;
-            return (
-              <div key={pmKey} className="bg-surface border border-border rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className="text-sm font-semibold text-foreground">{pm.label}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">{pm.lifeStage}</span>
-                  <span className="text-xs text-muted-foreground">{pm.ageRange}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mb-1.5">관계: {pm.relationship}</p>
-                <p className="text-sm text-foreground/80 leading-[1.8]">{pm.description}</p>
-              </div>
-            );
-          })}
-        </div>
+        {/* 4주 카드 + 각 주 아래 해석 — 4열 그리드 */}
+        {(() => {
+          const pillars = [
+            { label: "시주", ganji: siju, sipsungCg: sipsung.sijuCg, sipsungJj: sipsung.sijuJj, twelveJj: twelveStages.sijuJj, pmKey: "시주 (時柱)" },
+            { label: "일주 (나)", ganji: ilju, sipsungCg: undefined, sipsungJj: sipsung.iljuJj, twelveJj: twelveStages.iljuJj, pmKey: "일주 (日柱)" },
+            { label: "월주", ganji: wolju, sipsungCg: sipsung.woljuCg, sipsungJj: sipsung.woljuJj, twelveJj: twelveStages.woljuJj, pmKey: "월주 (月柱)" },
+            { label: "연주", ganji: yeonju, sipsungCg: sipsung.yeonjuCg, sipsungJj: sipsung.yeonjuJj, twelveJj: twelveStages.yeonjuJj, pmKey: "연주 (年柱)" },
+          ];
+          return (
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
+              {pillars.map((p, i) => {
+                const pm = pillarMeanings.find(m => m.label === p.pmKey);
+                return (
+                  <div key={i} className="flex flex-col gap-2">
+                    <PillarCard label={p.label} ganji={p.ganji} sipsungCg={p.sipsungCg} sipsungJj={p.sipsungJj} twelveJj={p.twelveJj} />
+                    {pm && (
+                      <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 flex-1">
+                        <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                          <span className="text-[12px] font-semibold text-primary">{pm.lifeStage}</span>
+                          <span className="text-[11px] text-muted-foreground">{pm.ageRange}</span>
+                        </div>
+                        <p className="text-[12px] text-muted-foreground mb-1.5">관계: {pm.relationship}</p>
+                        <p className="text-[12px] text-foreground/80 leading-[1.7]">{pm.description}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </Section>
 
       {/* 오행 밸런스 */}

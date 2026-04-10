@@ -442,24 +442,62 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
 }
 
 // ── 합충형파해 ──────────────────────────────────────
+const RELATION_MEANING: Record<string, { label: string; vibe: string; effect: "positive" | "negative" | "neutral" }> = {
+  천간합: { label: "합", vibe: "에너지가 서로 끌어당겨서 하나로 합쳐지는 관계. 좋은 인연, 협력, 시너지가 생기는 자리. 다만 너무 묶이면 본연의 힘을 잃을 수 있음", effect: "positive" },
+  천간충: { label: "충", vibe: "서로 부딪히는 관계. 변화, 갈등, 전환점이 생기는 자리. 힘들 수 있지만 그만큼 성장의 기회도 큼", effect: "negative" },
+  육합: { label: "합", vibe: "두 지지가 맞물려서 조화를 이루는 관계. 인간관계가 부드럽고 도움 주는 사람이 많음", effect: "positive" },
+  삼합: { label: "합", vibe: "세 지지가 모여 하나의 기운을 만드는 강력한 조합. 집단에서 중심 역할을 하거나 든든한 네트워크가 생김", effect: "positive" },
+  방합: { label: "합", vibe: "같은 계절의 기운이 모여 큰 힘을 만드는 관계. 한 방향으로 밀고 나가는 추진력이 강함", effect: "positive" },
+  육충: { label: "충", vibe: "정반대 에너지가 부딪히는 관계. 이사, 이직, 환경 변화가 많은 편. 정착보다 움직임이 맞음", effect: "negative" },
+  삼형: { label: "형", vibe: "서로 깎고 다듬는 관계. 법, 규율, 의리 문제가 생길 수 있지만 이걸 잘 쓰면 오히려 리더십이 돋보임", effect: "negative" },
+  자형: { label: "형", vibe: "같은 기운이 겹치면서 스스로를 깎는 관계. 내면 갈등, 자책이 생기기 쉬움. 자기 사랑이 필요", effect: "negative" },
+  파: { label: "파", vibe: "살짝 어긋나는 관계. 큰 문제는 아닌데 일이 미묘하게 틀어지거나 약속이 꼬이는 느낌", effect: "neutral" },
+  해: { label: "해", vibe: "은근히 해치는 관계. 티나지 않게 손해를 보거나, 정이 떨어지는 관계가 생길 수 있음", effect: "negative" },
+};
+
 function RelationsList({ relations }: { relations: RelationItem[] }) {
   if (relations.length === 0) return <p className="text-sm text-muted-foreground">해당 관계 없음</p>;
-  const typeColors: Record<string, string> = {
-    합: "bg-green-500/20 text-green-400",
-    충: "bg-red-500/20 text-red-400",
-    형: "bg-orange-500/20 text-orange-400",
-    파: "bg-yellow-500/20 text-yellow-400",
-    해: "bg-purple-500/20 text-purple-400",
-    방합: "bg-blue-500/20 text-blue-400",
-    삼합: "bg-cyan-500/20 text-cyan-400",
-  };
+
+  const effectStyle = (e: string) =>
+    e === 'positive' ? 'bg-green-500/20 text-green-400 border-green-500/30'
+      : e === 'negative' ? 'bg-red-500/20 text-red-400 border-red-500/30'
+      : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {relations.map((r, i) => (
-        <div key={i} className={`px-3 py-1.5 rounded-full text-xs font-medium ${typeColors[r.type] || "bg-surface text-foreground"}`}>
-          {r.detail} ({r.positions.join("-")})
-        </div>
-      ))}
+    <div className="space-y-4">
+      {/* 기본 설명 */}
+      <div className="bg-card border border-border rounded-xl p-4">
+        <p className="text-sm text-foreground/90 leading-[1.8] mb-2 font-medium">합충형파해가 뭐야?</p>
+        <p className="text-sm text-foreground/80 leading-[1.8]">
+          사주 안에서 기운들이 서로 밀고 당기는 관계야. <span className="text-green-400">합(合)</span>은 끌어당겨서 조화,
+          {" "}<span className="text-red-400">충(沖)</span>은 부딪혀서 변화,
+          {" "}<span className="text-orange-400">형(刑)</span>은 깎아서 단련,
+          {" "}<span className="text-yellow-400">파(破)</span>는 살짝 어긋남,
+          {" "}<span className="text-purple-400">해(害)</span>는 은근한 손해를 뜻해.
+          이 조합이 많을수록 인생이 평탄하기보단 드라마틱한 편.
+        </p>
+      </div>
+
+      {/* 각 관계 카드 */}
+      <div className="space-y-3">
+        {relations.map((r, i) => {
+          const meaning = RELATION_MEANING[r.type] || { label: r.type, vibe: "", effect: "neutral" as const };
+          return (
+            <div key={i} className={`bg-surface border rounded-xl p-4 ${effectStyle(meaning.effect)}`}>
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className="text-sm font-semibold text-foreground">{r.detail}</span>
+                <span className="text-[10px] text-muted-foreground">({r.positions.join(" ↔ ")})</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${effectStyle(meaning.effect)}`}>
+                  {r.type}
+                </span>
+              </div>
+              {meaning.vibe && (
+                <p className="text-sm text-foreground/80 leading-[1.8]">{meaning.vibe}</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1283,8 +1321,41 @@ const SajuPage = () => {
             술: { animal: "개", ohaeng: "토", meaning: "의리, 신뢰, 수호자 기질" },
             해: { animal: "돼지", ohaeng: "수", meaning: "복, 여유, 풍요로움" },
           };
+
+          // 오행별 실생활 의미
+          const ohaengLifeMap: Record<string, {
+            overview: string; areas: string; advice: string;
+          }> = {
+            목: {
+              overview: "성장, 확장, 새로운 시작의 기운",
+              areas: "창업, 이직, 새 프로젝트, 자식 문제, 학업 시작",
+              advice: "무리하게 새 일을 벌이거나 확장하는 건 기대만큼 결과가 안 나올 수 있어. 기존 걸 잘 가꾸는 게 오히려 이득",
+            },
+            화: {
+              overview: "열정, 인기, 명예, 표현의 기운",
+              areas: "인기 얻기, 유명세, 공적 인정, 승진, SNS 관심",
+              advice: "인정받으려고 너무 애쓰면 오히려 공허함이 생겨. 남의 평가보다 내가 즐거운 일에 집중하는 게 맞아",
+            },
+            토: {
+              overview: "안정, 부동산, 가족, 중심의 기운",
+              areas: "부동산, 집, 가족 관계, 조직 내 자리, 안정적 소득",
+              advice: "부동산이나 한 자리에 너무 묶이면 답답해질 수 있어. 유연하게 움직이는 게 오히려 이득",
+            },
+            금: {
+              overview: "결과, 돈, 인정, 결실의 기운",
+              areas: "돈 벌기, 재물, 사회적 성공, 승부, 결과물 평가",
+              advice: "돈이나 결과에 너무 집착하면 오히려 빠져나가는 느낌이 들 수 있어. 과정에 몰입하면 결과는 자연스럽게 따라와",
+            },
+            수: {
+              overview: "지혜, 관계, 흐름, 감정의 기운",
+              areas: "인간관계, 연애, 사람 모으기, 감정 교류, 소통",
+              advice: "사람한테 기대가 크면 실망도 커져. 관계를 꽉 잡으려 하지 말고 흐르게 두는 게 편해",
+            },
+          };
+
           const g1 = jijiInfo[gongmang.jiji1Kor] || { animal: "", ohaeng: "", meaning: "" };
           const g2 = jijiInfo[gongmang.jiji2Kor] || { animal: "", ohaeng: "", meaning: "" };
+          const uniqueOhaengs = Array.from(new Set([g1.ohaeng, g2.ohaeng])).filter(Boolean);
 
           return (
             <div className="space-y-4">
@@ -1300,17 +1371,40 @@ const SajuPage = () => {
                   <p className="text-xs text-foreground/70 mt-2">{g2.meaning}</p>
                 </div>
               </div>
+
+              {/* 공망이 뭔지 기본 설명 */}
               <div className="bg-card border border-border rounded-xl p-4">
+                <p className="text-sm text-foreground/90 leading-[1.8] mb-2 font-medium">
+                  공망이 뭐야?
+                </p>
                 <p className="text-sm text-foreground/80 leading-[1.8]">
-                  공망은 "비어있는 자리"야. {gongmang.jiji1Kor}({g1.animal})과 {gongmang.jiji2Kor}({g2.animal})이 공망이라는 건,
-                  {g1.ohaeng === g2.ohaeng
-                    ? ` ${g1.ohaeng} 기운 쪽에서 기대만큼 결과가 안 올 수 있다는 뜻이야.`
-                    : ` ${g1.ohaeng}과 ${g2.ohaeng} 기운 쪽에서 뭔가 허전함을 느낄 수 있어.`
-                  }
-                  {" "}쉽게 말하면 이 방면에 너무 집착하면 오히려 빗나가고, 힘을 빼면 자연스럽게 채워지는 자리야.
-                  "없다"가 아니라 "내려놓으면 된다"로 읽으면 돼.
+                  사주에서 "비어있는 자리"를 뜻해. 이게 나쁜 건 아니야. 오히려 너무 집착하면 뜻대로 안 되고,
+                  힘을 빼면 자연스럽게 채워지는 신기한 자리야. 쉽게 말하면 "여긴 욕심내지 마, 내려놓을수록 편해져"
+                  하고 사주가 알려주는 포인트지.
                 </p>
               </div>
+
+              {/* 내 공망이 뭘 의미하는지 */}
+              {uniqueOhaengs.map((oh) => {
+                const life = ohaengLifeMap[oh];
+                if (!life) return null;
+                return (
+                  <div key={oh} className="bg-card border border-primary/20 rounded-xl p-4">
+                    <p className="text-sm text-primary font-medium mb-2">
+                      {oh} 기운이 공망 → 이게 무슨 뜻이냐면
+                    </p>
+                    <p className="text-sm text-foreground/90 leading-[1.8] mb-2">
+                      <span className="text-muted-foreground">{oh} 기운</span>은 보통 {life.overview}을 의미해.
+                    </p>
+                    <p className="text-sm text-foreground/80 leading-[1.8] mb-2">
+                      <span className="text-muted-foreground">구체적으로:</span> {life.areas} 같은 영역이야.
+                    </p>
+                    <p className="text-sm text-foreground/80 leading-[1.8]">
+                      <span className="text-muted-foreground">너한테 해줄 조언:</span> {life.advice}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           );
         })()}

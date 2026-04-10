@@ -383,7 +383,13 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
 
   return (
     <div className="space-y-5">
-      {/* 1) 4주별 배치 — 클릭하면 그 자리에서 vibe + 위치의미 */}
+      {/* 1) 전체 신살 조화 — 용신/음양 기준 (맨 위) */}
+      <div className="bg-card border border-primary/20 rounded-xl p-4">
+        <p className="text-sm text-primary font-medium mb-2">신살 종합 해석 (용신 {yongsinOh} 기준)</p>
+        <p className="text-sm text-foreground/80 leading-[1.8]">{harmonyNote}</p>
+      </div>
+
+      {/* 2) 4주별 배치 — 클릭하면 그 자리에서 vibe + 위치의미 */}
       <div className="grid grid-cols-4 gap-2">
         {['시주', '일주', '월주', '연주'].map(pos => (
           <div key={pos}>
@@ -419,23 +425,21 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
         ))}
       </div>
 
-      {/* 2) 주별 신살 해석 (세로 배치, 가독성 높게) */}
+      {/* 3) 주별 신살 해석 (시→연 순서) */}
       <div className="space-y-3">
-        {pillarComplement.map(({ pos, note }) => (
-          <div key={pos} className="bg-surface border border-border rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-semibold text-foreground">{pos}</span>
-              <span className="text-xs text-muted-foreground">{positionMeaning[pos]}</span>
+        {['시주', '일주', '월주', '연주'].map(pos => {
+          const item = pillarComplement.find(p => p.pos === pos);
+          if (!item) return null;
+          return (
+            <div key={pos} className="bg-surface border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-semibold text-foreground">{pos}</span>
+                <span className="text-xs text-muted-foreground">{positionMeaning[pos]}</span>
+              </div>
+              <p className="text-sm text-foreground/80 leading-[1.8]">{item.note}</p>
             </div>
-            <p className="text-sm text-foreground/80 leading-[1.8]">{note}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* 3) 전체 신살 조화 — 용신/음양 기준 */}
-      <div className="bg-card border border-primary/20 rounded-xl p-4">
-        <p className="text-sm text-primary font-medium mb-2">신살 종합 해석 (용신 {yongsinOh} 기준)</p>
-        <p className="text-sm text-foreground/80 leading-[1.8]">{harmonyNote}</p>
+          );
+        })}
       </div>
     </div>
   );

@@ -573,20 +573,20 @@ ${prompt}`;
 }
 
 // ── 섹션 ────────────────────────────────────────────
-function Section({ title, children, collapsed, hint }: {
-  title: string; children: React.ReactNode; collapsed?: boolean; hint?: string;
+function Section({ title, children, collapsible, defaultOpen = true, hint }: {
+  title: string; children: React.ReactNode; collapsible?: boolean; defaultOpen?: boolean; hint?: string;
 }) {
-  const [isOpen, setIsOpen] = useState(!collapsed);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
     <section className="mb-6">
       <button
-        onClick={() => collapsed !== undefined && setIsOpen(!isOpen)}
-        className={`w-full text-left text-sm font-semibold text-foreground mb-3 flex items-center gap-2 ${collapsed !== undefined ? "cursor-pointer group" : ""}`}
+        onClick={() => collapsible && setIsOpen(!isOpen)}
+        className={`w-full text-left text-sm font-semibold text-foreground mb-3 flex items-center gap-2 ${collapsible ? "cursor-pointer group" : ""}`}
       >
         <div className="w-1 h-4 bg-primary rounded-full shrink-0" />
         <span className="flex-1">{title}</span>
-        {collapsed !== undefined && (
+        {collapsible && (
           <span className={`text-xs text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}>▼</span>
         )}
       </button>
@@ -1020,15 +1020,15 @@ const SajuPage = () => {
       </Section>
 
       {/* AI 해석 + 운세 — 총평 바로 아래, 사주팔자 위 */}
-      <Section title="AI 해석" collapsed hint="웹소설처럼 술술 읽히는 사주 해석을 AI가 써줘">
+      <Section title="AI 해석" collapsible defaultOpen={false} hint="웹소설처럼 술술 읽히는 사주 해석을 AI가 써줘">
         <AIInterpretation prompt={aiPrompt} userId={userId} />
       </Section>
 
-      <Section title="운세 보기" collapsed hint="오늘/이번주/이번달/올해 — 지금 내 운의 흐름은?">
+      <Section title="운세 보기" collapsible defaultOpen={false} hint="오늘/이번주/이번달/올해 — 지금 내 운의 흐름은?">
         <FortuneSection prompt={aiPrompt} userId={userId} />
       </Section>
 
-      <Section title="내 사주 네 기둥" collapsed hint="시주·일주·월주·연주가 말해주는 인생의 네 장면">
+      <Section title="내 사주 네 기둥" collapsible defaultOpen={false} hint="시주·일주·월주·연주가 말해주는 인생의 네 장면">
         {/* 4주 카드 — 가로 배치 (반응형) */}
         <div className="grid grid-cols-4 gap-2 sm:gap-3">
           <PillarCard label="시주" ganji={siju} sipsungCg={sipsung.sijuCg} sipsungJj={sipsung.sijuJj} twelveJj={twelveStages.sijuJj} />
@@ -1063,7 +1063,7 @@ const SajuPage = () => {
       </Section>
 
       {/* 오행 밸런스 */}
-      <Section title="오행 밸런스" collapsed hint="나무·불·흙·쇠·물 중에 뭐가 넘치고 뭐가 모자라?">
+      <Section title="오행 밸런스" collapsible hint="나무·불·흙·쇠·물 중에 뭐가 넘치고 뭐가 모자라?">
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex justify-between mb-3">
             {(Object.entries(balance) as [string, number][]).map(([ohaeng, count]) => {
@@ -1097,7 +1097,7 @@ const SajuPage = () => {
       {/* 주별 해석은 위 사주팔자 섹션 안에 통합됨 */}
 
       {/* 격국 */}
-      <Section title="내 사주의 성격 유형" collapsed hint="너는 어떤 타입의 사주인지 한마디로 정리하면...">
+      <Section title="내 사주의 성격 유형" collapsible defaultOpen={false} hint="너는 어떤 타입의 사주인지 한마디로 정리하면...">
         <div className="bg-card border border-border rounded-xl p-4 glow-mystical">
           <p className="text-base font-semibold text-gold-gradient mb-1">{gyeokguk.name}</p>
           <p className="text-sm text-foreground/80">{gyeokguk.description}</p>
@@ -1106,7 +1106,7 @@ const SajuPage = () => {
       </Section>
 
       {/* 용신 + 예술 추천 */}
-      <Section title="나한테 필요한 기운 + 추천 아트" collapsed hint="사주가 부족한 에너지를 채워줄 색상·화풍·소재는?">
+      <Section title="나한테 필요한 기운 + 추천 아트" collapsible hint="사주가 부족한 에너지를 채워줄 색상·화풍·소재는?">
         <div className="bg-card border border-border rounded-xl p-4 space-y-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -1169,7 +1169,7 @@ const SajuPage = () => {
       </Section>
 
       {/* 나의 운명과 맞는 ARTs */}
-      <Section title="내 사주에 딱 맞는 그림" collapsed hint="125가지 조합 중에 나한테 딱 맞는 그림 TOP은?">
+      <Section title="내 사주에 딱 맞는 그림" collapsible hint="125가지 조합 중에 나한테 딱 맞는 그림 TOP은?">
         <div className="space-y-5">
           {/* 추천 요약 — 재미있게 */}
           {(() => {
@@ -1267,7 +1267,7 @@ const SajuPage = () => {
       </Section>
 
       {/* 공망 */}
-      <Section title="공망 — 비어있는 자리" collapsed hint="집착을 내려놓아야 하는 곳이 어딘지 알려줘">
+      <Section title="공망 — 비어있는 자리" collapsible defaultOpen={false} hint="집착을 내려놓아야 하는 곳이 어딘지 알려줘">
         {(() => {
           const jijiInfo: Record<string, { animal: string; ohaeng: string; meaning: string }> = {
             자: { animal: "쥐", ohaeng: "수", meaning: "지혜, 새로운 시작, 밤의 에너지" },
@@ -1317,17 +1317,17 @@ const SajuPage = () => {
       </Section>
 
       {/* 합충형파해 */}
-      <Section title="기운의 충돌과 조화" collapsed hint="사주 안에서 부딪히고 합쳐지는 에너지의 드라마">
+      <Section title="기운의 충돌과 조화" collapsible defaultOpen={false} hint="사주 안에서 부딪히고 합쳐지는 에너지의 드라마">
         <RelationsList relations={relations} />
       </Section>
 
       {/* 신살 */}
-      <Section title="내가 타고난 별 (신살)" collapsed hint="귀인은 몇 개? 살은 몇 개? 나한테 붙은 별들의 정체">
+      <Section title="내가 타고난 별 (신살)" collapsible defaultOpen={false} hint="귀인은 몇 개? 살은 몇 개? 나한테 붙은 별들의 정체">
         <SinsalList sinsal={sinsal} yongsinOh={enhancedYongsin.yongsin} dayOh={ilju.ohaeng} />
       </Section>
 
       {/* 대운 */}
-      <Section title="인생 타임라인 (대운)" collapsed hint="10년 단위로 보는 인생 시나리오 — 지금은 어디쯤?">
+      <Section title="인생 타임라인 (대운)" collapsible defaultOpen={false} hint="10년 단위로 보는 인생 시나리오 — 지금은 어디쯤?">
         <DaeunTimeline daeun={daeun} startAge={daeunStartAge}
           birthYear={solarDate.year}
           dayOh={ilju.ohaeng} yongsinOh={enhancedYongsin.yongsin}

@@ -431,9 +431,9 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
 
               {/* 주별 신살 해석 — 바로 아래 */}
               {pillarNote && (
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-2.5 flex-1">
-                  <p className="text-[10px] text-primary font-medium mb-1">{pos} 해석</p>
-                  <p className="text-[10px] text-foreground/80 leading-[1.7]">{pillarNote.note}</p>
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 flex-1">
+                  <p className="text-[12.5px] text-primary font-medium mb-1.5">{pos} 해석</p>
+                  <p className="text-[12.5px] text-foreground/80 leading-[1.7]">{pillarNote.note}</p>
                 </div>
               )}
             </div>

@@ -432,8 +432,8 @@ function SinsalList({ sinsal, yongsinOh, dayOh }: { sinsal: SinsalItem[]; yongsi
               {/* 주별 신살 해석 — 바로 아래 */}
               {pillarNote && (
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 flex-1">
-                  <p className="text-[12.5px] text-primary font-medium mb-1.5">{pos} 해석</p>
-                  <p className="text-[12.5px] text-foreground/80 leading-[1.7]">{pillarNote.note}</p>
+                  <p className="text-sm text-primary font-medium mb-1.5">{pos} 해석</p>
+                  <p className="text-sm text-foreground/80 leading-[1.7]">{pillarNote.note}</p>
                 </div>
               )}
             </div>
@@ -1088,11 +1088,11 @@ const SajuPage = () => {
                     {pm && (
                       <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 flex-1">
                         <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-                          <span className="text-[12px] font-semibold text-primary">{pm.lifeStage}</span>
-                          <span className="text-[11px] text-muted-foreground">{pm.ageRange}</span>
+                          <span className="text-sm font-semibold text-primary">{pm.lifeStage}</span>
+                          <span className="text-[13px] text-muted-foreground">{pm.ageRange}</span>
                         </div>
-                        <p className="text-[12px] text-muted-foreground mb-1.5">관계: {pm.relationship}</p>
-                        <p className="text-[12px] text-foreground/80 leading-[1.7]">{pm.description}</p>
+                        <p className="text-sm text-muted-foreground mb-1.5">관계: {pm.relationship}</p>
+                        <p className="text-sm text-foreground/80 leading-[1.7]">{pm.description}</p>
                       </div>
                     )}
                   </div>

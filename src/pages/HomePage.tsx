@@ -12,6 +12,7 @@ import { getOhaengBalance, getYongsin, getLuckyItems, getSajuSummary } from "@/l
 import { analyzeYongsin } from "@/lib/saju/yongsin";
 import { matchSajuToCases } from "@/lib/case-code";
 import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
+import { matchMbtiToArt } from "@/lib/mbti-art-engine";
 
 const OHAENG_COLORS: Record<string, { bg: string; text: string }> = {
   목: { bg: "bg-green-500/20", text: "text-green-400" },
@@ -71,7 +72,7 @@ function getSajuInput() {
 const HomePage = () => {
   const navigate = useNavigate();
   const store = useOnboardingStore();
-  const [subTab, setSubTab] = useState<"recommend" | "saju">("recommend");
+  const [subTab, setSubTab] = useState<"recommend" | "mbti" | "saju">("recommend");
   const [directData, setDirectData] = useState<any>(null);
 
   useEffect(() => { const d = getSajuInput(); if (d) setDirectData(d); }, []);
@@ -130,7 +131,8 @@ const HomePage = () => {
           {/* 서브탭 헤더 */}
           <div className="flex gap-1 mb-5 bg-surface rounded-xl p-1">
             {([
-              { key: "recommend" as const, label: "추천 그림" },
+              { key: "recommend" as const, label: "사주 추천" },
+              { key: "mbti" as const, label: "MBTI 추천" },
               { key: "saju" as const, label: "사주 분석" },
             ]).map((tab) => (
               <button key={tab.key} onClick={() => setSubTab(tab.key)}
@@ -311,6 +313,86 @@ const HomePage = () => {
               </div>
             </div>
           );
+          })()}
+
+          {/* ── MBTI 추천 탭 ── */}
+          {subTab === "mbti" && (() => {
+            const userMbti = store.mbti || "INFP";
+            const mbtiResult = matchMbtiToArt(userMbti);
+            const mbtiArtworks = getRecommendedArtworks(mbtiResult.top.slice(0, 8).map(r => r.caseCode), 8);
+
+            return (
+              <div className="space-y-6 animate-fade-in">
+                {/* MBTI 프로필 */}
+                <div className="bg-card border border-primary/20 rounded-2xl p-6 glow-mystical">
+                  <p className="text-xs text-primary font-medium mb-2">{nameKorean || "나"}의 MBTI가 고른 그림</p>
+                  <p className="text-lg font-bold text-foreground mb-1">{mbtiResult.mbtiLabel}</p>
+                  <p className="text-sm text-foreground/80 mb-2">{mbtiResult.personality}</p>
+                  <p className="text-sm text-primary/80">{mbtiResult.artVibe}</p>
+                </div>
+
+                {/* MBTI 추천 작품 그리드 */}
+                <div>
+                  <SectionHeader title={`${mbtiResult.mbtiLabel}에게 딱 맞는 그림`} />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {mbtiArtworks.slice(0, 8).map((art) => {
+                      const el = ELEMENT_MAP[art.element];
+                      const en = ENERGY_MAP[art.energy];
+                      return (
+                        <div key={art.id} className="group cursor-pointer" onClick={() => navigate(`/artwork/${art.id}`)}>
+                          <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border mb-2 transition-all group-hover:border-primary/30">
+                            <CaseCodeArt element={art.element} energy={art.energy} style={art.style} />
+                          </div>
+                          <p className="text-sm font-medium text-foreground truncate">{art.title.split("—")[0].trim()}</p>
+                          <p className="text-xs text-muted-foreground">{art.artist} · {el?.labelKor} {en?.labelKor}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* MBTI Top 5 */}
+                <div>
+                  <SectionHeader title="MBTI 매칭 Top 5" />
+                  <div className="space-y-3">
+                    {mbtiResult.top.slice(0, 5).map((r, i) => {
+                      const el = ELEMENT_MAP[r.element];
+                      const en = ENERGY_MAP[r.energy];
+                      const st = STYLE_MAP[r.style];
+                      const matchArt = mbtiArtworks.find(a => a.caseCode === r.caseCode)
+                        || mbtiArtworks.find(a => a.element === r.element);
+                      return (
+                        <div key={r.caseCode}
+                          onClick={() => matchArt && navigate(`/artwork/${matchArt.id}`)}
+                          className={`bg-card border rounded-xl p-4 flex gap-4 items-center cursor-pointer hover:border-primary/30 transition-all ${
+                            i === 0 ? "border-primary/30 glow-mystical" : "border-border"
+                          }`}>
+                          <div className="shrink-0 w-16 h-20 rounded-lg overflow-hidden border border-border">
+                            <CaseCodeArt element={r.element} energy={r.energy} style={r.style} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className={`text-xs font-semibold ${i === 0 ? "text-primary" : "text-foreground"}`}>
+                                {i === 0 ? "최적 추천" : `${i + 1}순위`}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">{el?.labelKor} · {en?.labelKor} · {st?.labelKor}</span>
+                            </div>
+                            <p className="text-xs text-foreground/80">
+                              {userMbti}의 {i === 0 ? "감성에 가장 잘 맞는" : "성향과 어울리는"} {st?.labelKor} 스타일
+                            </p>
+                            {matchArt && <p className="text-[10px] text-muted-foreground mt-0.5">{matchArt.artist} — {matchArt.title.split("—")[0].trim()}</p>}
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <span className="text-xl font-bold text-primary">{r.score}</span>
+                            <p className="text-[9px] text-muted-foreground">매칭</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
           })()}
 
           {/* ── 사주 분석 탭 ── */}

@@ -825,7 +825,7 @@ ${prompt}`;
       {/* 코인 부족 안내 */}
       {coins !== null && coins < 1 && !Object.keys(cachedFortunes).length && (
         <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 px-3 py-2 text-xs text-yellow-400">
-          코인이 부족합니다. 추후 코인 충전 기능이 추가될 예정입니다.
+          코인이 부족해요. <button onClick={() => navigate('/coin-shop')} className="underline text-primary">충전하러 가기</button>
         </div>
       )}
 

@@ -42,7 +42,6 @@ const App = () => {
   useEffect(() => startOnlineSync(), []);
 
   return (
-  <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -81,7 +80,6 @@ const App = () => {
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-  </ErrorBoundary>
   );
 };
 

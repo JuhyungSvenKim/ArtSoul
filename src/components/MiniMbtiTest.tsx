@@ -10,27 +10,27 @@ interface Question {
 
 const QUESTIONS: Question[] = [
   {
-    question: "에너지를 어디서 얻나요?",
-    optionA: "사람들과 어울릴 때",
-    optionB: "혼자만의 시간에",
+    question: "주말에 갑자기 약속이 잡히면?",
+    optionA: "좋지! 나가자",
+    optionB: "음... 집이 좋은데",
     dimension: "EI",
   },
   {
-    question: "정보를 어떻게 받아들이나요?",
-    optionA: "구체적 사실 중심",
-    optionB: "직관과 가능성 중심",
+    question: "새 프로젝트를 시작할 때",
+    optionA: "일단 자료부터 모음",
+    optionB: "큰 그림부터 그림",
     dimension: "SN",
   },
   {
-    question: "결정을 어떻게 내리나요?",
-    optionA: "논리적으로 분석해서",
-    optionB: "감정과 가치관으로",
+    question: "친구가 고민 상담을 하면",
+    optionA: "해결책을 찾아줌",
+    optionB: "일단 공감해줌",
     dimension: "TF",
   },
   {
-    question: "생활 방식은?",
-    optionA: "계획적이고 체계적",
-    optionB: "유연하고 즉흥적",
+    question: "여행 계획은?",
+    optionA: "숙소-맛집 다 예약",
+    optionB: "가서 정함 뭐",
     dimension: "JP",
   },
 ];

@@ -4,6 +4,7 @@ import { ChevronLeft, ImagePlus, X, Sparkles, ToggleLeft, ToggleRight } from "lu
 import { supabase } from "@/lib/supabase";
 import { generateCuratorDescription } from "@/lib/curator";
 import { getMyArtistProfile } from "@/services/artist";
+import { uploadArtworkImage } from "@/lib/upload";
 import {
   MEDIUM_OPTIONS, SUBJECT_OPTIONS, STYLE_OPTIONS, COLOR_OPTIONS, ENERGY_OPTIONS,
   calculateOhaengScores, getPrimaryOhaeng, getAutoEumYang, getAutoEnergyLevel,
@@ -39,12 +40,17 @@ const ArtworkUploadPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
-  const EMOJIS = ["🎨", "🖼️", "🏔️", "🌸", "🌊", "🎋", "🌕", "☁️", "❄️", "🌅"];
+  const [uploading, setUploading] = useState(false);
 
-  const addMockImage = () => {
-    if (images.length >= 5) return;
-    const emoji = EMOJIS[images.length % EMOJIS.length];
-    setImages([...images, emoji]);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || images.length >= 5) return;
+    setUploading(true);
+    for (let i = 0; i < Math.min(files.length, 5 - images.length); i++) {
+      const url = await uploadArtworkImage(files[i]);
+      if (url) setImages(prev => [...prev, url]);
+    }
+    setUploading(false);
   };
 
   const removeImage = (idx: number) => {
@@ -109,8 +115,8 @@ const ArtworkUploadPage = () => {
         artist_id: artistInfo?.user_id || "unknown",
         genre: form.genre,
         description: curatedDescription,
-        image_url: null,
-        image_urls: [],
+        image_url: images[0] || null,
+        image_urls: images,
         thumbnail_url: "",
         price: Number(form.price) || 0,
         rental_price: form.rentalAllowed ? Math.round((Number(form.price) || 0) * 0.05) : null,
@@ -182,9 +188,9 @@ const ArtworkUploadPage = () => {
           <div>
             <p className="text-xs font-semibold text-foreground mb-2">작품 사진 ({images.length}/5)</p>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              {images.map((emoji, i) => (
-                <div key={i} className="relative w-24 h-24 rounded-xl bg-surface border border-border flex items-center justify-center text-3xl shrink-0">
-                  {emoji}
+              {images.map((url, i) => (
+                <div key={i} className="relative w-24 h-24 rounded-xl bg-surface border border-border shrink-0 overflow-hidden">
+                  <img src={url} alt="" className="w-full h-full object-cover" />
                   <button
                     onClick={() => removeImage(i)}
                     className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center"
@@ -194,13 +200,13 @@ const ArtworkUploadPage = () => {
                 </div>
               ))}
               {images.length < 5 && (
-                <button
-                  onClick={addMockImage}
-                  className="w-24 h-24 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors shrink-0"
+                <label
+                  className="w-24 h-24 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors shrink-0 cursor-pointer"
                 >
                   <ImagePlus className="w-6 h-6" />
-                  <span className="text-[10px]">추가</span>
-                </button>
+                  <span className="text-[10px]">{uploading ? "업로드 중..." : "추가"}</span>
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
+                </label>
               )}
             </div>
           </div>

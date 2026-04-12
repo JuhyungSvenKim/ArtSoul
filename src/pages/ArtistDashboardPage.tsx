@@ -90,7 +90,15 @@ const ArtistDashboardPage = () => {
         </div>
 
         <div className="flex-1 px-5 space-y-4 overflow-y-auto">
-          {loading && <p className="text-sm text-muted-foreground text-center py-12">불러오는 중...</p>}
+          {loading && (
+            <div className="space-y-3 animate-pulse">
+              <div className="grid grid-cols-2 gap-3">
+                {[1,2,3,4].map(i => <div key={i} className="bg-muted/30 rounded-xl h-24" />)}
+              </div>
+              <div className="bg-muted/30 rounded-xl h-16" />
+              <div className="bg-muted/30 rounded-xl h-16" />
+            </div>
+          )}
 
           {/* Overview */}
           {!loading && tab === "overview" && (

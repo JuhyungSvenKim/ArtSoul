@@ -6,6 +6,7 @@ import MbtiGrid, { type MbtiType } from "@/components/MbtiGrid";
 import MiniMbtiTest from "@/components/MiniMbtiTest";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { updateUserMbti } from "@/services/onboarding";
+import { matchMbtiToArt } from "@/lib/mbti-art-engine";
 
 const MbtiPage = () => {
   const navigate = useNavigate();
@@ -50,6 +51,17 @@ const MbtiPage = () => {
       </button>
 
       <MiniMbtiTest visible={showTest} onComplete={(result) => { setMbti(result); setShowTest(false); }} />
+
+      {/* MBTI 선택 시 아트 바이브 미리보기 */}
+      {mbti && (() => {
+        const result = matchMbtiToArt(mbti);
+        return (
+          <div className="bg-card border border-primary/20 rounded-xl p-4 mt-4 animate-fade-in">
+            <p className="text-xs text-primary font-medium mb-1">{result.mbtiLabel}의 아트 바이브</p>
+            <p className="text-sm text-foreground/80 leading-relaxed">{result.artVibe}</p>
+          </div>
+        );
+      })()}
 
       <div className="flex-1" />
 

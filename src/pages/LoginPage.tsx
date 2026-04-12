@@ -33,26 +33,23 @@ const LoginPage = () => {
         // Supabase에 회원 저장
         const userId = `user_${Date.now()}`;
         const { error: dbError } = await supabase.from("user_profiles").insert({
-          id: userId,
+          user_id: userId,
+          display_name: name,
           email,
-          nickname: name,
-          name_korean: name,
           phone,
-          role: "consumer",
-          is_pass_verified: false,
-          agree_marketing: agreeMarketing,
-          created_at: new Date().toISOString(),
+          role: "user",
+          is_verified: false,
+          marketing_agreed: agreeMarketing,
         });
         if (dbError && !dbError.message?.includes("duplicate")) {
-          // DB 에러여도 진행 (테이블 없을 수도 있음)
           console.warn("user_profiles insert:", dbError.message);
         }
         localStorage.setItem("artsoul-user", JSON.stringify({ email, name, phone, agreeMarketing, userId }));
       } else {
         // 로그인: 이메일로 조회
-        const { data } = await supabase.from("user_profiles").select("id, nickname").eq("email", email).single();
-        const displayName = data?.nickname || email.split("@")[0];
-        localStorage.setItem("artsoul-user", JSON.stringify({ email, name: displayName, userId: data?.id }));
+        const { data } = await supabase.from("user_profiles").select("user_id, display_name").eq("email", email).single();
+        const displayName = data?.display_name || email.split("@")[0];
+        localStorage.setItem("artsoul-user", JSON.stringify({ email, name: displayName, userId: data?.user_id }));
       }
       navigate("/birth-info");
     } catch {

@@ -5,6 +5,7 @@ import GenderSelect from "@/components/GenderSelect";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { createUser } from "@/services/onboarding";
 import { saveBirthInfo } from "@/services/saju-profile";
+import { supabase } from "@/lib/supabase";
 
 // ── 위치 기반 시간대 자동 감지 ────────────────────────
 const TIMEZONE_LABELS: Record<string, string> = {
@@ -44,6 +45,35 @@ const BirthInfoPage = () => {
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // OAuth 소셜 로그인 후 세션 처리
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const user = session.user;
+        const userId = user.id;
+        const displayName = user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split("@")[0] || "";
+        const email = user.email || "";
+        const provider = user.app_metadata?.provider || "";
+
+        // localStorage에 유저 정보 저장
+        localStorage.setItem("artsoul-user", JSON.stringify({ email, name: displayName, userId, provider }));
+        setUserId(userId);
+
+        // user_profiles에 upsert
+        supabase.from("user_profiles").upsert({
+          user_id: userId,
+          display_name: displayName,
+          email,
+          provider,
+          role: "user",
+        }, { onConflict: "user_id" }).then(() => {});
+
+        // 이름 자동 채우기
+        if (displayName && !name) setName(displayName);
+      }
+    });
+  }, []);
 
   // 포맷
   const birthFormatted = (() => {

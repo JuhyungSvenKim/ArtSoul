@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ImagePlus, X, Sparkles, ToggleLeft, ToggleRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { generateCuratorDescription } from "@/lib/curator";
+import { getMyArtistProfile } from "@/services/artist";
 import {
   MEDIUM_OPTIONS, SUBJECT_OPTIONS, STYLE_OPTIONS, COLOR_OPTIONS, ENERGY_OPTIONS,
   calculateOhaengScores, getPrimaryOhaeng, getAutoEumYang, getAutoEnergyLevel,
@@ -13,7 +14,17 @@ const GENRES = ["수묵담채", "유화", "수채화", "아크릴", "판화", "�
 
 const ArtworkUploadPage = () => {
   const navigate = useNavigate();
+  const [artistInfo, setArtistInfo] = useState<{ user_id: string; artist_name: string } | null>(null);
   const [images, setImages] = useState<string[]>([]);
+
+  // 작가 정보 로드
+  useEffect(() => {
+    getMyArtistProfile().then(profile => {
+      if (profile && profile.status === "approved") {
+        setArtistInfo({ user_id: profile.user_id, artist_name: profile.artist_name });
+      }
+    });
+  }, []);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -94,8 +105,8 @@ const ArtworkUploadPage = () => {
       // DB 저장
       const { error: dbError } = await supabase.from("artworks").insert({
         title: form.title,
-        artist_name: "작가",
-        artist_id: "00000000-0000-0000-0000-000000000000",
+        artist_name: artistInfo?.artist_name || "작가",
+        artist_id: artistInfo?.user_id || "unknown",
         genre: form.genre,
         description: curatedDescription,
         image_url: null,

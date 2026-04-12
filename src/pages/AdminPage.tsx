@@ -125,36 +125,35 @@ const AdminPage = () => {
     loadArtworks();
   };
 
-  // ── 작가 승인 관련 ────────────────────────────
-  const [applications, setApplications] = useState<Array<{ key: string; data: ArtistApplication }>>([]);
+  // ── 작가 승인 관련 (DB 연동) ────────────────────
+  const [applications, setApplications] = useState<any[]>([]);
+
+  const loadArtistApps = async () => {
+    const { data } = await supabase.from("artists")
+      .select("*")
+      .in("status", ["pending"])
+      .order("applied_at", { ascending: false });
+    setApplications(data || []);
+  };
 
   useEffect(() => {
-    if (mode === "artists") {
-      // 실제로는 DB에서 조회. 지금은 데모용 localStorage 기반.
-      const apps: Array<{ key: string; data: ArtistApplication }> = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith("artsoul-artist-application")) {
-          try {
-            apps.push({ key, data: JSON.parse(localStorage.getItem(key) || "{}") });
-          } catch {}
-        }
-      }
-      setApplications(apps);
-    }
+    if (mode === "artists") loadArtistApps();
   }, [mode]);
 
-  const approveArtist = (key: string) => {
-    localStorage.setItem("artsoul-artist-status", "artist");
-    setApplications(prev => prev.filter(a => a.key !== key));
+  const approveArtist = async (userId: string) => {
+    await supabase.from("artists").update({
+      status: "approved", approved_at: new Date().toISOString(),
+    }).eq("user_id", userId);
+    setApplications(prev => prev.filter(a => a.user_id !== userId));
     setSuccess("작가 승인 완료!");
     setTimeout(() => setSuccess(null), 2000);
   };
 
-  const rejectArtist = (key: string) => {
-    localStorage.removeItem(key);
-    localStorage.setItem("artsoul-artist-status", "none");
-    setApplications(prev => prev.filter(a => a.key !== key));
+  const rejectArtist = async (userId: string) => {
+    await supabase.from("artists").update({
+      status: "rejected",
+    }).eq("user_id", userId);
+    setApplications(prev => prev.filter(a => a.user_id !== userId));
   };
 
   // ── 작품 삭제 ────────────────────────────────
@@ -306,39 +305,40 @@ const AdminPage = () => {
             </div>
           )}
 
-          {applications.map((app) => (
-            <div key={app.key} className="bg-surface border border-border rounded-xl p-5">
+          {applications.map((app: any) => (
+            <div key={app.user_id} className="bg-surface border border-border rounded-xl p-5">
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <p className="text-sm font-medium text-foreground">작가 신청</p>
+                  <p className="text-sm font-medium text-foreground">{app.artist_name}</p>
                   <p className="text-[10px] text-muted-foreground">
-                    신청일: {app.data.appliedAt ? new Date(app.data.appliedAt).toLocaleDateString("ko-KR") : "—"}
+                    신청일: {app.applied_at ? new Date(app.applied_at).toLocaleDateString("ko-KR") : "—"}
+                    {app.business_number && ` · 사업자 ${app.business_number}`}
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => approveArtist(app.key)}
+                  <button onClick={() => approveArtist(app.user_id)}
                     className="px-4 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium hover:bg-green-500/20">
                     승인
                   </button>
-                  <button onClick={() => rejectArtist(app.key)}
+                  <button onClick={() => rejectArtist(app.user_id)}
                     className="px-4 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/20">
                     거절
                   </button>
                 </div>
               </div>
 
-              {app.data.portfolio && (
+              {app.portfolio_url && (
                 <div className="mb-2">
                   <p className="text-[10px] text-muted-foreground mb-0.5">포트폴리오</p>
-                  <a href={app.data.portfolio} target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline break-all">{app.data.portfolio}</a>
+                  <a href={app.portfolio_url} target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline break-all">{app.portfolio_url}</a>
                 </div>
               )}
 
-              {app.data.intro && (
+              {app.bio && (
                 <div>
                   <p className="text-[10px] text-muted-foreground mb-0.5">작가 소개</p>
-                  <p className="text-xs text-foreground/80 leading-relaxed">{app.data.intro}</p>
+                  <p className="text-xs text-foreground/80 leading-relaxed">{app.bio}</p>
                 </div>
               )}
             </div>

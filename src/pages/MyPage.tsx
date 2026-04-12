@@ -178,44 +178,45 @@ const MyPage = () => {
 };
 
 // ── 작가 모드 섹션 ─────────────────────────────────
-// 역할: none(미신청) → pending(심사중) → artist(승인됨)
+import { applyAsArtist, getArtistStatus } from "@/services/artist";
+
 function ArtistSection({ navigate }: { navigate: (path: string) => void }) {
-  const [artistStatus, setArtistStatus] = useState<"none" | "pending" | "artist">("none");
+  const [artistStatus, setArtistStatus] = useState<"none" | "pending" | "approved" | "rejected">("none");
   const [showApply, setShowApply] = useState(false);
-  const [inviteCode, setInviteCode] = useState("");
+  const [artistName, setArtistName] = useState("");
   const [portfolio, setPortfolio] = useState("");
   const [intro, setIntro] = useState("");
+  const [businessNum, setBusinessNum] = useState("");
   const [applyMsg, setApplyMsg] = useState("");
+  const [applying, setApplying] = useState(false);
 
-  // localStorage에서 작가 상태 읽기
+  // DB에서 작가 상태 읽기
   useEffect(() => {
-    const status = localStorage.getItem("artsoul-artist-status");
-    if (status === "artist" || status === "pending") setArtistStatus(status);
+    getArtistStatus().then(setArtistStatus).catch(() => {});
   }, []);
 
-  const handleInviteCode = () => {
-    // 초대 코드 검증 (하드코딩 + 향후 API 연동)
-    const validCodes = ["ARTDNA2026", "ARTIST-VIP", "CREATOR-PASS"];
-    if (validCodes.includes(inviteCode.toUpperCase().trim())) {
-      localStorage.setItem("artsoul-artist-status", "artist");
-      setArtistStatus("artist");
+  const handleApply = async () => {
+    if (!artistName) { setApplyMsg("활동명을 입력해주세요"); return; }
+    if (!portfolio && !intro) { setApplyMsg("포트폴리오 또는 작가 소개를 입력해주세요"); return; }
+    setApplying(true);
+    const success = await applyAsArtist({
+      artistName,
+      bio: intro,
+      portfolioUrl: portfolio,
+      businessNumber: businessNum || undefined,
+    });
+    setApplying(false);
+    if (success) {
+      setArtistStatus("pending");
+      setShowApply(false);
       setApplyMsg("");
     } else {
-      setApplyMsg("유효하지 않은 초대 코드입니다");
+      setApplyMsg("신청 중 오류가 발생했습니다");
     }
   };
 
-  const handleApply = () => {
-    if (!portfolio && !intro) { setApplyMsg("포트폴리오 또는 작가 소개를 입력해주세요"); return; }
-    localStorage.setItem("artsoul-artist-status", "pending");
-    localStorage.setItem("artsoul-artist-application", JSON.stringify({ portfolio, intro, appliedAt: new Date().toISOString() }));
-    setArtistStatus("pending");
-    setApplyMsg("");
-    setShowApply(false);
-  };
-
   // 승인된 작가
-  if (artistStatus === "artist") {
+  if (artistStatus === "approved") {
     return (
       <div className="w-full bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
         <div className="flex items-center justify-between">
@@ -250,17 +251,29 @@ function ArtistSection({ navigate }: { navigate: (path: string) => void }) {
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">작가 신청 심사 중</p>
-            <p className="text-[10px] text-muted-foreground">관리자 확인 후 승인됩니다. 보통 1~3일 소요.</p>
+            <p className="text-[10px] text-muted-foreground">포트폴리오 확인 후 승인됩니다. 보통 1~3일 소요.</p>
           </div>
         </div>
-        <div className="mt-3 bg-surface rounded-lg p-3">
-          <p className="text-[10px] text-muted-foreground">초대 코드가 있으면 바로 등록 가능합니다</p>
-          <div className="flex gap-2 mt-1.5">
-            <input type="text" placeholder="초대 코드 입력" value={inviteCode} onChange={e => setInviteCode(e.target.value)}
-              className="flex-1 px-3 py-1.5 rounded-lg bg-card border border-border text-xs text-foreground placeholder:text-muted-foreground/50" />
-            <button onClick={handleInviteCode} className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium">확인</button>
+      </div>
+    );
+  }
+
+  // 거절됨
+  if (artistStatus === "rejected") {
+    return (
+      <div className="w-full bg-red-500/5 border border-red-500/20 rounded-xl p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <Palette className="w-5 h-5 text-red-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">작가 신청이 반려되었습니다</p>
+              <p className="text-[10px] text-muted-foreground">포트폴리오를 보완하여 다시 신청할 수 있어요</p>
+            </div>
           </div>
-          {applyMsg && <p className="text-[10px] text-red-400 mt-1">{applyMsg}</p>}
+          <button onClick={() => { setShowApply(true); setArtistStatus("none"); }}
+            className="text-xs text-primary font-medium">재신청</button>
         </div>
       </div>
     );
@@ -285,30 +298,21 @@ function ArtistSection({ navigate }: { navigate: (path: string) => void }) {
 
       {showApply && (
         <div className="space-y-3 animate-fade-in">
-          {/* 초대 코드 */}
-          <div className="bg-card border border-primary/20 rounded-lg p-3">
-            <p className="text-xs text-foreground font-medium mb-1.5">초대 코드가 있나요?</p>
-            <div className="flex gap-2">
-              <input type="text" placeholder="초대 코드 입력" value={inviteCode} onChange={e => setInviteCode(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg bg-surface border border-border text-xs text-foreground placeholder:text-muted-foreground/50" />
-              <button onClick={handleInviteCode} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium">확인</button>
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">초대 코드가 있으면 바로 작가 등록됩니다</p>
-          </div>
-
-          {/* 일반 신청 */}
           <div className="bg-card border border-border rounded-lg p-3 space-y-2">
-            <p className="text-xs text-foreground font-medium">또는 작가 신청하기</p>
+            <input type="text" placeholder="활동명 (작가명) *" value={artistName} onChange={e => setArtistName(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-xs text-foreground placeholder:text-muted-foreground/50" />
             <input type="url" placeholder="포트폴리오 URL (인스타, 비핸스 등)" value={portfolio} onChange={e => setPortfolio(e.target.value)}
               className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-xs text-foreground placeholder:text-muted-foreground/50" />
-            <textarea placeholder="작가 소개 (작품 활동, 경력 등)" value={intro} onChange={e => setIntro(e.target.value)} rows={3}
+            <textarea placeholder="작가 소개 (작품 활동, 경력, 수상 이력 등)" value={intro} onChange={e => setIntro(e.target.value)} rows={3}
               className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-xs text-foreground placeholder:text-muted-foreground/50 resize-none" />
-            <button onClick={handleApply}
-              className="w-full py-2.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-medium">
-              작가 신청하기 (관리자 승인 필요)
+            <input type="text" placeholder="사업자 번호 (선택)" value={businessNum} onChange={e => setBusinessNum(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-xs text-foreground placeholder:text-muted-foreground/50" />
+            <button onClick={handleApply} disabled={applying}
+              className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50">
+              {applying ? "신청 중..." : "작가 신청하기"}
             </button>
+            <p className="text-[10px] text-muted-foreground">포트폴리오 심사 후 승인됩니다 (1~3일)</p>
           </div>
-
           {applyMsg && <p className="text-[10px] text-red-400">{applyMsg}</p>}
         </div>
       )}

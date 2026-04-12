@@ -46,6 +46,14 @@ const BirthInfoPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 소셜 로그인 추가 정보
+  const [isSocialUser, setIsSocialUser] = useState(false);
+  const [socialProvider, setSocialProvider] = useState("");
+  const [phone, setPhone] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreeMarketing, setAgreeMarketing] = useState(false);
+  const [needsExtra, setNeedsExtra] = useState(false);
+
   // OAuth 소셜 로그인 후 세션 처리
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -56,11 +64,22 @@ const BirthInfoPage = () => {
         const email = user.email || "";
         const provider = user.app_metadata?.provider || "";
 
-        // localStorage에 유저 정보 저장
         localStorage.setItem("artsoul-user", JSON.stringify({ email, name: displayName, userId, provider }));
         setUserId(userId);
+        setIsSocialUser(true);
+        setSocialProvider(provider);
 
-        // user_profiles에 upsert
+        // DB에서 기존 프로필 확인 → 전화번호 없으면 추가 입력 필요
+        supabase.from("user_profiles").select("phone, marketing_agreed")
+          .eq("user_id", userId).single().then(({ data }) => {
+            if (!data?.phone) {
+              setNeedsExtra(true);
+            } else {
+              setNeedsExtra(false);
+            }
+          });
+
+        // user_profiles에 upsert (기본 정보만)
         supabase.from("user_profiles").upsert({
           user_id: userId,
           display_name: displayName,
@@ -69,7 +88,6 @@ const BirthInfoPage = () => {
           role: "user",
         }, { onConflict: "user_id" }).then(() => {});
 
-        // 이름 자동 채우기
         if (displayName && !name) setName(displayName);
       }
     });
@@ -117,6 +135,20 @@ const BirthInfoPage = () => {
   const handleNext = () => {
     if (!isValid || !gender) return;
 
+    // 소셜 유저 추가 정보 검증
+    if (isSocialUser && needsExtra) {
+      if (!agreeTerms) { setError("이용약관에 동의해주세요"); return; }
+      if (!phone) { setError("휴대폰 번호를 입력해주세요"); return; }
+      // 추가 정보 DB 저장
+      const userId = JSON.parse(localStorage.getItem("artsoul-user") || "{}").userId;
+      if (userId) {
+        supabase.from("user_profiles").update({
+          phone,
+          marketing_agreed: agreeMarketing,
+        }).eq("user_id", userId).then(() => {});
+      }
+    }
+
     const data = {
       birthDate,
       birthTime: unknownTime ? null : birthTime || null,
@@ -150,6 +182,42 @@ const BirthInfoPage = () => {
       {error && (
         <div className="rounded-lg bg-red-500/20 text-red-400 px-3 py-2 text-xs font-medium mb-4">
           {error}
+        </div>
+      )}
+
+      {/* 소셜 로그인 유저 — 추가 정보 입력 */}
+      {isSocialUser && needsExtra && (
+        <div className="bg-card border border-primary/20 rounded-xl p-4 mb-5 space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-1">
+              {socialProvider === "kakao" ? "카카오" : socialProvider === "google" ? "구글" : "애플"} 로그인 환영해요!
+            </p>
+            <p className="text-xs text-muted-foreground">서비스 이용을 위해 몇 가지만 더 알려주세요</p>
+          </div>
+
+          <input type="tel" placeholder="휴대폰 번호 (01012345678)" value={phone}
+            onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
+            className="w-full px-3 py-2.5 rounded-lg bg-surface border border-border text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" checked={agreeTerms} onChange={e => setAgreeTerms(e.target.checked)}
+              className="w-4 h-4 mt-0.5 rounded border-border accent-primary shrink-0" />
+            <span className="text-xs text-foreground leading-relaxed">
+              <span className="text-primary">[필수]</span> 이용약관 및 개인정보처리방침에 동의합니다
+            </span>
+          </label>
+
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" checked={agreeMarketing} onChange={e => setAgreeMarketing(e.target.checked)}
+              className="w-4 h-4 mt-0.5 rounded border-border accent-primary shrink-0" />
+            <span className="text-xs text-muted-foreground leading-relaxed">
+              [선택] 마케팅 정보 수신에 동의합니다
+            </span>
+          </label>
+
+          {isSocialUser && needsExtra && !agreeTerms && (
+            <p className="text-[10px] text-red-400">이용약관 동의가 필요합니다</p>
+          )}
         </div>
       )}
 

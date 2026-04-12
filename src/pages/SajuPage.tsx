@@ -1025,31 +1025,63 @@ const SajuPage = () => {
     );
   }
 
-  const { yeonju, wolju, ilju, siju, sipsung, twelveStages, gyeokguk, sinsal, gongmang, relations, daeun, daeunStartAge, solarDate, input } = result;
+  let yeonju, wolju, ilju, siju, sipsung, twelveStages, gyeokguk, sinsal, gongmang, relations, daeun, daeunStartAge, solarDate, input;
+  let summary = "", balance: any = {}, ohaengAnalysis: any = { dominant: [], lacking: [], description: "" };
+  let yongsin: any = { element: "목", reason: "" }, lucky: any = { colors: [], colorHexes: [], artStyles: [], artSubjects: [], artMoods: [], direction: "", season: "" };
+  let pillarMeanings: any[] = [];
 
-  // 추가 분석
-  const summary = getSajuSummary(result);
-  const balance = getOhaengBalance(result);
-  const ohaengAnalysis = getOhaengAnalysis(balance, `${ilju.cheonganKor}(${ilju.ohaeng})`);
-  const yongsin = getYongsin(balance, ilju.ohaeng);
-  const lucky = getLuckyItems(yongsin.element);
-  const pillarMeanings = getPillarMeanings(result);
+  try {
+    ({ yeonju, wolju, ilju, siju, sipsung, twelveStages, gyeokguk, sinsal, gongmang, relations, daeun, daeunStartAge, solarDate, input } = result);
+    summary = getSajuSummary(result);
+    balance = getOhaengBalance(result);
+    ohaengAnalysis = getOhaengAnalysis(balance, `${ilju.cheonganKor}(${ilju.ohaeng})`);
+    yongsin = getYongsin(balance, ilju.ohaeng);
+    lucky = getLuckyItems(yongsin.element);
+    pillarMeanings = getPillarMeanings(result);
+  } catch (e) {
+    console.error("사주 분석 오류:", e);
+    return (
+      <PageContainer className="pt-20">
+        <div className="text-center py-20">
+          <p className="text-lg font-semibold text-foreground mb-2">사주 분석 중 오류가 발생했습니다</p>
+          <p className="text-sm text-muted-foreground mb-4">{String(e)}</p>
+          <button onClick={() => setResult(null)} className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm">다시 시도</button>
+        </div>
+      </PageContainer>
+    );
+  }
 
   // 125 케이스코드 분석 (강화된 용신 엔진)
-  const enhancedYongsin = analyzeYongsin(
-    { yeonju, wolju, ilju, siju },
-    sipsung,
-  );
-  const caseCodeRecommendation = matchSajuToCases({
-    sajuResult: result,
-    yongsinResult: enhancedYongsin,
-  });
-  const caseCodeResults = caseCodeRecommendation.all;
-  const topBaseCases = getTopBaseCases(caseCodeRecommendation, 3);
+  let enhancedYongsin: any = { yongsin: "목", huisin: "", gisin: "", dayOhaeng: "목", dayStrength: "중", summary: "" };
+  let caseCodeResults: any[] = [];
+  let topBaseCases: any[] = [];
+  try {
+    enhancedYongsin = analyzeYongsin(
+      { yeonju, wolju, ilju, siju },
+      sipsung,
+    );
+    const caseCodeRecommendation = matchSajuToCases({
+      sajuResult: result,
+      yongsinResult: enhancedYongsin,
+    });
+    caseCodeResults = caseCodeRecommendation.all;
+    topBaseCases = getTopBaseCases(caseCodeRecommendation, 3);
+  } catch (e) {
+    console.error("케이스코드 분석 오류:", e);
+  }
 
   // DB에 사주 계산 결과 저장 (비동기, 한 번만)
   useEffect(() => {
-    saveSajuResult(result, enhancedYongsin).catch(() => {});
+    try {
+      saveSajuResult(result, {
+        yongsin: enhancedYongsin.yongsin,
+        huisin: enhancedYongsin.huisin,
+        gisin: enhancedYongsin.gisin,
+        dayOhaeng: enhancedYongsin.dayOhaeng,
+        dayStrength: enhancedYongsin.dayStrength,
+        summary: enhancedYongsin.summary,
+      }).catch(() => {});
+    } catch {}
   }, []);
 
   return (

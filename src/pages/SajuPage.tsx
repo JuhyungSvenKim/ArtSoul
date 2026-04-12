@@ -1047,10 +1047,10 @@ const SajuPage = () => {
   const caseCodeResults = caseCodeRecommendation.all;
   const topBaseCases = getTopBaseCases(caseCodeRecommendation, 3);
 
-  // DB에 사주 계산 결과 저장 (비동기, fire-and-forget)
+  // DB에 사주 계산 결과 저장 (비동기, 한 번만)
   useEffect(() => {
     saveSajuResult(result, enhancedYongsin).catch(() => {});
-  }, [result]);
+  }, []);
 
   return (
     <PageContainer className="pt-20">

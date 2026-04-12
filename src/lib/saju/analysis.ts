@@ -274,7 +274,7 @@ export function getPillarMeanings(result: SajuResult): PillarMeaning[] {
     return ` ${list.join(', ')}이 붙어있어서, 에너지가 꽤 강하게 작동하는 자리야.`;
   };
 
-  const sipsungDesc = (name: string) => SIPSUNG_MEANING[name] || name;
+  const sipsungDesc = (name: string) => SIPSUNG_MEANING[name] || name || "알 수 없음";
 
   return [
     {
@@ -282,28 +282,28 @@ export function getPillarMeanings(result: SajuResult): PillarMeaning[] {
       lifeStage: '초년운',
       relationship: '조상·조부모',
       ageRange: '1~15세',
-      description: `어린 시절 에너지를 보여주는 자리야. 위에 ${sipsung.yeonjuCg}(${sipsungDesc(sipsung.yeonjuCg).split('.')[0]})이 떠 있고, ${getComboDesc(yeonju.ohaeng, yeonju.jijiOhaeng)}. 어릴 때 집안 분위기나 성장 환경이 이 기운으로 깔려 있었다고 보면 돼.${sinsalText('연주')}`,
+      description: `어린 시절 에너지를 보여주는 자리야.${sipsung.yeonjuCg ? ` 위에 ${sipsung.yeonjuCg}(${(sipsungDesc(sipsung.yeonjuCg) || "").split('.')[0]})이 떠 있고,` : ""} ${getComboDesc(yeonju.ohaeng, yeonju.jijiOhaeng)}. 어릴 때 집안 분위기나 성장 환경이 이 기운으로 깔려 있었다고 보면 돼.${sinsalText('연주')}`,
     },
     {
       label: '월주 (月柱)',
       lifeStage: '청년운',
       relationship: '부모·형제',
       ageRange: '16~30세',
-      description: `사회에 나가기 시작하는 시기의 기운이야. ${sipsung.woljuCg}(${sipsungDesc(sipsung.woljuCg).split('.')[0]})이 깔려 있고, ${getComboDesc(wolju.ohaeng, wolju.jijiOhaeng)}. 첫 직장이나 진로를 정할 때 이 에너지가 크게 영향을 줘.${sinsalText('월주')}`,
+      description: `사회에 나가기 시작하는 시기의 기운이야.${sipsung.woljuCg ? ` ${sipsung.woljuCg}(${(sipsungDesc(sipsung.woljuCg) || "").split('.')[0]})이 깔려 있고,` : ""} ${getComboDesc(wolju.ohaeng, wolju.jijiOhaeng)}. 첫 직장이나 진로를 정할 때 이 에너지가 크게 영향을 줘.${sinsalText('월주')}`,
     },
     {
       label: '일주 (日柱)',
       lifeStage: '장년운',
       relationship: '나·배우자',
       ageRange: '31~45세',
-      description: `여기가 사주의 메인이야. 일간 ${ilju.cheonganKor}(${ilju.ohaeng})이 바로 "나" 자신이고, 아래 깔린 ${sipsung.iljuJj}(${sipsungDesc(sipsung.iljuJj).split('.')[0]})이 배우자나 내면의 기질을 보여줘. ${getComboDesc(ilju.ohaeng, ilju.jijiOhaeng)}.${sinsalText('일주')}`,
+      description: `여기가 사주의 메인이야. 일간 ${ilju.cheonganKor}(${ilju.ohaeng})이 바로 "나" 자신이고,${sipsung.iljuJj ? ` 아래 깔린 ${sipsung.iljuJj}(${(sipsungDesc(sipsung.iljuJj) || "").split('.')[0]})이 배우자나 내면의 기질을 보여줘.` : ""} ${getComboDesc(ilju.ohaeng, ilju.jijiOhaeng)}.${sinsalText('일주')}`,
     },
     {
       label: '시주 (時柱)',
       lifeStage: '말년운',
       relationship: '자식·후배',
       ageRange: '46세~',
-      description: `인생 후반부의 에너지야. ${sipsung.sijuCg}(${sipsungDesc(sipsung.sijuCg).split('.')[0]})이 떠 있고, ${getComboDesc(siju.ohaeng, siju.jijiOhaeng)}. 말년의 방향, 자녀 복, 인생 마무리가 어떤 느낌인지가 여기에 담겨 있어.${sinsalText('시주')}`,
+      description: `인생 후반부의 에너지야.${sipsung.sijuCg ? ` ${sipsung.sijuCg}(${(sipsungDesc(sipsung.sijuCg) || "").split('.')[0]})이 떠 있고,` : ""} ${getComboDesc(siju.ohaeng, siju.jijiOhaeng)}. 말년의 방향, 자녀 복, 인생 마무리가 어떤 느낌인지가 여기에 담겨 있어.${sinsalText('시주')}`,
     },
   ];
 }

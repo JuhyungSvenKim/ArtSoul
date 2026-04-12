@@ -6,20 +6,6 @@ import { supabase } from "@/lib/supabase";
 const LoginPage = () => {
   const navigate = useNavigate();
 
-  // 이미 로그인된 유저면 홈으로
-  useEffect(() => {
-    const user = localStorage.getItem("artsoul-user");
-    if (user) {
-      try {
-        const parsed = JSON.parse(user);
-        if (parsed.userId || parsed.email) {
-          navigate("/home", { replace: true });
-          return;
-        }
-      } catch {}
-    }
-  }, []);
-
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

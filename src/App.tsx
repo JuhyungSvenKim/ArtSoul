@@ -39,7 +39,10 @@ const queryClient = new QueryClient();
 
 const App = () => {
   // 온라인 복구 시 오프라인 큐 자동 동기화
-  useEffect(() => startOnlineSync(), []);
+  useEffect(() => {
+    const cleanup = startOnlineSync();
+    return cleanup;
+  }, []);
 
   return (
   <QueryClientProvider client={queryClient}>

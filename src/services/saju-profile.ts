@@ -46,18 +46,27 @@ export async function saveSajuResult(result: SajuResult, yongsinDetail: any) {
   }, { onConflict: "user_id" });
 }
 
-/** AI 해석 결과를 saju_profiles에 저장 */
-export async function saveAIInterpretation(text: string) {
+/** AI 해석 결과를 saju_profiles + saju_history에 저장 */
+export async function saveAIInterpretation(text: string, cost: number = 3) {
   const userId = getCurrentUserId();
   if (!userId) return;
 
+  // saju_profiles에 최신 해석 저장
   await supabase.from("saju_profiles").update({
     ai_interpretation: text,
     ai_interpretation_at: new Date().toISOString(),
   }).eq("user_id", userId);
+
+  // saju_history에 이용 기록 저장
+  await supabase.from("saju_history").insert({
+    user_id: userId,
+    service_type: "ai_interpretation",
+    cost,
+    result: text,
+  });
 }
 
-/** 운세를 fortune_records에 저장 */
+/** 운세를 fortune_records + saju_history에 저장 */
 export async function saveFortuneRecord(data: {
   fortuneType: "today" | "week" | "month" | "year";
   cost: number;
@@ -67,6 +76,7 @@ export async function saveFortuneRecord(data: {
   const userId = getCurrentUserId();
   if (!userId) return;
 
+  // fortune_records에 저장
   await supabase.from("fortune_records").insert({
     user_id: userId,
     fortune_type: data.fortuneType,
@@ -74,6 +84,29 @@ export async function saveFortuneRecord(data: {
     result: data.result,
     expires_at: data.expiresAt,
   });
+
+  // saju_history에 이용 기록 저장
+  await supabase.from("saju_history").insert({
+    user_id: userId,
+    service_type: `fortune_${data.fortuneType}`,
+    cost: data.cost,
+    result: data.result,
+    expires_at: data.expiresAt,
+  });
+}
+
+/** saju_history에서 유료 이용 기록 조회 */
+export async function loadSajuHistory(limit: number = 20) {
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+
+  const { data } = await supabase.from("saju_history")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  return data || [];
 }
 
 /** DB에서 사주 프로필 로드 */

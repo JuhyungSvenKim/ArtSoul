@@ -557,7 +557,7 @@ ${prompt}`;
       setInterpretation(text);
       setExpiresAt(expiry.toISOString());
       saveCache('ai_interpretation', text, expiry);
-      saveAIInterpretation(text).catch(() => {}); // DB 저장
+      saveAIInterpretation(text, AI_INTERPRETATION_COST).catch(() => {}); // DB 저장
     } catch (e: any) {
       setError(e.message || "AI 해석 요청 실패");
     } finally {

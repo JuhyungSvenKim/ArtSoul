@@ -16,6 +16,7 @@ import { getCoinBalance, deductCoins, saveFortune, getLatestFortune } from "@/se
 import { saveSajuResult, saveAIInterpretation, saveFortuneRecord } from "@/services/saju-profile";
 import { supabase } from "@/lib/supabase";
 import { callGemini } from "@/lib/gemini";
+import { getCoinPricing } from "@/lib/coin-pricing";
 
 // ── 오행 색상 매핑 ──────────────────────────────────
 const OHAENG_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -507,7 +508,6 @@ function RelationsList({ relations }: { relations: RelationItem[] }) {
 }
 
 // ── AI 해석 (코인 동적 — 어드민 설정) ────────────────
-import { getCoinPricing } from "@/lib/coin-pricing";
 
 function AIInterpretation({ prompt, userId }: { prompt: string; userId: string | null }) {
   const pricing = getCoinPricing();

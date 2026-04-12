@@ -4,6 +4,7 @@ import PageContainer from "@/components/PageContainer";
 import GenderSelect from "@/components/GenderSelect";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { createUser } from "@/services/onboarding";
+import { saveBirthInfo } from "@/services/saju-profile";
 
 // ── 위치 기반 시간대 자동 감지 ────────────────────────
 const TIMEZONE_LABELS: Record<string, string> = {
@@ -98,6 +99,7 @@ const BirthInfoPage = () => {
     try { localStorage.setItem("artsoul-saju-input", JSON.stringify(data)); } catch {}
     setBirthInfo(data);
     createUser(data).then(user => setUserId(user.id)).catch(() => {});
+    saveBirthInfo({ birthDate, birthTime: unknownTime ? null : birthTime || null, gender: gender! }).catch(() => {});
 
     // URL hash로 데이터 인코딩해서 전달
     const hash = btoa(encodeURIComponent(JSON.stringify(data)));

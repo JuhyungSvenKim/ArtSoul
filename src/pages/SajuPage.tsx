@@ -13,6 +13,7 @@ import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
 import CaseCodeArt from "@/components/CaseCodeArt";
 import { getRecommendedArtworks } from "@/data/sample-artworks";
 import { getCoinBalance, deductCoins, saveFortune, getLatestFortune } from "@/services/coins";
+import { saveSajuResult, saveAIInterpretation, saveFortuneRecord } from "@/services/saju-profile";
 import { supabase } from "@/lib/supabase";
 import { callGemini } from "@/lib/gemini";
 
@@ -556,6 +557,7 @@ ${prompt}`;
       setInterpretation(text);
       setExpiresAt(expiry.toISOString());
       saveCache('ai_interpretation', text, expiry);
+      saveAIInterpretation(text).catch(() => {}); // DB 저장
     } catch (e: any) {
       setError(e.message || "AI 해석 요청 실패");
     } finally {
@@ -758,6 +760,12 @@ ${prompt}`;
         cost: type.cost,
         sajuPrompt: prompt,
         result: text,
+      }).catch(() => {});
+      saveFortuneRecord({
+        fortuneType: type.key,
+        cost: type.cost,
+        result: text,
+        expiresAt: expiry.toISOString(),
       }).catch(() => {});
 
     } catch (e: any) {
@@ -1038,6 +1046,11 @@ const SajuPage = () => {
   });
   const caseCodeResults = caseCodeRecommendation.all;
   const topBaseCases = getTopBaseCases(caseCodeRecommendation, 3);
+
+  // DB에 사주 계산 결과 저장 (비동기, fire-and-forget)
+  useEffect(() => {
+    saveSajuResult(result, enhancedYongsin).catch(() => {});
+  }, [result]);
 
   return (
     <PageContainer className="pt-20">

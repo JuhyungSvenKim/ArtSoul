@@ -72,7 +72,7 @@ function getSajuInput() {
 const HomePage = () => {
   const navigate = useNavigate();
   const store = useOnboardingStore();
-  const [subTab, setSubTab] = useState<"recommend" | "mbti" | "saju">("recommend");
+  const [subTab, setSubTab] = useState<"recommend" | "mbti" | "saju" | "mbti-analysis">("recommend");
   const [directData, setDirectData] = useState<any>(null);
 
   useEffect(() => { const d = getSajuInput(); if (d) setDirectData(d); }, []);
@@ -129,14 +129,15 @@ const HomePage = () => {
       {analysis && (
         <>
           {/* 서브탭 헤더 */}
-          <div className="flex gap-1 mb-5 bg-surface rounded-xl p-1">
+          <div className="flex gap-1 mb-5 bg-surface rounded-xl p-1 overflow-x-auto">
             {([
               { key: "recommend" as const, label: "사주 추천" },
-              { key: "mbti" as const, label: "MBTI 추천" },
               { key: "saju" as const, label: "사주 분석" },
+              { key: "mbti" as const, label: "MBTI 추천" },
+              { key: "mbti-analysis" as const, label: "MBTI 분석" },
             ]).map((tab) => (
               <button key={tab.key} onClick={() => setSubTab(tab.key)}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
                   subTab === tab.key
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -317,6 +318,7 @@ const HomePage = () => {
 
           {/* ── MBTI 추천 탭 ── */}
           {subTab === "mbti" && (() => {
+            try {
             const userMbti = store.mbti || "INFP";
             const mbtiResult = matchMbtiToArt(userMbti);
             const mbtiArtworks = getRecommendedArtworks(mbtiResult.top.slice(0, 8).map(r => r.caseCode), 8);
@@ -393,10 +395,20 @@ const HomePage = () => {
                 </div>
               </div>
             );
+            } catch (e) { return <p className="text-sm text-red-400 py-8 text-center">MBTI 분석 오류: {String(e)}</p>; }
           })()}
+
+          {/* ── MBTI 분석 탭 (준비중) ── */}
+          {subTab === "mbti-analysis" && (
+            <div className="animate-fade-in text-center py-12">
+              <p className="text-lg font-semibold text-foreground mb-2">MBTI 분석</p>
+              <p className="text-sm text-muted-foreground">곧 추가될 예정이에요</p>
+            </div>
+          )}
 
           {/* ── 사주 분석 탭 ── */}
           {subTab === "saju" && (() => {
+            try {
             const ohN: Record<string, string> = { 목: "나무", 화: "불", 토: "흙", 금: "쇠", 수: "물" };
             const ohPersonality: Record<string, string> = {
               목: "성장하려는 에너지가 강해. 새로운 걸 시작하는 걸 좋아하고, 정 많고 창의적인 편",
@@ -524,6 +536,7 @@ const HomePage = () => {
               </button>
             </div>
           );
+          } catch (e) { return <p className="text-sm text-red-400 py-8 text-center">사주 분석 오류: {String(e)}</p>; }
           })()}
         </>
       )}

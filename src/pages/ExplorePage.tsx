@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import TabBar from "@/components/TabBar";
 import { Search, SlidersHorizontal } from "lucide-react";
 import CaseCodeArt from "@/components/CaseCodeArt";
 import { getSampleArtworks, type SampleArtwork } from "@/data/sample-artworks";
+import { supabase } from "@/lib/supabase";
 import { ELEMENT_MAP, ENERGY_MAP, STYLE_MAP } from "@/lib/case-code/types";
 import type { OhaengElement, StyleCode } from "@/lib/case-code/types";
 
@@ -31,7 +32,31 @@ const ExplorePage = () => {
   const [selectedStyle, setSelectedStyle] = useState<StyleCode | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const allArtworks = useMemo(() => getSampleArtworks(), []);
+  const sampleArtworks = useMemo(() => getSampleArtworks(), []);
+  const [dbArtworks, setDbArtworks] = useState<SampleArtwork[]>([]);
+
+  // DB에서 실제 등록된 작품 로드
+  useEffect(() => {
+    supabase.from("artworks").select("*").eq("status", "available").order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const mapped: SampleArtwork[] = data.map((a: any) => ({
+            id: a.id, title: a.title, artist: a.artist_name,
+            description: a.description || "",
+            element: (a.primary_ohaeng === "목" ? "W" : a.primary_ohaeng === "화" ? "F" : a.primary_ohaeng === "토" ? "E" : a.primary_ohaeng === "금" ? "M" : "A") as any,
+            energy: Math.min(5, Math.max(1, Math.round((a.ohaeng_scores?.목 || 0 + a.ohaeng_scores?.화 || 0) / 20) + 1)) as any,
+            style: (a.style_tags?.[0]?.includes("팝") ? "S4" : a.style_tags?.[0]?.includes("수묵") ? "S2" : "S3") as any,
+            caseCode: `${a.primary_ohaeng || "W"}3-S3`,
+            tags: a.mood_tags || [],
+            spaceType: "거실",
+            priceRange: a.price > 2000000 ? "high" : a.price > 500000 ? "mid" : "low",
+          }));
+          setDbArtworks(mapped);
+        }
+      });
+  }, []);
+
+  const allArtworks = useMemo(() => [...dbArtworks, ...sampleArtworks], [dbArtworks, sampleArtworks]);
 
   const filtered = useMemo(() => {
     let result = allArtworks;

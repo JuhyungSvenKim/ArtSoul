@@ -8,6 +8,7 @@ import { useOnboardingStore } from "@/stores/onboarding";
 import { getCoinBalance } from "@/services/coins";
 import { getLikes, type LikedArtwork } from "@/lib/likes";
 import { getOrders, getRentals, type Order, type Rental } from "@/lib/orders";
+import { supabase } from "@/lib/supabase";
 
 const MOCK_USER = {
   nickname: "홍길동",
@@ -62,8 +63,13 @@ const MyPage = () => {
             </div>
           </div>
         </div>
-        <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
-          <Settings className="w-5 h-5" />
+        <button onClick={() => {
+          if (!confirm("로그아웃 하시겠습니까?")) return;
+          localStorage.clear();
+          supabase.auth.signOut().catch(() => {});
+          navigate("/");
+        }} className="p-2 text-muted-foreground hover:text-red-400 transition-colors text-xs">
+          로그아웃
         </button>
       </div>
 

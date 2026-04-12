@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { startOnlineSync } from "@/lib/encrypted-storage";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // 온보딩 플로우
 import LoginPage from "./pages/LoginPage";
@@ -41,6 +42,7 @@ const App = () => {
   useEffect(() => startOnlineSync(), []);
 
   return (
+  <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -79,6 +81,7 @@ const App = () => {
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
   );
 };
 

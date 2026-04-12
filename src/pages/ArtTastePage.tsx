@@ -5,6 +5,8 @@ import ProgressBar from "@/components/ProgressBar";
 import CaseCodeArt from "@/components/CaseCodeArt";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { saveTasteSelections } from "@/services/onboarding";
+import { supabase } from "@/lib/supabase";
+import { getCurrentUserId } from "@/lib/current-user";
 import type { OhaengElement, EnergyLevel, StyleCode } from "@/lib/case-code/types";
 
 // ── 질문 데이터 ─────────────────────────────────
@@ -120,6 +122,17 @@ const ArtTastePage = () => {
     try {
       localStorage.setItem("artsoul-taste-tags", JSON.stringify(topTags));
     } catch {}
+
+    // DB에도 저장
+    const uid = getCurrentUserId();
+    if (uid) {
+      supabase.from("art_taste_selections").upsert({
+        user_id: uid,
+        selections: allSelections,
+        top_tags: topTags,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" }).then(() => {});
+    }
 
     let hash = sajuHash;
     if (!hash) {

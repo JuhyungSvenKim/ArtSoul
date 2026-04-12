@@ -52,11 +52,13 @@ const LoginPage = () => {
         const displayName = data?.display_name || email.split("@")[0];
         localStorage.setItem("artsoul-user", JSON.stringify({ email, name: displayName, userId: data?.user_id }));
       }
-      navigate("/birth-info");
+      // 사주 정보 있으면 홈, 없으면 온보딩
+      const hasSaju = localStorage.getItem("artsoul-saju-input") || localStorage.getItem("artsoul-onboarding");
+      navigate(hasSaju ? "/home" : "/birth-info");
     } catch {
-      // Supabase 연결 실패 시에도 localStorage로 진행
       localStorage.setItem("artsoul-user", JSON.stringify({ email, name: name || email.split("@")[0], phone, agreeMarketing }));
-      navigate("/birth-info");
+      const hasSaju = localStorage.getItem("artsoul-saju-input") || localStorage.getItem("artsoul-onboarding");
+      navigate(hasSaju ? "/home" : "/birth-info");
     } finally {
       setLoading(false);
     }

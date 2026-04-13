@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -37,6 +37,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 const App = () => {
   // 온라인 복구 시 오프라인 큐 자동 동기화
   useEffect(() => {
@@ -50,6 +56,7 @@ const App = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <ErrorBoundary>
         <Routes>
           {/* 온보딩: 로그인 → 사주입력 → MBTI → 취향테스트 → 결과 → 메인 */}

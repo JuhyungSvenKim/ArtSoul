@@ -1,49 +1,30 @@
 /**
- * MBTI → 작품 매칭 엔진
- * 16 유형별로 선호 스타일/에너지/색감/소재를 매핑하고 점수 계산
+ * MBTI → 125 케이스코드 매칭 엔진
+ * v2: 차원별 강도(퍼센트)를 반영한 정밀 매칭
  */
 import type { OhaengElement, EnergyLevel, StyleCode } from "./case-code/types";
+import type { MbtiStrengths } from "@/stores/onboarding";
 
 // ── MBTI 4축 분해 ─────────────────────────────
-type MbtiAxis = {
-  EI: "E" | "I";
-  SN: "S" | "N";
-  TF: "T" | "F";
-  JP: "J" | "P";
-};
+type MbtiAxis = { EI: "E" | "I"; SN: "S" | "N"; TF: "T" | "F"; JP: "J" | "P" };
 
 function parseMbti(mbti: string): MbtiAxis | null {
   if (!mbti || mbti.length !== 4) return null;
   const m = mbti.toUpperCase();
-  return {
-    EI: m[0] as "E" | "I",
-    SN: m[1] as "S" | "N",
-    TF: m[2] as "T" | "F",
-    JP: m[3] as "J" | "P",
-  };
+  return { EI: m[0] as "E" | "I", SN: m[1] as "S" | "N", TF: m[2] as "T" | "F", JP: m[3] as "J" | "P" };
 }
 
-// ── 축별 선호도 매핑 ──────────────────────────
-// 에너지 선호 (1~5)
+// ── 축별 선호도 매핑 (1~5 점수) ──────────────
+// 에너지 선호 [energy 1~5]
 const ENERGY_PREF: Record<string, number[]> = {
-  // E/I: 외향은 역동+유동, 내향은 여백+균형
-  E: [1, 2, 5, 4, 3], // energy 1~5 점수
-  I: [5, 4, 1, 2, 3],
-  // J/P: 판단형은 균형+밀도, 인식형은 유동+여백
-  J: [2, 5, 3, 1, 4],
-  P: [4, 1, 2, 5, 3],
+  E: [1, 2, 5, 4, 3], I: [5, 4, 1, 2, 3],
+  J: [2, 5, 3, 1, 4], P: [4, 1, 2, 5, 3],
 };
-
-// 스타일 선호 (S1~S5)
+// 스타일 선호 [S1~S5]
 const STYLE_PREF: Record<string, number[]> = {
-  // S/N: 감각형은 고전+미니멀, 직관형은 팝+프리미엄
-  S: [5, 3, 4, 1, 2], // S1~S5 점수
-  N: [2, 3, 1, 4, 5],
-  // T/F: 사고형은 미니멀+고전, 감정형은 동양+팝
-  T: [4, 1, 5, 2, 3],
-  F: [2, 5, 3, 4, 1],
+  S: [5, 3, 4, 1, 2], N: [2, 3, 1, 4, 5],
+  T: [4, 1, 5, 2, 3], F: [2, 5, 3, 4, 1],
 };
-
 // 오행(색감) 선호
 const ELEMENT_PREF: Record<string, Record<OhaengElement, number>> = {
   E: { W: 3, F: 5, E: 2, M: 1, A: 4 },
@@ -66,8 +47,20 @@ export interface MbtiMatchResult {
   reason: string;
 }
 
-// ── 매칭 엔진 ─────────────────────────────────
-export function matchMbtiToArt(mbti: string): {
+// ── 강도 기반 가중 점수 계산 ──────────────────
+function weightedScore(
+  prefA: number, prefB: number,
+  strengthA: number, strengthB: number,
+): number {
+  // strengthA, strengthB = 0~100 퍼센트 (합 = 100)
+  // prefA, prefB = 해당 차원의 양쪽 선호 점수 (1~5)
+  const wA = strengthA / 100;
+  const wB = strengthB / 100;
+  return prefA * wA + prefB * wB;
+}
+
+// ── 메인 매칭 엔진 ───────────────────────────
+export function matchMbtiToArt(mbti: string, strengths?: MbtiStrengths | null): {
   top: MbtiMatchResult[];
   mbtiLabel: string;
   personality: string;
@@ -76,33 +69,48 @@ export function matchMbtiToArt(mbti: string): {
   const axis = parseMbti(mbti);
   if (!axis) return { top: [], mbtiLabel: mbti, personality: "", artVibe: "" };
 
+  // 강도가 없으면 기본 이진값 사용 (직접 선택 시)
+  const s = strengths || {
+    E: axis.EI === "E" ? 75 : 25, I: axis.EI === "I" ? 75 : 25,
+    S: axis.SN === "S" ? 75 : 25, N: axis.SN === "N" ? 75 : 25,
+    T: axis.TF === "T" ? 75 : 25, F: axis.TF === "F" ? 75 : 25,
+    J: axis.JP === "J" ? 75 : 25, P: axis.JP === "P" ? 75 : 25,
+  };
+
   const elements: OhaengElement[] = ["W", "F", "E", "M", "A"];
   const energies: EnergyLevel[] = [1, 2, 3, 4, 5];
   const styles: StyleCode[] = ["S1", "S2", "S3", "S4", "S5"];
 
-  // 모든 조합에 대해 점수 계산
   const results: MbtiMatchResult[] = [];
 
   for (const el of elements) {
     for (const en of energies) {
       for (const st of styles) {
-        // 에너지 점수 (E/I + J/P 평균)
-        const eiEnergy = ENERGY_PREF[axis.EI][en - 1];
-        const jpEnergy = ENERGY_PREF[axis.JP][en - 1];
+        // 에너지 점수 (E/I 강도 + J/P 강도 가중)
+        const eiEnergy = weightedScore(
+          ENERGY_PREF.E[en - 1], ENERGY_PREF.I[en - 1], s.E, s.I
+        );
+        const jpEnergy = weightedScore(
+          ENERGY_PREF.J[en - 1], ENERGY_PREF.P[en - 1], s.J, s.P
+        );
         const energyScore = (eiEnergy + jpEnergy) / 2;
 
-        // 스타일 점수 (S/N + T/F 평균)
-        const snStyle = STYLE_PREF[axis.SN][parseInt(st[1]) - 1];
-        const tfStyle = STYLE_PREF[axis.TF][parseInt(st[1]) - 1];
+        // 스타일 점수 (S/N 강도 + T/F 강도 가중)
+        const stIdx = parseInt(st[1]) - 1;
+        const snStyle = weightedScore(
+          STYLE_PREF.S[stIdx], STYLE_PREF.N[stIdx], s.S, s.N
+        );
+        const tfStyle = weightedScore(
+          STYLE_PREF.T[stIdx], STYLE_PREF.F[stIdx], s.T, s.F
+        );
         const styleScore = (snStyle + tfStyle) / 2;
 
-        // 오행 점수 (4축 평균)
-        const elScore = (
-          ELEMENT_PREF[axis.EI][el] +
-          ELEMENT_PREF[axis.SN][el] +
-          ELEMENT_PREF[axis.TF][el] +
-          ELEMENT_PREF[axis.JP][el]
-        ) / 4;
+        // 오행 점수 (4축 각각 강도 가중)
+        const elScoreEI = weightedScore(ELEMENT_PREF.E[el], ELEMENT_PREF.I[el], s.E, s.I);
+        const elScoreSN = weightedScore(ELEMENT_PREF.S[el], ELEMENT_PREF.N[el], s.S, s.N);
+        const elScoreTF = weightedScore(ELEMENT_PREF.T[el], ELEMENT_PREF.F[el], s.T, s.F);
+        const elScoreJP = weightedScore(ELEMENT_PREF.J[el], ELEMENT_PREF.P[el], s.J, s.P);
+        const elScore = (elScoreEI + elScoreSN + elScoreTF + elScoreJP) / 4;
 
         const total = Math.round((energyScore * 30 + styleScore * 30 + elScore * 40) / 5);
 
@@ -116,7 +124,6 @@ export function matchMbtiToArt(mbti: string): {
     }
   }
 
-  // 정렬
   results.sort((a, b) => b.score - a.score);
   const top = results.slice(0, 20);
 
@@ -141,6 +148,5 @@ export function matchMbtiToArt(mbti: string): {
   };
 
   const info = personalities[mbti.toUpperCase()] || { personality: mbti, artVibe: "" };
-
   return { top, mbtiLabel: mbti.toUpperCase(), ...info };
 }

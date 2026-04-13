@@ -320,7 +320,7 @@ const HomePage = () => {
           {subTab === "mbti" && (() => {
             try {
             const userMbti = store.mbti || "INFP";
-            const mbtiResult = matchMbtiToArt(userMbti);
+            const mbtiResult = matchMbtiToArt(userMbti, store.mbtiStrengths);
             const mbtiArtworks = getRecommendedArtworks(mbtiResult.top.slice(0, 8).map(r => r.caseCode), 8);
 
             return (

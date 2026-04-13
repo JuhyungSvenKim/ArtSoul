@@ -444,18 +444,60 @@ const HomePage = () => {
 
             const p = personalities[mbti] || { title: mbti, nickname: "", core: "", strength: "", weakness: "", artSoul: "" };
 
-            // 사주 × MBTI 교차 분석
-            let crossAnalysis = "";
+            // 사주 × MBTI 종합 분석
+            let crossSections: { title: string; text: string }[] = [];
             if (analysis) {
               const dOh = analysis.enhancedYongsin.dayOhaeng;
-              const ohMbtiMap: Record<string, string> = {
-                목: dims.EI === "E" ? "외향적 목 기운이라 확장하려는 에너지가 매우 강해. 새로운 프로젝트를 자꾸 벌리는 타입" : "내향적 목 기운이라 내면에서 조용히 성장하는 스타일. 혼자만의 창작이 잘 맞아",
-                화: dims.TF === "F" ? "감정형+화 기운이라 열정과 공감이 폭발하는 조합. 사람들에게 영감을 주는 존재" : "사고형+화 기운이라 열정은 있는데 이성적으로 통제하는 타입. 전략적 리더",
-                토: dims.JP === "J" ? "판단형+토 기운이라 안정감의 극치. 체계적이고 변하지 않는 신뢰의 상징" : "인식형+토 기운이라 유연한 안정감. 적응하면서도 중심을 잃지 않는 타입",
-                금: dims.SN === "S" ? "감각형+금 기운이라 디테일에 강한 완벽주의자. 현실적이면서 칼 같은 판단력" : "직관형+금 기운이라 날카로운 통찰력. 본질을 꿰뚫는 능력이 탁월",
-                수: dims.EI === "I" ? "내향적+수 기운이라 깊은 사색가. 혼자 있을 때 가장 창의적인 아이디어가 나옴" : "외향적+수 기운이라 유연한 소통가. 어떤 상황이든 물처럼 적응하는 능력",
+              const yOh = analysis.enhancedYongsin.yongsin;
+              const dStr = analysis.enhancedYongsin.dayStrength;
+              const ohN: Record<string, string> = { 목: "나무", 화: "불", 토: "흙", 금: "쇠", 수: "물" };
+
+              // 1. 본질 해석
+              const ohMbtiCore: Record<string, string> = {
+                목: dims.EI === "E" ? `외향적인 ${ohN.목} 기운이라 확장 에너지가 폭발적이야. 새 프로젝트 계속 벌리고, 사람 모으고, 앞장서서 뭔가 시작하는 게 너의 본능. ${dims.JP === "J" ? "거기에 판단형이라 벌려놓은 걸 정리하는 힘도 있어. 시작과 마무리 둘 다 되는 사람" : "근데 인식형이라 벌려놓고 수습이 좀 약할 수 있어. 시작은 천재, 마무리는 숙제"}` :
+                  `내향적인 ${ohN.목} 기운이라 조용히 성장하는 스타일이야. 겉으론 잔잔한데 속으로 뿌리를 깊이 내리고 있는 타입. ${dims.SN === "N" ? "직관형이라 남들이 못 보는 성장 포인트를 찾아내는 능력이 있어" : "감각형이라 현실적으로 한 단계씩 확실하게 성장해나가는 스타일"}`,
+                화: dims.TF === "F" ? `감정형 + ${ohN.화} 기운이라 열정과 공감 능력이 동시에 폭발하는 조합이야. 사람들한테 영감을 주고, 분위기를 주도하는 존재. ${dims.EI === "E" ? "외향적이기까지 하니까 카리스마가 장난 아닐 거야" : "내향적이라 조용히 불태우는 타입. 소수에게 깊은 영향을 줘"}` :
+                  `사고형 + ${ohN.화} 기운이라 열정은 화끈한데 이성으로 통제하는 타입. 전략적 리더 기질이야. ${dims.JP === "J" ? "판단형이라 열정을 체계적으로 조직화하는 능력이 탁월해" : "인식형이라 열정의 방향이 수시로 바뀔 수 있어. 유연하지만 분산 주의"}`,
+                토: dims.JP === "J" ? `판단형 + ${ohN.토} 기운이라 안정감의 극치야. 체계적이고, 한번 자리 잡으면 흔들리지 않는 신뢰의 상징. ${dims.TF === "T" ? "사고형이라 감정에 휘둘리지 않는 철벽 같은 안정감" : "감정형이라 따뜻한 안정감. 사람들이 네 옆에 있으면 편안해해"}` :
+                  `인식형 + ${ohN.토} 기운이라 유연한 안정감이야. 변화에 적응하면서도 중심을 잃지 않는 타입. ${dims.SN === "N" ? "직관형이라 안정 속에서도 새로운 가능성을 계속 탐색해" : "감각형이라 현실적인 안정을 착실하게 쌓아가는 스타일"}`,
+                금: dims.SN === "S" ? `감각형 + ${ohN.금} 기운이라 디테일에 강한 완벽주의자. 현실적이면서 칼 같은 판단력이 있어. ${dims.TF === "T" ? "사고형이기까지 하니까 논리+정밀함의 끝판왕" : "감정형이라 차가운 판단 속에 따뜻한 마음이 숨어있어"}` :
+                  `직관형 + ${ohN.금} 기운이라 날카로운 통찰력의 소유자야. 본질을 꿰뚫고 핵심만 짚어내는 능력. ${dims.EI === "I" ? "내향적이라 혼자 생각할 때 가장 날카로운 답이 나와" : "외향적이라 사람들 앞에서 번뜩이는 통찰을 던져"}`,
+                수: dims.EI === "I" ? `내향적 + ${ohN.수} 기운이라 깊은 사색가야. 혼자 있을 때 가장 창의적인 아이디어가 나오고, 감성의 깊이가 남다른 타입. ${dims.SN === "N" ? "직관형이라 상상력이 바다처럼 끝없이 펼쳐져" : "감각형이라 감성이 깊으면서도 현실 감각은 놓치지 않아"}` :
+                  `외향적 + ${ohN.수} 기운이라 유연한 소통가야. 물처럼 어떤 상황이든 적응하고, 사람들 사이를 자연스럽게 연결하는 능력. ${dims.TF === "F" ? "감정형이라 공감 능력까지 더해져서 관계의 달인" : "사고형이라 유연하면서도 핵심은 놓치지 않는 전략적 소통"}`,
               };
-              crossAnalysis = ohMbtiMap[dOh] || "";
+
+              crossSections.push({
+                title: `${ohN[dOh]}(${dOh}) × ${mbti} — 너의 본질`,
+                text: ohMbtiCore[dOh] || "",
+              });
+
+              // 2. 강약점 보완 관계
+              const strengthBalance = dStr === "강"
+                ? `사주가 ${ohN[dOh]} 에너지가 넘치는 "강한 사주"야. ${dims.EI === "E" ? "거기에 외향적이라 에너지 분출이 더 강해. 의식적으로 쉬는 시간이 필요해" : "내향적 성향이 넘치는 에너지를 안에서 소화해주는 역할을 해. 균형이 잘 맞는 편"}. 용신 ${ohN[yOh]}(${yOh}) 기운을 보충하면 ${dims.JP === "J" ? "체계적인 추진력이 더 강해져" : "창의적 유연성이 극대화돼"}.`
+                : dStr === "약"
+                ? `사주가 ${ohN[dOh]} 에너지가 부족한 "약한 사주"야. ${dims.TF === "F" ? "감정형이라 에너지 부족할 때 감정적으로 힘들 수 있어. 용신 ${ohN[yOh]} 기운이 감정 안정에도 도움을 줘" : "사고형이라 이성적으로 버틸 수 있는데, 몸이 먼저 신호를 보낼 수 있어. 건강 관리 중요"}. ${dims.EI === "E" ? "사교 활동이 에너지 보충에 도움돼" : "혼자만의 충전 시간이 핵심이야"}.`
+                : `사주가 중화를 이룬 균형 잡힌 구조야. ${mbti} 성격과 시너지가 좋은 편이고, 용신 ${ohN[yOh]}(${yOh})를 살짝 더하면 운이 한 단계 업돼.`;
+
+              crossSections.push({
+                title: "사주 강약 × MBTI 보완",
+                text: strengthBalance,
+              });
+
+              // 3. 추천 아트 종합
+              const artRecommend = `사주에서는 ${ohN[yOh]}(${yOh}) 기운이 담긴 작품이 필요하고, MBTI ${mbti}로 보면 ${p.artSoul.split('.')[0]}. 이 두 가지를 합치면, ${
+                yOh === "목" ? "초록/청색 계열의 자연 소재 작품이면서" :
+                yOh === "화" ? "붉은/주황 계열의 열정적인 작품이면서" :
+                yOh === "토" ? "노란/갈색 계열의 안정감 있는 작품이면서" :
+                yOh === "금" ? "흰/은색 계열의 절제된 작품이면서" :
+                "남색/파란 계열의 깊이 있는 작품이면서"
+              } ${
+                dims.EI === "E" ? "존재감 있고 대담한" : "조용히 감상할 수 있는"
+              } 스타일이 너한테 최적이야.`;
+
+              crossSections.push({
+                title: "사주 × MBTI 아트 종합 추천",
+                text: artRecommend,
+              });
             }
 
             return (
@@ -505,11 +547,19 @@ const HomePage = () => {
                   <p className="text-sm text-foreground/85 leading-relaxed">{p.artSoul}</p>
                 </div>
 
-                {/* 사주 × MBTI 교차 분석 */}
-                {crossAnalysis && (
-                  <div className="bg-card border border-primary/20 rounded-xl p-4">
-                    <p className="text-xs text-primary font-medium mb-2">사주 × MBTI 크로스 분석</p>
-                    <p className="text-sm text-foreground/85 leading-relaxed">{crossAnalysis}</p>
+                {/* 사주 × MBTI 종합 분석 */}
+                {crossSections.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <span className="w-1 h-4 bg-primary rounded-full" />
+                      사주 × MBTI 종합 해설
+                    </p>
+                    {crossSections.map((s, i) => (
+                      <div key={i} className="bg-card border border-primary/20 rounded-xl p-4">
+                        <p className="text-xs text-primary font-medium mb-2">{s.title}</p>
+                        <p className="text-sm text-foreground/85 leading-[1.8]">{s.text}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

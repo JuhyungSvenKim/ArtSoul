@@ -1,9 +1,9 @@
 /**
- * 125 Case Code SVG Art Generator
- *
- * 오행(색상) × 에너지(구도) × 스타일(표현)을 조합해 고유한 추상화 생성
+ * 125 Case Code Art — AI 이미지 + SVG 폴백
  */
+import { useState, useEffect } from "react";
 import type { OhaengElement, EnergyLevel, StyleCode } from "@/lib/case-code/types";
+import { getCachedArtImage, generateArtImage } from "@/lib/art-image";
 
 interface CaseCodeArtProps {
   element: OhaengElement;
@@ -13,7 +13,7 @@ interface CaseCodeArtProps {
   className?: string;
 }
 
-// 오행별 색상 팔레트
+// 오행별 색상 팔레트 (SVG 폴백용)
 const PALETTES: Record<OhaengElement, { primary: string; secondary: string; accent: string; bg: string }> = {
   W: { primary: "#4a9e6e", secondary: "#2d6e4a", accent: "#8fd4a8", bg: "#1a2f22" },
   F: { primary: "#d45050", secondary: "#a03030", accent: "#f09090", bg: "#2f1a1a" },
@@ -21,6 +21,49 @@ const PALETTES: Record<OhaengElement, { primary: string; secondary: string; acce
   M: { primary: "#a0a0a0", secondary: "#707070", accent: "#d0d0d0", bg: "#1e1e22" },
   A: { primary: "#4a7eb5", secondary: "#2a5e95", accent: "#8ab8e5", bg: "#1a222f" },
 };
+
+export default function CaseCodeArt({ element, energy, style, size = 200, className = "" }: CaseCodeArtProps) {
+  const caseCode = `${element}${energy}-${style}`;
+  const [imageUrl, setImageUrl] = useState<string | null>(() => getCachedArtImage(caseCode));
+  const [loading, setLoading] = useState(false);
+
+  // 캐시에 없으면 AI 이미지 생성 시도
+  useEffect(() => {
+    if (imageUrl) return;
+    let cancelled = false;
+    setLoading(true);
+    generateArtImage(caseCode)
+      .then(url => { if (!cancelled) setImageUrl(url); })
+      .catch(() => {}) // 실패하면 SVG 폴백 유지
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [caseCode]);
+
+  // AI 이미지가 있으면 표시
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={`Art ${caseCode}`}
+        className={className}
+        style={{ borderRadius: "12px", width: "100%", height: "100%", objectFit: "cover" }}
+      />
+    );
+  }
+
+  // 로딩 중이거나 폴백: SVG 추상화
+  const p = PALETTES[element];
+  return (
+    <div className="relative" style={{ width: "100%", height: "100%" }}>
+      <SvgFallback element={element} energy={energy} style={style} size={size} className={className} />
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-xl">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 // 시드 기반 간단한 난수 (deterministic)
 function seededRandom(seed: number) {
@@ -128,7 +171,7 @@ function generateShapes(
   return shapes.join("\n");
 }
 
-export default function CaseCodeArt({ element, energy, style, size = 200, className = "" }: CaseCodeArtProps) {
+function SvgFallback({ element, energy, style, size = 200, className = "" }: CaseCodeArtProps) {
   const p = PALETTES[element];
   const seed = getSeed(element, energy, style);
   const rand = seededRandom(seed);

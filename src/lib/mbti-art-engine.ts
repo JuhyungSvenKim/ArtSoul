@@ -52,11 +52,23 @@ function weightedScore(
   prefA: number, prefB: number,
   strengthA: number, strengthB: number,
 ): number {
-  // strengthA, strengthB = 0~100 퍼센트 (합 = 100)
-  // prefA, prefB = 해당 차원의 양쪽 선호 점수 (1~5)
   const wA = strengthA / 100;
   const wB = strengthB / 100;
   return prefA * wA + prefB * wB;
+}
+
+// 극단도 보너스: 축이 극단일수록 점수 차이가 벌어짐
+// E 95% → 극단도 0.9 (=|95-50|/50), E 52% → 극단도 0.04
+function polarityBonus(strengths: MbtiStrengths): number {
+  const dims = [
+    Math.abs(strengths.E - 50),
+    Math.abs(strengths.S - 50),
+    Math.abs(strengths.T - 50),
+    Math.abs(strengths.J - 50),
+  ];
+  // 평균 극단도 0~50 → 0~1로 정규화
+  const avg = dims.reduce((a, b) => a + b, 0) / dims.length;
+  return avg / 50; // 0 = 전부 50:50, 1 = 전부 극단
 }
 
 // ── 메인 매칭 엔진 ───────────────────────────
@@ -82,6 +94,7 @@ export function matchMbtiToArt(mbti: string, strengths?: MbtiStrengths | null): 
   const styles: StyleCode[] = ["S1", "S2", "S3", "S4", "S5"];
 
   const results: MbtiMatchResult[] = [];
+  const polarity = polarityBonus(s); // 0~1, 극단일수록 높음
 
   for (const el of elements) {
     for (const en of energies) {
@@ -112,12 +125,19 @@ export function matchMbtiToArt(mbti: string, strengths?: MbtiStrengths | null): 
         const elScoreJP = weightedScore(ELEMENT_PREF.J[el], ELEMENT_PREF.P[el], s.J, s.P);
         const elScore = (elScoreEI + elScoreSN + elScoreTF + elScoreJP) / 4;
 
-        const total = Math.round((energyScore * 30 + styleScore * 30 + elScore * 40) / 5);
+        const rawTotal = (energyScore * 30 + styleScore * 30 + elScore * 40) / 5;
+
+        // 극단도 보너스: 극단일수록 점수 범위가 넓어짐 (30~99)
+        // 50:50이면 범위 좁음 (50~75), 극단이면 범위 넓음 (30~99)
+        const minScore = Math.round(50 - polarity * 20); // 50→30
+        const maxScore = Math.round(75 + polarity * 24); // 75→99
+        const normalized = minScore + (rawTotal - 10) / 20 * (maxScore - minScore);
+        const finalScore = Math.min(99, Math.max(minScore, Math.round(normalized)));
 
         results.push({
           caseCode: `${el}${en}-${st}`,
           element: el, energy: en, style: st,
-          score: Math.min(99, Math.max(50, total)),
+          score: finalScore,
           reason: "",
         });
       }

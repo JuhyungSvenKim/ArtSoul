@@ -131,9 +131,9 @@ const HomePage = () => {
           {/* 서브탭 헤더 */}
           <div className="flex gap-1 mb-5 bg-surface rounded-xl p-1 overflow-x-auto">
             {([
-              { key: "recommend" as const, label: "사주 추천" },
-              { key: "saju" as const, label: "사주 분석" },
-              { key: "mbti" as const, label: "MBTI 추천" },
+              { key: "recommend" as const, label: "사주기반 그림추천" },
+              { key: "saju" as const, label: "사주분석" },
+              { key: "mbti" as const, label: "MBTI기반 그림추천" },
               { key: "mbti-analysis" as const, label: "MBTI 분석" },
             ]).map((tab) => (
               <button key={tab.key} onClick={() => setSubTab(tab.key)}

@@ -54,10 +54,12 @@ const MbtiPage = () => {
 
   const handleNext = () => {
     if (!mbti) return;
-    storeMbti(mbti);
-    // 강도 정보도 localStorage에 저장
+    // store에 MBTI + 강도 저장
     if (testResult) {
+      storeMbti(mbti, testResult.scores);
       try { localStorage.setItem("artsoul-mbti-strengths", JSON.stringify(testResult)); } catch {}
+    } else {
+      storeMbti(mbti);
     }
     if (userId) updateUserMbti(userId, mbti).catch(() => {});
     navigate(`/art-taste#${sajuHash}`);

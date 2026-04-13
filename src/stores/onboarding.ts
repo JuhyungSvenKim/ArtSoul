@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Gender } from '@/types';
 
+export interface MbtiStrengths {
+  E: number; I: number;
+  S: number; N: number;
+  T: number; F: number;
+  J: number; P: number;
+}
+
 interface OnboardingState {
   // Step 1: Birth Info
   birthDate: string;
@@ -12,6 +19,7 @@ interface OnboardingState {
 
   // Step 2: MBTI
   mbti: string | null;
+  mbtiStrengths: MbtiStrengths | null;
 
   // Step 3: Art Taste
   tasteSelections: string[];
@@ -27,7 +35,7 @@ interface OnboardingState {
     nameHanja: string | null;
     gender: Gender;
   }) => void;
-  setMbti: (mbti: string) => void;
+  setMbti: (mbti: string, strengths?: MbtiStrengths) => void;
   addTasteSelection: (artworkId: string) => void;
   setUserId: (id: string) => void;
   resetTaste: () => void;
@@ -42,19 +50,19 @@ export const useOnboardingStore = create<OnboardingState>()(
       nameHanja: null,
       gender: null,
       mbti: null,
+      mbtiStrengths: null,
       tasteSelections: [],
       userId: null,
 
       setBirthInfo: (data) => set(data),
 
-      setMbti: (mbti) => set({ mbti }),
+      setMbti: (mbti, strengths) => set({ mbti, mbtiStrengths: strengths || null }),
 
       addTasteSelection: (artworkId) =>
         set((state) => ({ tasteSelections: [...state.tasteSelections, artworkId] })),
 
       setUserId: (id) => set({ userId: id }),
 
-      // 취향 선택만 초기화 (생년월일/MBTI는 유지)
       resetTaste: () => set({ tasteSelections: [] }),
     }),
     {

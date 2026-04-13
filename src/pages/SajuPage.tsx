@@ -17,6 +17,8 @@ import { saveSajuResult, saveAIInterpretation, saveFortuneRecord } from "@/servi
 import { supabase } from "@/lib/supabase";
 import { callGemini } from "@/lib/gemini";
 import { getCoinPricing } from "@/lib/coin-pricing";
+import { analyzeFullName } from "@/lib/name-analysis";
+import NameAnalysisCard from "@/components/NameAnalysisCard";
 
 // ── 오행 색상 매핑 ──────────────────────────────────
 const OHAENG_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -1192,6 +1194,25 @@ const SajuPage = () => {
       </Section>
 
       {/* 주별 해석은 위 사주팔자 섹션 안에 통합됨 */}
+
+      {/* 성명학 분석 */}
+      {(() => {
+        try {
+          const nameKorean = store.nameKorean || (() => { try { const d = JSON.parse(localStorage.getItem("artsoul-saju-input") || "{}"); return d.nameKorean || ""; } catch { return ""; } })();
+          const nameHanja = store.nameHanja || (() => { try { const d = JSON.parse(localStorage.getItem("artsoul-saju-input") || "{}"); return d.nameHanja || null; } catch { return null; } })();
+          if (!nameKorean) return null;
+          const nameResult = analyzeFullName({
+            nameKorean,
+            nameHanja,
+            yongsinElement: enhancedYongsin.yongsin as any,
+          });
+          return (
+            <Section title="성명학 분석" collapsible defaultOpen={false} hint="이름의 소리·획수·오행이 사주와 얼마나 맞는지 분석">
+              <NameAnalysisCard data={nameResult} />
+            </Section>
+          );
+        } catch { return null; }
+      })()}
 
       {/* 격국 */}
       <Section title="내 사주의 성격 유형" collapsible defaultOpen={false} hint="너는 어떤 타입의 사주인지 한마디로 정리하면...">

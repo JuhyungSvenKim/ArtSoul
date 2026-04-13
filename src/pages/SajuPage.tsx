@@ -1003,6 +1003,31 @@ const SajuPage = () => {
 
   const aiPrompt = useMemo(() => result ? sajuToAIPrompt(result) : "", [result]);
 
+  // DB에 사주 계산 결과 저장 (비동기, 한 번만)
+  // 반드시 early return 전에 호출 — React hooks 순서 보장
+  useEffect(() => {
+    if (!result) return;
+    try {
+      const yeonjuLocal = result.yeonju;
+      const woljuLocal = result.wolju;
+      const iljuLocal = result.ilju;
+      const sijuLocal = result.siju;
+      const sipsungLocal = result.sipsung;
+      let ey: any = { yongsin: "목", huisin: "", gisin: "", dayOhaeng: "목", dayStrength: "중", summary: "" };
+      try {
+        ey = analyzeYongsin({ yeonju: yeonjuLocal, wolju: woljuLocal, ilju: iljuLocal, siju: sijuLocal }, sipsungLocal);
+      } catch {}
+      saveSajuResult(result, {
+        yongsin: ey.yongsin,
+        huisin: ey.huisin,
+        gisin: ey.gisin,
+        dayOhaeng: ey.dayOhaeng,
+        dayStrength: ey.dayStrength,
+        summary: ey.summary,
+      }).catch(() => {});
+    } catch {}
+  }, [result]);
+
   if (!result) {
     // localStorage에 데이터가 있으면 잠시 로딩 표시 (hydration 대기)
     const hasLocalData = !!loadSajuInput();
@@ -1069,20 +1094,6 @@ const SajuPage = () => {
   } catch (e) {
     console.error("케이스코드 분석 오류:", e);
   }
-
-  // DB에 사주 계산 결과 저장 (비동기, 한 번만)
-  useEffect(() => {
-    try {
-      saveSajuResult(result, {
-        yongsin: enhancedYongsin.yongsin,
-        huisin: enhancedYongsin.huisin,
-        gisin: enhancedYongsin.gisin,
-        dayOhaeng: enhancedYongsin.dayOhaeng,
-        dayStrength: enhancedYongsin.dayStrength,
-        summary: enhancedYongsin.summary,
-      }).catch(() => {});
-    } catch {}
-  }, []);
 
   return (
     <PageContainer className="pt-20">

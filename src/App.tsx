@@ -50,6 +50,7 @@ const App = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ErrorBoundary>
         <Routes>
           {/* 온보딩: 로그인 → 사주입력 → MBTI → 취향테스트 → 결과 → 메인 */}
           <Route path="/" element={<LoginPage />} />
@@ -80,6 +81,7 @@ const App = () => {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </ErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

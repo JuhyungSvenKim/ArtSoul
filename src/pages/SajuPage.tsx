@@ -1195,7 +1195,7 @@ const SajuPage = () => {
 
       {/* 주별 해석은 위 사주팔자 섹션 안에 통합됨 */}
 
-      {/* 성명학 분석 */}
+      {/* 성명학 분석 — 부족한 오행을 이름이 채워주는지 */}
       {(() => {
         try {
           const nameKorean = store.nameKorean || (() => { try { const d = JSON.parse(localStorage.getItem("artsoul-saju-input") || "{}"); return d.nameKorean || ""; } catch { return ""; } })();
@@ -1206,9 +1206,12 @@ const SajuPage = () => {
             nameHanja,
             yongsinElement: enhancedYongsin.yongsin as any,
           });
+          // 오행 밸런스에서 부족/과다 정보 전달
+          const lacking = ohaengAnalysis.lacking as string[];
+          const dominant = ohaengAnalysis.dominant as string[];
           return (
-            <Section title="성명학 분석" collapsible defaultOpen={false} hint="이름의 소리·획수·오행이 사주와 얼마나 맞는지 분석">
-              <NameAnalysisCard data={nameResult} />
+            <Section title="이름이 사주를 채워주는가 (성명학)" collapsible defaultOpen={false} hint={`부족한 ${lacking.length > 0 ? lacking.join('·') : '없음'} 오행을 이름이 보충하는지 분석`}>
+              <NameAnalysisCard data={nameResult} lackingOhaeng={lacking} dominantOhaeng={dominant} dayOhaeng={enhancedYongsin.dayOhaeng} />
             </Section>
           );
         } catch { return null; }

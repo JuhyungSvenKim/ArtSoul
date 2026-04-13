@@ -28,15 +28,38 @@ const RATING_STYLE: Record<string, string> = {
   대흉: "text-red-500",
 };
 
-export default function NameAnalysisCard({ data }: { data: FullNameAnalysis }) {
-  const [openSection, setOpenSection] = useState<string | null>("sound");
+export default function NameAnalysisCard({ data, lackingOhaeng = [], dominantOhaeng = [], dayOhaeng = "" }: {
+  data: FullNameAnalysis; lackingOhaeng?: string[]; dominantOhaeng?: string[]; dayOhaeng?: string;
+}) {
+  const [openSection, setOpenSection] = useState<string | null>("balance");
   const grade = GRADE_STYLE[data.overallGrade] || GRADE_STYLE.C;
 
   const toggle = (key: string) => setOpenSection(openSection === key ? null : key);
 
+  // 이름 오행이 부족한 오행을 채워주는지 분석
+  const nameOhaengs = [...data.soundOhaeng.flow, ...(data.jawonOhaeng?.flow || [])];
+  const nameOhaengCount: Record<string, number> = {};
+  for (const oh of nameOhaengs) nameOhaengCount[oh] = (nameOhaengCount[oh] || 0) + 1;
+
+  const supplements = lackingOhaeng.filter(oh => nameOhaengCount[oh]);
+  const conflicts = dominantOhaeng.filter(oh => nameOhaengCount[oh] && nameOhaengCount[oh] >= 2);
+
+  let balanceVerdict = "";
+  if (supplements.length > 0 && conflicts.length === 0) {
+    balanceVerdict = `이름에 ${supplements.join('·')} 오행이 있어서 사주에서 부족한 기운을 채워줍니다. 이름과 사주의 궁합이 좋은 편이에요.`;
+  } else if (supplements.length > 0 && conflicts.length > 0) {
+    balanceVerdict = `${supplements.join('·')} 오행을 보충해주지만, 이미 넘치는 ${conflicts.join('·')} 오행도 이름에 있어서 약간의 편중이 있습니다.`;
+  } else if (conflicts.length > 0) {
+    balanceVerdict = `이미 강한 ${conflicts.join('·')} 오행이 이름에도 많아서, 부족한 기운을 채우기엔 아쉬운 구조입니다. 생활 속에서 부족한 오행을 보완하세요.`;
+  } else if (lackingOhaeng.length > 0) {
+    balanceVerdict = `부족한 ${lackingOhaeng.join('·')} 오행이 이름에 직접 들어있지 않습니다. 색상, 방향, 계절 등으로 보완하면 좋습니다.`;
+  } else {
+    balanceVerdict = "사주의 오행 밸런스가 양호하여, 이름이 기운을 크게 흐트리지 않습니다.";
+  }
+
   return (
     <div className="space-y-4">
-      {/* 종합 점수 */}
+      {/* 핵심 — 부족한 오행을 이름이 채워주는가 */}
       <div className="bg-card border border-primary/20 rounded-xl p-4 glow-mystical">
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -50,7 +73,57 @@ export default function NameAnalysisCard({ data }: { data: FullNameAnalysis }) {
             <p className="text-[10px] text-muted-foreground mt-1">{data.overallScore}점 · {grade.label}</p>
           </div>
         </div>
+        <p className="text-sm text-foreground/85 leading-relaxed">{balanceVerdict}</p>
+        {lackingOhaeng.length > 0 && (
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {lackingOhaeng.map(oh => {
+              const s = OH_STYLE[oh];
+              const has = nameOhaengCount[oh];
+              return (
+                <span key={oh} className={`text-xs px-2.5 py-1 rounded-full border ${has ? "border-green-500/40 bg-green-500/10 text-green-400" : "border-red-500/30 bg-red-500/10 text-red-400"}`}>
+                  {oh} {has ? "보충됨" : "미보충"}
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* 오행 밸런스 보충 해석 */}
+      {(lackingOhaeng.length > 0 || dominantOhaeng.length > 0) && (
+        <SectionToggle title="이름 × 사주 오행 보충 분석" hint="부족한 오행을 이름이 얼마나 채워주는지" isOpen={openSection === "balance"} onToggle={() => toggle("balance")}>
+          <div className="space-y-3">
+            {dayOhaeng && (
+              <p className="text-xs text-muted-foreground">
+                일간 <span className={`font-semibold ${OH_STYLE[dayOhaeng]?.text || "text-foreground"}`}>{dayOhaeng}</span> 기준,
+                용신 <span className={`font-semibold ${OH_STYLE[data.yongsinMatch?.yongsinElement || ""]?.text || "text-primary"}`}>{data.yongsinMatch?.yongsinElement || "?"}</span> 오행이 필요한 사주
+              </p>
+            )}
+            <div className="grid grid-cols-5 gap-1.5">
+              {(["목", "화", "토", "금", "수"] as const).map(oh => {
+                const s = OH_STYLE[oh];
+                const count = nameOhaengCount[oh] || 0;
+                const isLacking = lackingOhaeng.includes(oh);
+                const isDominant = dominantOhaeng.includes(oh);
+                return (
+                  <div key={oh} className={`rounded-lg p-2 text-center border ${isLacking ? "border-red-500/30" : isDominant ? "border-yellow-500/30" : "border-border"} ${s.bg}`}>
+                    <p className={`text-sm font-bold ${s.text}`}>{oh}</p>
+                    <p className="text-[10px] text-muted-foreground">이름 {count}개</p>
+                    {isLacking && <p className="text-[9px] text-red-400 mt-0.5">부족</p>}
+                    {isDominant && <p className="text-[9px] text-yellow-400 mt-0.5">과다</p>}
+                  </div>
+                );
+              })}
+            </div>
+            {data.yongsinMatch && (
+              <div className="bg-surface rounded-lg p-3">
+                <p className="text-xs text-foreground/80 leading-relaxed">{data.yongsinMatch.description}</p>
+                <p className="text-xs text-primary leading-relaxed mt-1">{data.yongsinMatch.recommendation}</p>
+              </div>
+            )}
+          </div>
+        </SectionToggle>
+      )}
 
       {/* 음향오행 */}
       <SectionToggle title="음향오행 (초성)" hint="이름 소리의 오행 흐름" isOpen={openSection === "sound"} onToggle={() => toggle("sound")}>

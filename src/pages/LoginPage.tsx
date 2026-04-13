@@ -68,37 +68,24 @@ const LoginPage = () => {
     setLoading(true);
     setError("");
     const providerLabel = provider === "kakao" ? "카카오" : provider === "google" ? "구글" : "Apple";
-    try {
-      // Supabase URL이 placeholder면 OAuth 시도하지 않음
-      const isPlaceholder = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes("placeholder");
-      if (isPlaceholder) throw new Error("OAuth not configured");
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: `${window.location.origin}/birth-info` },
-      });
-      if (error) throw error;
-    } catch {
-      // OAuth 미설정 시 간편 게스트 로그인
-      const guestId = `local_${Date.now()}`;
-      const guestName = `${providerLabel} 사용자`;
-      localStorage.setItem("artsoul-user", JSON.stringify({
-        email: `${provider}_${Date.now()}@guest`,
-        name: guestName,
-        userId: guestId,
-        provider,
-      }));
-      // DB 저장 시도 (실패해도 OK)
-      supabase.from("user_profiles").upsert({
-        user_id: guestId, display_name: guestName,
-        email: `${provider}_guest`, provider, role: "user",
-      }, { onConflict: "user_id" }).then(() => {});
+    // OAuth 프로바이더 설정 전 — 게스트 로그인으로 처리
+    const guestId = `local_${Date.now()}`;
+    const guestName = `${providerLabel} 사용자`;
+    localStorage.setItem("artsoul-user", JSON.stringify({
+      email: `${provider}_${Date.now()}@guest`,
+      name: guestName,
+      userId: guestId,
+      provider,
+    }));
+    supabase.from("user_profiles").upsert({
+      user_id: guestId, display_name: guestName,
+      email: `${provider}_guest`, provider, role: "user",
+    }, { onConflict: "user_id" }).then(() => {});
 
-      const hasSaju = localStorage.getItem("artsoul-saju-input") || localStorage.getItem("artsoul-onboarding");
-      navigate(hasSaju ? "/home" : "/birth-info");
-    } finally {
-      setLoading(false);
-    }
+    const hasSaju = localStorage.getItem("artsoul-saju-input") || localStorage.getItem("artsoul-onboarding");
+    navigate(hasSaju ? "/home" : "/birth-info");
+    setLoading(false);
   };
 
   return (

@@ -398,13 +398,124 @@ const HomePage = () => {
             } catch (e) { return <p className="text-sm text-red-400 py-8 text-center">MBTI 분석 오류: {String(e)}</p>; }
           })()}
 
-          {/* ── MBTI 분석 탭 (준비중) ── */}
-          {subTab === "mbti-analysis" && (
-            <div className="animate-fade-in text-center py-12">
-              <p className="text-lg font-semibold text-foreground mb-2">MBTI 분석</p>
-              <p className="text-sm text-muted-foreground">곧 추가될 예정이에요</p>
-            </div>
-          )}
+          {/* ── MBTI 분석 탭 ── */}
+          {subTab === "mbti-analysis" && (() => {
+            try {
+            const mbti = (store.mbti || "").toUpperCase();
+            if (!mbti) return (
+              <div className="animate-fade-in text-center py-12">
+                <p className="text-lg font-semibold text-foreground mb-2">MBTI를 먼저 입력해주세요</p>
+                <button onClick={() => navigate("/mbti")} className="text-sm text-primary hover:underline">MBTI 입력하러 가기</button>
+              </div>
+            );
+
+            const dims = {
+              EI: mbti[0] as "E" | "I",
+              SN: mbti[1] as "S" | "N",
+              TF: mbti[2] as "T" | "F",
+              JP: mbti[3] as "J" | "P",
+            };
+
+            const dimInfo: Record<string, { left: string; right: string; lDesc: string; rDesc: string; yours: string; artAngle: string }> = {
+              EI: { left: "E 외향", right: "I 내향", lDesc: "사람들과 어울리며 에너지를 얻는 타입", rDesc: "혼자만의 시간에서 에너지를 충전하는 타입", yours: dims.EI === "E" ? "외향적이라 사람들과 함께하는 전시, 대형 작품이 잘 맞아" : "내향적이라 조용히 감상할 수 있는 작품, 개인 공간에 어울리는 그림이 딱", artAngle: dims.EI === "E" ? "역동적이고 시선을 사로잡는 대담한 작품" : "여백이 있고 사색적인 분위기의 작품" },
+              SN: { left: "S 감각", right: "N 직관", lDesc: "현실적이고 구체적인 것을 선호", rDesc: "추상적이고 상상력이 풍부한 것을 선호", yours: dims.SN === "S" ? "사실적이고 디테일한 작품에 끌려. 풍경화, 정물화가 잘 맞아" : "추상적이고 상징적인 작품에 끌려. 컨셉추얼 아트가 잘 맞아", artAngle: dims.SN === "S" ? "세밀한 표현과 사실적 묘사" : "상상력 자극하는 추상·컨셉 작품" },
+              TF: { left: "T 사고", right: "F 감정", lDesc: "논리와 분석으로 판단하는 타입", rDesc: "감정과 가치로 판단하는 타입", yours: dims.TF === "T" ? "구조적이고 지적 자극이 있는 작품을 좋아해. 기하학, 미니멀이 딱" : "감성적이고 따뜻한 작품에 마음이 가. 부드러운 색감과 감정이 담긴 그림", artAngle: dims.TF === "T" ? "구조적이고 지적인 미니멀·기하학 작품" : "감성적이고 따뜻한 색감의 작품" },
+              JP: { left: "J 판단", right: "P 인식", lDesc: "계획적이고 체계적인 것을 좋아함", rDesc: "유연하고 즉흥적인 것을 좋아함", yours: dims.JP === "J" ? "정돈되고 균형 잡힌 작품이 편안해. 클래식하고 격식 있는 스타일" : "자유롭고 파격적인 작품에 끌려. 즉흥적 에너지가 담긴 스타일", artAngle: dims.JP === "J" ? "균형 잡힌 구도와 클래식한 품위" : "자유로운 구도와 즉흥적 에너지" },
+            };
+
+            const personalities: Record<string, { title: string; nickname: string; core: string; strength: string; weakness: string; artSoul: string }> = {
+              INTJ: { title: "전략가", nickname: "미래를 설계하는 건축가", core: "독립적이고 분석적. 큰 그림을 보는 능력이 뛰어남", strength: "계획력, 통찰력, 독립심", weakness: "감정 표현 서툴고 완벽주의 과함", artSoul: "미니멀하고 구조적인 작품, 차가운 톤의 추상화. 지적 자극이 있는 작품에 오래 머무는 타입" },
+              INTP: { title: "논리학자", nickname: "끝없이 파고드는 탐구자", core: "호기심 덩어리. 이론과 패턴을 사랑하는 사색가", strength: "분석력, 창의력, 객관성", weakness: "실행력 부족, 사회성 약함", artSoul: "실험적이고 개념적인 작품, 기하학적 패턴. 왜 이 작품인지 이유가 명확해야 마음에 듬" },
+              ENTJ: { title: "통솔자", nickname: "타고난 리더", core: "야심차고 결단력 있는 리더. 비효율을 참지 못함", strength: "리더십, 추진력, 자신감", weakness: "독단적, 감정 무시 경향", artSoul: "대담하고 임팩트 있는 대형 작품. 공간을 지배하는 강렬한 색감이 딱" },
+              ENTP: { title: "변론가", nickname: "아이디어 폭풍의 주인공", core: "재치 있고 도전적. 틀을 깨는 사고방식", strength: "창의력, 적응력, 토론 능력", weakness: "끈기 부족, 갈등 유발", artSoul: "파격적이고 유니크한 작품, 팝아트나 컨템포러리. 남들이 안 고르는 걸 고름" },
+              INFJ: { title: "옹호자", nickname: "조용한 이상주의자", core: "깊은 통찰력과 공감 능력. 의미 있는 삶을 추구", strength: "공감력, 통찰력, 헌신", weakness: "번아웃 잦음, 이상 과도", artSoul: "서사가 있고 깊이 있는 작품, 동양적 여백. 작품 뒤의 이야기에 감동받는 타입" },
+              INFP: { title: "중재자", nickname: "꿈꾸는 감성 예술가", core: "감성적이고 이상을 추구. 자기만의 세계가 확실함", strength: "창의력, 공감력, 진정성", weakness: "현실 감각 부족, 결정 어려움", artSoul: "따뜻하고 감성적인 작품, 자연 풍경이나 부드러운 수채화. 감정이 움직이는 작품에 끌림" },
+              ENFJ: { title: "선도자", nickname: "사람을 이끄는 카리스마", core: "카리스마 있고 영감을 주는 타입. 사람 중심 사고", strength: "리더십, 소통력, 영향력", weakness: "자기 희생 과도, 갈등 회피", artSoul: "따뜻하면서 존재감 있는 작품. 사람들과 공유하고 싶은 의미 있는 그림" },
+              ENFP: { title: "활동가", nickname: "열정 가득한 자유영혼", core: "열정적이고 사교적. 가능성을 보는 낙관주의자", strength: "열정, 창의력, 사교성", weakness: "산만함, 현실 도피", artSoul: "밝고 자유로운 작품, 다채로운 색감. 보기만 해도 기분이 좋아지는 에너지 넘치는 그림" },
+              ISTJ: { title: "현실주의자", nickname: "믿을 수 있는 기둥", core: "책임감 강하고 성실. 규칙과 전통을 존중", strength: "신뢰성, 책임감, 꼼꼼함", weakness: "변화 거부, 융통성 부족", artSoul: "클래식하고 품위 있는 작품, 사실주의 회화. 오래 봐도 질리지 않는 전통의 가치" },
+              ISFJ: { title: "수호자", nickname: "따뜻한 울타리", core: "따뜻하고 헌신적. 주변 사람을 챙기는 게 본능", strength: "헌신, 관찰력, 인내심", weakness: "자기 주장 약함, 변화 두려움", artSoul: "포근하고 편안한 작품, 꽃이나 자연. 집에 두면 마음이 편해지는 그림" },
+              ESTJ: { title: "경영자", nickname: "질서의 수호자", core: "조직적이고 실용적. 효율과 규칙을 중시", strength: "조직력, 실행력, 책임감", weakness: "고집, 감정 무시", artSoul: "정돈되고 격식 있는 작품, 고전 미술. 품격 있는 인테리어 아트" },
+              ESFJ: { title: "영사", nickname: "모두의 친구", core: "사교적이고 배려심 넘침. 조화와 화합을 추구", strength: "친화력, 배려, 조직력", weakness: "타인 의식 과도, 갈등 회피", artSoul: "누구나 좋아할 수 있는 대중적 작품. 꽃, 풍경 등 공간을 밝히는 그림" },
+              ISTP: { title: "장인", nickname: "쿨한 해결사", core: "관찰력 있고 실용적. 손으로 만드는 것을 좋아함", strength: "문제해결, 적응력, 실용성", weakness: "감정 표현 서툴, 장기 계획 약함", artSoul: "질감이 느껴지는 작품, 미니멀하면서 기술적으로 뛰어난 것. 디테일에 감탄하는 타입" },
+              ISFP: { title: "모험가", nickname: "타고난 예술 감각", core: "감각적이고 자유로운 영혼. 아름다움에 민감", strength: "미적 감각, 유연성, 감성", weakness: "계획 부족, 갈등 회피", artSoul: "색채가 풍부하고 감각적인 작품. 자연 주제, 꽃, 풍경 — 본능적으로 아름다운 것에 끌림" },
+              ESTP: { title: "사업가", nickname: "현장의 승부사", core: "대담하고 활동적. 현실 감각이 뛰어남", strength: "대담함, 관찰력, 순발력", weakness: "인내심 부족, 장기 비전 약함", artSoul: "강렬하고 눈에 띄는 팝아트, 대담한 그래픽. 한 방에 시선을 잡는 작품" },
+              ESFP: { title: "연예인", nickname: "분위기 메이커", core: "즉흥적이고 에너지 넘침. 재미와 즐거움 추구", strength: "사교성, 낙관, 즉흥 대응", weakness: "산만, 진지함 부족", artSoul: "화려하고 비비드한 팝 스타일. 보는 순간 기분이 올라가는 에너지 넘치는 작품" },
+            };
+
+            const p = personalities[mbti] || { title: mbti, nickname: "", core: "", strength: "", weakness: "", artSoul: "" };
+
+            // 사주 × MBTI 교차 분석
+            let crossAnalysis = "";
+            if (analysis) {
+              const dOh = analysis.enhancedYongsin.dayOhaeng;
+              const ohMbtiMap: Record<string, string> = {
+                목: dims.EI === "E" ? "외향적 목 기운이라 확장하려는 에너지가 매우 강해. 새로운 프로젝트를 자꾸 벌리는 타입" : "내향적 목 기운이라 내면에서 조용히 성장하는 스타일. 혼자만의 창작이 잘 맞아",
+                화: dims.TF === "F" ? "감정형+화 기운이라 열정과 공감이 폭발하는 조합. 사람들에게 영감을 주는 존재" : "사고형+화 기운이라 열정은 있는데 이성적으로 통제하는 타입. 전략적 리더",
+                토: dims.JP === "J" ? "판단형+토 기운이라 안정감의 극치. 체계적이고 변하지 않는 신뢰의 상징" : "인식형+토 기운이라 유연한 안정감. 적응하면서도 중심을 잃지 않는 타입",
+                금: dims.SN === "S" ? "감각형+금 기운이라 디테일에 강한 완벽주의자. 현실적이면서 칼 같은 판단력" : "직관형+금 기운이라 날카로운 통찰력. 본질을 꿰뚫는 능력이 탁월",
+                수: dims.EI === "I" ? "내향적+수 기운이라 깊은 사색가. 혼자 있을 때 가장 창의적인 아이디어가 나옴" : "외향적+수 기운이라 유연한 소통가. 어떤 상황이든 물처럼 적응하는 능력",
+              };
+              crossAnalysis = ohMbtiMap[dOh] || "";
+            }
+
+            return (
+              <div className="space-y-4 animate-fade-in">
+                {/* MBTI 프로필 카드 */}
+                <div className="bg-card border border-primary/20 rounded-2xl p-5 glow-mystical">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                      <span className="text-xl font-bold text-primary">{mbti}</span>
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-foreground">{p.title}</p>
+                      <p className="text-sm text-primary">{p.nickname}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-foreground/85 leading-relaxed mb-2">{p.core}</p>
+                  <div className="flex gap-2 text-xs">
+                    <span className="px-2 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">{p.strength}</span>
+                    <span className="px-2 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">{p.weakness}</span>
+                  </div>
+                </div>
+
+                {/* 4가지 차원 분석 */}
+                <div className="space-y-2">
+                  {(["EI", "SN", "TF", "JP"] as const).map(dim => {
+                    const info = dimInfo[dim];
+                    const isLeft = dim === "EI" ? dims.EI === "E" : dim === "SN" ? dims.SN === "S" : dim === "TF" ? dims.TF === "T" : dims.JP === "J";
+                    return (
+                      <div key={dim} className="bg-card border border-border rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${isLeft ? "bg-primary/10 text-primary" : "bg-surface text-muted-foreground"}`}>{info.left}</span>
+                          <div className="flex-1 h-1.5 rounded-full bg-surface relative">
+                            <div className={`absolute top-0 h-full rounded-full bg-primary/60 ${isLeft ? "left-0 w-3/4" : "right-0 w-3/4"}`} />
+                          </div>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${!isLeft ? "bg-primary/10 text-primary" : "bg-surface text-muted-foreground"}`}>{info.right}</span>
+                        </div>
+                        <p className="text-xs text-foreground/80 leading-relaxed">{info.yours}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">추천 아트: {info.artAngle}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 아트 소울 */}
+                <div className="bg-card border border-primary/20 rounded-xl p-4">
+                  <p className="text-xs text-primary font-medium mb-2">{mbti}의 아트 소울</p>
+                  <p className="text-sm text-foreground/85 leading-relaxed">{p.artSoul}</p>
+                </div>
+
+                {/* 사주 × MBTI 교차 분석 */}
+                {crossAnalysis && (
+                  <div className="bg-card border border-primary/20 rounded-xl p-4">
+                    <p className="text-xs text-primary font-medium mb-2">사주 × MBTI 크로스 분석</p>
+                    <p className="text-sm text-foreground/85 leading-relaxed">{crossAnalysis}</p>
+                  </div>
+                )}
+              </div>
+            );
+            } catch (e) { return <p className="text-sm text-red-400 py-8 text-center">MBTI 분석 오류: {String(e)}</p>; }
+          })()}
 
           {/* ── 사주 분석 탭 ── */}
           {subTab === "saju" && (() => {

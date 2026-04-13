@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageContainer from "@/components/PageContainer";
 import TabBar from "@/components/TabBar";
 import { Search, SlidersHorizontal } from "lucide-react";
@@ -61,8 +61,15 @@ const OHAENG_COLORS: Record<string, { bg: string; text: string }> = {
 
 const ExplorePage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const store = useOnboardingStore();
-  const [tab, setTab] = useState<"artworks" | "artists">("artworks");
+  const initialTab = searchParams.get("tab") === "artists" ? "artists" : "artworks";
+  const [tab, setTab] = useState<"artworks" | "artists">(initialTab);
+
+  const changeTab = (t: "artworks" | "artists") => {
+    setTab(t);
+    setSearchParams({ tab: t }, { replace: true });
+  };
   const [query, setQuery] = useState("");
   const [selectedElement, setSelectedElement] = useState<OhaengElement | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<StyleCode | null>(null);
@@ -135,11 +142,11 @@ const ExplorePage = () => {
     <PageContainer className="pt-20">
       {/* 탭 */}
       <div className="flex gap-1 mb-4 bg-surface rounded-xl p-1">
-        <button onClick={() => setTab("artworks")}
+        <button onClick={() => changeTab("artworks")}
           className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${tab === "artworks" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
           작품
         </button>
-        <button onClick={() => setTab("artists")}
+        <button onClick={() => changeTab("artists")}
           className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${tab === "artists" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
           화가
         </button>
@@ -255,8 +262,29 @@ const ExplorePage = () => {
                   </div>
 
                   {/* 궁합 */}
-                  {totalScore !== null && (
-                    <div className="mt-3 pt-3 border-t border-border">
+                  {totalScore !== null && (() => {
+                    const ohN: Record<string, string> = { 목: "나무", 화: "불", 토: "흙", 금: "쇠", 수: "물" };
+                    const sajuExplain = sajuCompat ? (
+                      sajuCompat.label === "상생" ? `내 ${ohN[userOhaeng!.dayOhaeng]}(${userOhaeng!.dayOhaeng}) 기운이 화가의 ${ohN[artist.ohaeng]}(${artist.ohaeng})을 생해주는 관계. 이 화가의 작품이 내 에너지와 자연스럽게 공명해` :
+                      sajuCompat.label === "역생" ? `화가의 ${ohN[artist.ohaeng]}(${artist.ohaeng}) 기운이 내 ${ohN[userOhaeng!.dayOhaeng]}(${userOhaeng!.dayOhaeng})을 살려줘. 이 화가의 작품을 보면 에너지가 충전되는 느낌` :
+                      sajuCompat.label === "비화" ? `나와 같은 ${ohN[artist.ohaeng]} 기운이라 편안하고 익숙한 느낌. 감성이 통하기 쉬운 관계` :
+                      sajuCompat.label === "상극" ? `내 ${ohN[userOhaeng!.dayOhaeng]}이 화가의 ${ohN[artist.ohaeng]}을 누르는 관계. 자극적이지만 긴장감이 있을 수 있어` :
+                      `화가의 ${ohN[artist.ohaeng]}이 내 ${ohN[userOhaeng!.dayOhaeng]}을 누르는 관계. 도전적인 작품에서 성장의 기회를 얻을 수 있어`
+                    ) : "";
+                    const mbtiExplain = mbtiMatch !== null ? (
+                      mbtiMatch === 4 ? `MBTI가 완전 동일! 취향이 거의 같아서 이 화가 작품은 바로 "내 취향저격"일 확률 높음` :
+                      mbtiMatch === 3 ? `MBTI 4차원 중 3개 일치. 감성 코드가 비슷해서 작품 선택 기준이 잘 맞는 편` :
+                      mbtiMatch === 2 ? `MBTI 반 정도 일치. 공감되는 부분도 있고 새로운 시각도 줄 수 있는 관계` :
+                      mbtiMatch === 1 ? `MBTI가 많이 달라서 이 화가의 작품은 신선한 자극이 될 수 있어` :
+                      `MBTI가 정반대! 완전 다른 시각의 작품이라 호불호가 갈릴 수 있지만, 새로운 세계를 열어줄 수도`
+                    ) : "";
+                    const totalExplain = totalScore >= 80 ? "종합적으로 최고의 궁합이야. 이 화가의 작품을 적극 추천!" :
+                      totalScore >= 60 ? "꽤 잘 맞는 편이야. 이 화가의 작품을 한번 감상해봐" :
+                      totalScore >= 45 ? "보통 궁합이지만, 뜻밖의 발견이 있을 수 있어" :
+                      "궁합은 낮지만, 오히려 색다른 자극을 줄 수 있는 화가야";
+
+                    return (
+                    <div className="mt-3 pt-3 border-t border-border space-y-2">
                       <div className="flex items-center gap-3">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
@@ -283,8 +311,12 @@ const ExplorePage = () => {
                           )}
                         </div>
                       </div>
+                      {sajuExplain && <p className="text-[11px] text-foreground/70 leading-relaxed">{sajuExplain}</p>}
+                      {mbtiExplain && <p className="text-[11px] text-foreground/70 leading-relaxed">{mbtiExplain}</p>}
+                      <p className="text-[11px] text-primary/80 leading-relaxed">{totalExplain}</p>
                     </div>
-                  )}
+                    );
+                  })()}
                 </div>
               );
             })}

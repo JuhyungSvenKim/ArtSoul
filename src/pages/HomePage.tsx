@@ -72,7 +72,7 @@ function getSajuInput() {
 const HomePage = () => {
   const navigate = useNavigate();
   const store = useOnboardingStore();
-  const [subTab, setSubTab] = useState<"recommend" | "mbti" | "saju" | "mbti-analysis">("recommend");
+  const [subTab, setSubTab] = useState<"recommend" | "mbti" | "saju" | "mbti-analysis" | "total">("recommend");
   const [directData, setDirectData] = useState<any>(null);
 
   useEffect(() => { const d = getSajuInput(); if (d) setDirectData(d); }, []);
@@ -135,6 +135,7 @@ const HomePage = () => {
               { key: "saju" as const, label: "사주분석" },
               { key: "mbti" as const, label: "MBTI기반 그림추천" },
               { key: "mbti-analysis" as const, label: "MBTI 분석" },
+              { key: "total" as const, label: "종합 분석·추천" },
             ]).map((tab) => (
               <button key={tab.key} onClick={() => setSubTab(tab.key)}
                 className={`flex-1 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
@@ -565,6 +566,244 @@ const HomePage = () => {
               </div>
             );
             } catch (e) { return <p className="text-sm text-red-400 py-8 text-center">MBTI 분석 오류: {String(e)}</p>; }
+          })()}
+
+          {/* ── 종합 분석·추천 탭 ── */}
+          {subTab === "total" && (() => {
+            try {
+              if (!analysis) return <p className="text-sm text-muted-foreground py-8 text-center">사주 정보를 먼저 입력해주세요</p>;
+              const mbti = (store.mbti || "").toUpperCase();
+              if (!mbti) return (
+                <div className="animate-fade-in text-center py-12">
+                  <p className="text-lg font-semibold text-foreground mb-2">MBTI를 먼저 입력해주세요</p>
+                  <p className="text-xs text-muted-foreground mb-4">종합 분석은 사주와 MBTI가 모두 필요합니다</p>
+                  <button onClick={() => navigate("/mbti")} className="text-sm text-primary hover:underline">MBTI 입력하러 가기</button>
+                </div>
+              );
+
+              const ohN: Record<string, string> = { 목: "나무", 화: "불", 토: "흙", 금: "쇠", 수: "물" };
+              const dOh = analysis.enhancedYongsin.dayOhaeng;
+              const yOh = analysis.enhancedYongsin.yongsin;
+              const hOh = analysis.enhancedYongsin.huisin;
+              const gOh = analysis.enhancedYongsin.gisin;
+              const dStr = analysis.enhancedYongsin.dayStrength;
+              const bal = analysis.balance;
+              const sinsal = analysis.result.sinsal || [];
+              const dims = { EI: mbti[0], SN: mbti[1], TF: mbti[2], JP: mbti[3] };
+
+              const dominant = (Object.entries(bal) as [string, number][]).filter(([, v]) => v >= 3).map(([k]) => k);
+              const lacking = (Object.entries(bal) as [string, number][]).filter(([, v]) => v === 0).map(([k]) => k);
+
+              // 주요 신살 분류
+              const positives = sinsal.filter((s: any) => s.effect === "positive").slice(0, 3);
+              const negatives = sinsal.filter((s: any) => s.effect === "negative").slice(0, 3);
+
+              const top3 = analysis.topCases.slice(0, 3);
+
+              // MBTI 극단도
+              const mbtiStr = store.mbtiStrengths;
+              const polarity = mbtiStr ? (Math.abs(mbtiStr.E - 50) + Math.abs(mbtiStr.S - 50) + Math.abs(mbtiStr.T - 50) + Math.abs(mbtiStr.J - 50)) / 200 : 0.5;
+              const polarityLabel = polarity > 0.7 ? "매우 뚜렷한" : polarity > 0.4 ? "뚜렷한" : polarity > 0.2 ? "부드러운" : "애매한";
+
+              return (
+                <div className="space-y-5 animate-fade-in">
+                  {/* 헤드라인 */}
+                  <div className="bg-card border border-primary/30 rounded-2xl p-5 glow-mystical text-center">
+                    <p className="text-[10px] text-muted-foreground mb-1">AI 명리 × 심리 종합 진단</p>
+                    <p className="text-lg font-display text-gold-gradient font-semibold mb-1">{nameKorean || "당신"}의 맞춤 아트 처방</p>
+                    <p className="text-xs text-foreground/70 leading-relaxed">
+                      {ohN[dOh]}({dOh}) 일간 · {dStr} · {mbti}({polarityLabel} 성향)
+                    </p>
+                  </div>
+
+                  {/* 1. 에너지 진단 */}
+                  <section>
+                    <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <span className="w-1 h-4 bg-primary rounded-full" /> 1. 지금 내 에너지 진단
+                    </p>
+                    <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+                      <p className="text-sm text-foreground/85 leading-[1.8]">
+                        사주 분석 결과, 당신은 <span className={`font-semibold ${OHAENG_COLORS[dOh]?.text}`}>{ohN[dOh]}({dOh}) 기운이 {dStr === "강" ? "넘치는" : dStr === "약" ? "부족한" : "균형 잡힌"}</span> 구조입니다.
+                        {dominant.length > 0 && ` 특히 ${dominant.map(d => ohN[d]).join("·")} 오행이 과다하고,`}
+                        {lacking.length > 0 && ` ${lacking.map(l => ohN[l]).join("·")} 오행이 부족합니다.`}
+                      </p>
+                      <p className="text-sm text-foreground/85 leading-[1.8]">
+                        MBTI로는 <span className="font-semibold text-primary">{mbti}</span>이며, 4차원 강도가 {polarityLabel} 편이라
+                        {polarity > 0.5 ? " 추천 정확도가 높고 취향이 확실한 편입니다" : " 유연한 취향을 가지고 있어 다양한 스타일을 수용할 수 있습니다"}.
+                      </p>
+                      <div className="grid grid-cols-5 gap-1.5 pt-2">
+                        {(["목", "화", "토", "금", "수"] as const).map(oh => {
+                          const c = bal[oh];
+                          const style = OHAENG_COLORS[oh];
+                          const isYong = oh === yOh;
+                          return (
+                            <div key={oh} className={`text-center p-2 rounded-lg ${style.bg} ${isYong ? "ring-2 ring-primary" : ""}`}>
+                              <p className={`text-xs font-bold ${style.text}`}>{oh}</p>
+                              <p className="text-[10px] text-muted-foreground">{c}</p>
+                              {isYong && <p className="text-[9px] text-primary mt-0.5">용신</p>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* 2. 신살 기반 주의사항 */}
+                  {(positives.length > 0 || negatives.length > 0) && (
+                    <section>
+                      <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                        <span className="w-1 h-4 bg-primary rounded-full" /> 2. 내 사주에 드러나는 기운 (신살)
+                      </p>
+                      <div className="space-y-2">
+                        {positives.length > 0 && (
+                          <div className="bg-card border border-green-500/20 rounded-xl p-4">
+                            <p className="text-xs text-green-400 font-medium mb-2">🌟 타고난 복 — {positives.map((s: any) => s.name).join(", ")}</p>
+                            <p className="text-sm text-foreground/80 leading-[1.7]">
+                              이 귀인들이 당신을 보호하는 사주예요. 이 기운을 살리는 그림을 옆에 두면 운의 상승효과가 배가됩니다.
+                              {positives[0]?.description && ` ${positives[0].description.split('.')[0]}.`}
+                            </p>
+                          </div>
+                        )}
+                        {negatives.length > 0 && (
+                          <div className="bg-card border border-red-500/20 rounded-xl p-4">
+                            <p className="text-xs text-red-400 font-medium mb-2">⚠️ 다루면 무기가 되는 살 — {negatives.map((s: any) => s.name).join(", ")}</p>
+                            <p className="text-sm text-foreground/80 leading-[1.7]">
+                              이 살들은 "나쁘다"가 아니라 "에너지가 세다"는 뜻입니다. 용신 {ohN[yOh]}({yOh}) 기운의 그림으로 중화하면
+                              오히려 돌파력·카리스마로 전환될 수 있어요.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* 3. MBTI × 사주 시너지 */}
+                  <section>
+                    <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <span className="w-1 h-4 bg-primary rounded-full" /> 3. 내 MBTI × 사주 시너지
+                    </p>
+                    <div className="bg-card border border-border rounded-xl p-4 space-y-2">
+                      <p className="text-sm text-foreground/85 leading-[1.8]">
+                        <span className="text-primary font-semibold">{dims.EI}{dims.SN}{dims.TF}{dims.JP}</span>의 성향이 {ohN[dOh]} 일간과 만나면:
+                      </p>
+                      <ul className="space-y-1.5 text-sm text-foreground/80 leading-[1.7] pl-3">
+                        <li>• <span className="text-primary/80">{dims.EI === "E" ? "외향적 기운" : "내향적 기운"}</span>: {dims.EI === "E" ? `사주의 ${ohN[dOh]} 에너지를 밖으로 발산. 사람들과 함께하는 공간에 그림을 두면 시너지` : `사주의 ${ohN[dOh]} 에너지를 안으로 축적. 개인 공간의 그림이 내면을 채워줍니다`}</li>
+                        <li>• <span className="text-primary/80">{dims.SN === "S" ? "감각적 인식" : "직관적 인식"}</span>: {dims.SN === "S" ? "구체적이고 사실적인 작품이 당신에게 설득력" : "상징적이고 추상적인 작품에서 영감을 얻어요"}</li>
+                        <li>• <span className="text-primary/80">{dims.TF === "T" ? "논리적 판단" : "감정적 판단"}</span>: {dims.TF === "T" ? "구조적·기하학적 작품이 마음에 안정감" : "감성적·서정적 작품이 마음을 움직입니다"}</li>
+                        <li>• <span className="text-primary/80">{dims.JP === "J" ? "계획적 성향" : "유연한 성향"}</span>: {dims.JP === "J" ? "정돈된 구도와 클래식한 스타일이 잘 어울려요" : "자유롭고 즉흥적인 구도가 에너지를 줍니다"}</li>
+                      </ul>
+                    </div>
+                  </section>
+
+                  {/* 4. 처방 근거 */}
+                  <section>
+                    <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <span className="w-1 h-4 bg-primary rounded-full" /> 4. 왜 이 그림이 당신에게 필요한가
+                    </p>
+                    <div className="bg-card border border-primary/20 rounded-xl p-4 glow-mystical">
+                      <div className="space-y-3 text-sm text-foreground/85 leading-[1.8]">
+                        <p>
+                          <span className="text-primary font-semibold">사주 근거 :</span>{" "}
+                          {dStr === "강"
+                            ? `${ohN[dOh]} 기운이 넘쳐서 과열 위험이 있습니다. 이를 설기해줄 ${ohN[yOh]}({yOh}) 기운의 그림이 필요합니다.`
+                            : dStr === "약"
+                            ? `${ohN[dOh]} 기운이 부족해 에너지 고갈 위험이 있습니다. 이를 생조해줄 ${ohN[yOh]}({yOh}) 기운으로 보충이 필요합니다.`
+                            : `균형 잡힌 사주지만, ${ohN[yOh]}({yOh})의 기운을 더하면 한 단계 업그레이드됩니다.`}
+                        </p>
+                        <p>
+                          <span className="text-primary font-semibold">신살 근거 :</span>{" "}
+                          {negatives.length > 0
+                            ? `${negatives[0].name} 등 강한 살의 기운을 ${ohN[yOh]}({yOh})로 중화해 날카로움을 무기로 바꿉니다.`
+                            : positives.length > 0
+                            ? `${positives[0].name} 등 귀인의 기운을 극대화해 기회를 현실로 만듭니다.`
+                            : `사주가 안정적이라 ${ohN[yOh]}로 미세 조정만 하면 됩니다.`}
+                        </p>
+                        <p>
+                          <span className="text-primary font-semibold">MBTI 근거 :</span>{" "}
+                          {dims.EI}{dims.SN}{dims.TF}{dims.JP}의 감성 코드는{" "}
+                          {dims.EI === "E" ? "존재감 있고 대담한" : "조용히 감상할 수 있는"} 스타일,{" "}
+                          {dims.SN === "S" ? "디테일이 살아있는" : "상징과 은유가 담긴"} 작품,{" "}
+                          {dims.TF === "T" ? "구조가 명확한" : "감정이 움직이는"} 분위기를 선호합니다.
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* 5. TOP 3 처방 */}
+                  <section>
+                    <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <span className="w-1 h-4 bg-primary rounded-full" /> 5. 당신에게 처방하는 TOP 3 아트
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {top3.map((c, i) => {
+                        const el = ELEMENT_MAP[c.element];
+                        const en = ENERGY_MAP[c.energy];
+                        const st = STYLE_MAP[c.style];
+                        return (
+                          <div key={c.caseCode} className={`rounded-xl overflow-hidden border ${i === 0 ? "border-primary/40 glow-gold" : "border-border"}`}>
+                            <div className="aspect-[3/4]">
+                              <CaseCodeArt element={c.element} energy={c.energy} style={c.style} />
+                            </div>
+                            <div className="p-2 bg-surface">
+                              <p className="text-[10px] text-primary font-medium">{i === 0 ? "최강 처방" : `${i + 1}순위`}</p>
+                              <p className="text-[10px] text-foreground/80">{el?.labelKor}</p>
+                              <p className="text-[9px] text-muted-foreground">{en?.labelKor} · {st?.labelKor}</p>
+                              <p className="text-[10px] text-primary font-bold mt-1">{c.totalScore}점</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  {/* 6. 공간별 처방 */}
+                  <section>
+                    <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <span className="w-1 h-4 bg-primary rounded-full" /> 6. 공간별 그림 처방
+                    </p>
+                    <div className="space-y-2">
+                      {[
+                        { space: "🛋️ 거실", advice: `${ohN[yOh]}({yOh}) 기운의 중형 작품. 가족/손님이 함께 보는 공간이니 ${dims.EI === "E" ? "밝고 존재감 있는" : "조화롭고 편안한"} 느낌이 좋습니다.` },
+                        { space: "🛏️ 침실", advice: `정적인 ${hOh || "토"} 기운의 작품. 수면에 도움되는 부드러운 색감으로 ${dims.TF === "F" ? "감성을 달래주는" : "마음을 정돈해주는"} 스타일.` },
+                        { space: "📚 서재·작업공간", advice: `집중력을 높이는 ${ohN[yOh]} 기운의 미니멀한 작품. ${dims.SN === "S" ? "디테일이 살아있는" : "통찰을 자극하는"} 스타일이 생산성에 도움됩니다.` },
+                        { space: "🚪 현관", advice: `좋은 기운을 부르는 ${hOh || "수"} 기운의 작품. 첫인상을 결정하는 공간이니 품격 있는 것으로.` },
+                      ].map((item) => (
+                        <div key={item.space} className="bg-card border border-border rounded-xl p-3">
+                          <p className="text-sm font-medium text-foreground mb-1">{item.space}</p>
+                          <p className="text-xs text-foreground/70 leading-relaxed">{item.advice}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* 7. 주의: 피해야 할 것 */}
+                  <section>
+                    <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <span className="w-1 h-4 bg-primary rounded-full" /> 7. 피하면 좋은 것
+                    </p>
+                    <div className="bg-card border border-red-500/20 rounded-xl p-4">
+                      <p className="text-sm text-foreground/80 leading-[1.7]">
+                        당신의 사주와 궁합이 좋지 않은 것은 <span className="text-red-400 font-semibold">{ohN[gOh]}({gOh}) 기운</span>이에요.
+                        {gOh === "화" && " 너무 강렬한 붉은 색감의 자극적인 작품은 피하는 게 좋습니다."}
+                        {gOh === "수" && " 너무 어둡고 침울한 색조의 작품은 피하는 게 좋습니다."}
+                        {gOh === "목" && " 너무 날것 그대로의 자연 풍경보다는 정돈된 작품이 좋습니다."}
+                        {gOh === "금" && " 너무 차갑고 딱딱한 기하학 작품보다 부드러운 것이 좋습니다."}
+                        {gOh === "토" && " 너무 무거운 흙빛 작품보다 경쾌한 것이 좋습니다."}
+                      </p>
+                    </div>
+                  </section>
+
+                  {/* 마무리 */}
+                  <div className="bg-card border border-primary/20 rounded-2xl p-4 text-center glow-mystical">
+                    <p className="text-xs text-muted-foreground mb-2">이 분석은 당신의 사주·신살·MBTI 데이터에 기반합니다</p>
+                    <p className="text-sm text-foreground/85 leading-[1.7]">
+                      막연한 믿음이 아니라 <span className="text-primary">당신만의 에너지 구조</span>에 맞춘 맞춤 처방이에요.<br/>
+                      추천된 그림을 공간에 두고 한 달만 지내보세요. 차이가 느껴질 거예요.
+                    </p>
+                  </div>
+                </div>
+              );
+            } catch (e) { return <p className="text-sm text-red-400 py-8 text-center">종합 분석 오류: {String(e)}</p>; }
           })()}
 
           {/* ── 사주 분석 탭 ── */}

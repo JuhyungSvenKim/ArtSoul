@@ -1,39 +1,31 @@
 import { supabase } from '@/lib/supabase';
 import { getCurrentUserId } from '@/lib/current-user';
 
-/**
- * 코인 잔액 조회 — user_coins 테이블 사용
- * (결제 API와 동일한 테이블)
- */
 export async function getCoinBalance(userId?: string): Promise<number> {
   const uid = userId || getCurrentUserId();
-  if (!uid) return 10;
+  if (!uid) return 100;
 
   try {
     const { data, error } = await supabase
       .from('user_coins')
-      .select('coins')
+      .select('balance')
       .eq('user_id', uid)
       .single();
 
     if (error || !data) {
-      // 레코드 없으면 생성 (가입 보너스 10코인)
       const { data: newData } = await supabase
         .from('user_coins')
-        .upsert({ user_id: uid, coins: 10 }, { onConflict: 'user_id' })
-        .select('coins')
+        .upsert({ user_id: uid, balance: 100 }, { onConflict: 'user_id' })
+        .select('balance')
         .single();
-      return newData?.coins ?? 10;
+      return newData?.balance ?? 100;
     }
-    return data.coins;
+    return data.balance;
   } catch {
-    return 10;
+    return 100;
   }
 }
 
-/**
- * 코인 차감 — user_coins 테이블 + coin_transactions 기록
- */
 export async function deductCoins(userId: string, amount: number): Promise<number> {
   const balance = await getCoinBalance(userId);
   if (balance < amount) {
@@ -43,17 +35,14 @@ export async function deductCoins(userId: string, amount: number): Promise<numbe
   const newBalance = balance - amount;
 
   try {
-    // user_coins 업데이트
     await supabase.from('user_coins')
-      .update({ coins: newBalance, updated_at: new Date().toISOString() })
+      .update({ balance: newBalance, updated_at: new Date().toISOString() })
       .eq('user_id', userId);
 
-    // 거래 기록
     await supabase.from('coin_transactions').insert({
       user_id: userId,
       amount: -amount,
-      balance_after: newBalance,
-      transaction_type: 'use',
+      type: 'use',
       description: `코인 사용 ${amount}개`,
     });
 
@@ -63,9 +52,6 @@ export async function deductCoins(userId: string, amount: number): Promise<numbe
   }
 }
 
-/**
- * 운세 기록 저장 (레거시 — fortune_history)
- */
 export async function saveFortune(params: {
   userId: string;
   fortuneType: 'today' | 'week' | 'month' | 'year';

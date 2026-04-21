@@ -60,6 +60,7 @@ export async function saveAIInterpretation(text: string, cost: number = 3) {
   // saju_history에 이용 기록 저장
   await supabase.from("saju_history").insert({
     user_id: userId,
+    type: "ai_interpretation",
     service_type: "ai_interpretation",
     cost,
     result: text,
@@ -88,6 +89,7 @@ export async function saveFortuneRecord(data: {
   // saju_history에 이용 기록 저장
   await supabase.from("saju_history").insert({
     user_id: userId,
+    type: `fortune_${data.fortuneType}`,
     service_type: `fortune_${data.fortuneType}`,
     cost: data.cost,
     result: data.result,
